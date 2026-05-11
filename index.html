@@ -115,19 +115,12 @@
         text-align: center;
         margin-bottom: 32px;
       }
-      .login-logo .logo-icon {
-        width: 72px; height: 72px;
-        background: linear-gradient(135deg, #1a56db, #0ea5e9);
-        border-radius: 18px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32px;
-        color: white;
-        margin-bottom: 12px;
-        box-shadow: 0 8px 24px rgba(26,86,219,.35);
+      .login-logo-image {
+        width: min(280px, 100%);
+        height: auto;
+        display: block;
+        margin: 0 auto 14px;
       }
-      .login-logo h1 { font-size: 28px; font-weight: 800; color: var(--dark); }
       .login-logo p { color: var(--gray-500); font-size: 13px; margin-top: 4px; }
       .login-tabs {
         display: flex;
@@ -232,14 +225,10 @@
       }
       .emp-header-left { display: flex; align-items: center; gap: 12px; }
       .emp-header-logo {
-        width: 36px; height: 36px;
-        background: linear-gradient(135deg, #1a56db, #0ea5e9);
-        border-radius: 9px;
-        display: flex; align-items: center; justify-content: center;
-        color: white; font-size: 16px; font-weight: 800;
+        height: 38px;
+        width: auto;
+        display: block;
       }
-      .emp-header-brand { font-size: 18px; font-weight: 800; color: var(--dark); }
-      .emp-header-brand span { color: var(--primary); }
       .emp-header-right { display: flex; align-items: center; gap: 16px; }
       .emp-greeting { font-size: 14px; color: var(--gray-600); }
       .emp-greeting strong { color: var(--gray-900); }
@@ -831,18 +820,16 @@
         padding: 20px 20px 16px;
         border-bottom: 1px solid rgba(255,255,255,.08);
         display: flex;
-        align-items: center;
+        flex-direction: column;
+        align-items: flex-start;
         gap: 10px;
       }
-      .sidebar-logo-icon {
-        width: 40px; height: 40px;
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        color: white; font-weight: 800; font-size: 16px;
+      .sidebar-logo-image {
+        width: 190px;
+        max-width: 100%;
+        height: auto;
+        display: block;
       }
-      .sidebar-logo-text { font-size: 17px; font-weight: 800; color: white; }
-      .sidebar-logo-text span { color: var(--accent); }
       .sidebar-logo-sub { font-size: 10px; color: rgba(255,255,255,.4); margin-top: 1px; }
 
       .sidebar-section-title {
@@ -1200,6 +1187,8 @@
       @media (max-width: 640px) {
         .admin-sidebar { display: none; }
         .login-box { padding: 32px 24px; }
+        .login-logo-image { width: min(220px, 100%); }
+        .emp-header-logo { height: 32px; }
         .emp-main { padding: 16px; }
         .action-bar { flex-direction: column; }
         .btn-action { justify-content: center; }
@@ -1248,8 +1237,7 @@
     <div id="loginScreen" class="screen active">
       <div class="login-box">
         <div class="login-logo">
-          <div class="logo-icon"><i class="fas fa-notes-medical"></i></div>
-          <h1>Help<span style="color:var(--primary)">360</span></h1>
+          <img class="login-logo-image app-logo" alt="HELP360MD logo" />
           <p>Medical Billing Activity Tracker</p>
         </div>
 
@@ -1309,8 +1297,7 @@
       <!-- Header -->
       <header class="emp-header">
         <div class="emp-header-left">
-          <div class="emp-header-logo">H</div>
-          <span class="emp-header-brand">Help<span>360</span></span>
+          <img class="emp-header-logo app-logo" alt="HELP360MD logo" />
         </div>
         <div class="emp-header-right">
           <span class="emp-date-badge" id="empDateBadge"></span>
@@ -1913,11 +1900,8 @@
       <!-- Sidebar -->
       <aside class="admin-sidebar">
         <div class="sidebar-logo">
-          <div class="sidebar-logo-icon">H</div>
-          <div>
-            <div class="sidebar-logo-text">Help<span>360</span></div>
-            <div class="sidebar-logo-sub">Admin Dashboard</div>
-          </div>
+          <img class="sidebar-logo-image app-logo" alt="HELP360MD logo" />
+          <div class="sidebar-logo-sub">Admin Dashboard</div>
         </div>
 
         <div class="sidebar-section-title">Overview</div>
@@ -3160,6 +3144,27 @@ function doGet() {
           counter += 1;
         }
         return next;
+      }
+
+      function initBrandLogos() {
+        const logoPaths = window.location.protocol === 'file:'
+          ? ['./public/logo.png', 'public/logo.png', 'logo.png', '/logo.png']
+          : ['/logo.png', 'logo.png', './public/logo.png', 'public/logo.png'];
+
+        document.querySelectorAll('.app-logo').forEach((img) => {
+          let index = 0;
+          const tryNextLogo = () => {
+            if (index >= logoPaths.length) {
+              img.onerror = null;
+              return;
+            }
+            img.src = logoPaths[index];
+            index += 1;
+          };
+
+          img.onerror = tryNextLogo;
+          tryNextLogo();
+        });
       }
 
       function generateWorkEmail(name) {
@@ -4974,6 +4979,7 @@ function doGet() {
 
       function init() {
         loadState();
+        initBrandLogos();
         ensureTaskAssignments();
         persistSettings();
         persistManager();
