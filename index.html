@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Help360 – Employee Activity Tracker</title>
+    <title>Help360 - Employee Activity Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
       /* ============================================================
          GLOBAL RESET & BASE
@@ -1560,6 +1561,14 @@
         border-radius: 14px;
         background: rgba(23,49,109,.05);
       }
+      .workspace-note.alert {
+        background: rgba(239,68,68,.08);
+        color: #9f1d1d;
+      }
+      .workspace-note.success {
+        background: rgba(16,185,129,.1);
+        color: #0f766e;
+      }
       .compact-textarea {
         min-height: 88px;
       }
@@ -1645,6 +1654,55 @@
       .leave-reject-btn {
         color: #b42318;
       }
+      .leave-balance-list,
+      .hr-priority-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 8px;
+      }
+      .leave-balance-item,
+      .hr-priority-item {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 14px;
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(246,241,230,.88));
+        border: 1px solid rgba(201,165,107,.18);
+      }
+      .leave-balance-meta,
+      .hr-priority-meta {
+        font-size: 11px;
+        color: var(--gray-500);
+        line-height: 1.7;
+        margin-top: 4px;
+      }
+      .metric-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        background: rgba(23,49,109,.08);
+        color: var(--primary);
+        white-space: nowrap;
+      }
+      .metric-chip.alert {
+        background: rgba(239,68,68,.1);
+        color: #b42318;
+      }
+      .metric-chip.success {
+        background: rgba(16,185,129,.12);
+        color: #0f766e;
+      }
+      .mobile-admin-nav {
+        display: none;
+        margin-top: 10px;
+        min-width: min(100%, 240px);
+      }
       .chat-surface {
         display: flex;
         flex-direction: column;
@@ -1726,6 +1784,11 @@
         .team-tools-grid {
           grid-template-columns: 1fr;
         }
+        .admin-header {
+          flex-wrap: wrap;
+          gap: 12px;
+          align-items: flex-start;
+        }
       }
       @media (max-width: 640px) {
         .profile-card-layout,
@@ -1735,6 +1798,18 @@
         }
         .workspace-stat-grid {
           grid-template-columns: 1fr 1fr;
+        }
+        .mobile-admin-nav {
+          display: block;
+        }
+        .admin-header-right {
+          width: 100%;
+          justify-content: space-between;
+          flex-wrap: wrap;
+        }
+        .logs-table,
+        .history-table {
+          min-width: 720px;
         }
         .profile-avatar-stage {
           width: 88px;
@@ -1762,7 +1837,7 @@
             <i class="fas fa-user"></i> Employee
           </button>
           <button class="login-tab" onclick="switchLoginTab('admin', this)">
-            <i class="fas fa-shield-alt"></i> Admin
+            <i class="fas fa-shield-alt"></i> HR / Admin
           </button>
         </div>
 
@@ -1787,7 +1862,7 @@
         <!-- Admin Login Form -->
         <div id="adminLoginForm" class="hidden">
           <div class="form-group">
-            <label class="form-label">Admin Username</label>
+            <label class="form-label">HR / Admin Username</label>
             <input type="text" class="form-control" id="adminUser" placeholder="usama.mazar" />
           </div>
           <div class="form-group">
@@ -1795,13 +1870,13 @@
             <input type="password" class="form-control" id="adminPassword" placeholder="Enter admin password" />
           </div>
           <button class="btn-primary" onclick="adminLogin()">
-            <i class="fas fa-lock-open"></i> &nbsp;Admin Login
+            <i class="fas fa-lock-open"></i> &nbsp;HR Login
           </button>
-          <div class="login-error" id="adminLoginError">Invalid admin credentials.</div>
+          <div class="login-error" id="adminLoginError">Invalid HR/Admin credentials.</div>
         </div>
 
         <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--gray-400)">
-          <i class="fas fa-lock" style="margin-right:4px"></i>Secured Portal · Help360 © 2025
+          <i class="fas fa-lock" style="margin-right:4px"></i>Secured Portal | Help360 2025
         </p>
       </div>
     </div>
@@ -1825,8 +1900,8 @@
 
       <!-- Main Content -->
       <div class="emp-main">
-        <h2 class="emp-page-title">📋 Daily Activity Log</h2>
-        <p class="emp-page-subtitle">Record your work, keep everything autosaved, and email your manager from one place at the end of your shift.</p>
+        <h2 class="emp-page-title">Daily Activity Workspace</h2>
+        <p class="emp-page-subtitle">Track your work, manage leave professionally, and submit polished updates from one employee workspace.</p>
 
         <!-- Daily Summary Bar -->
         <div class="daily-summary-bar">
@@ -1855,7 +1930,7 @@
           <div class="assignment-panel-head">
             <div>
               <div class="assignment-title">Assigned Responsibilities</div>
-              <div class="assignment-subtitle" id="assignedTaskSummary">Manager-selected focus areas will appear here for this employee.</div>
+              <div class="assignment-subtitle" id="assignedTaskSummary">HR-selected focus areas will appear here for this employee.</div>
             </div>
             <label class="assignment-toggle">
               <input type="checkbox" id="assignedOnlyToggle" onchange="toggleAssignedOnly(this.checked)" />
@@ -1880,7 +1955,7 @@
             <div class="surface-head">
               <div>
                 <div class="surface-title">Profile and Passport Photo</div>
-                <div class="surface-sub">Upload a clear passport-size picture so your employee experience and manager dashboard stay polished and professional.</div>
+                <div class="surface-sub">Upload a clear passport-size picture so your employee experience and the HR dashboard stay polished and professional.</div>
               </div>
               <span class="surface-pill"><i class="fas fa-id-card"></i> Employee Identity</span>
             </div>
@@ -1906,7 +1981,7 @@
             <div class="surface-head">
               <div>
                 <div class="surface-title">Workspace Snapshot</div>
-                <div class="surface-sub">A fast view of your assigned scope, pending leave activity, team conversations, and draft support files.</div>
+                <div class="surface-sub">A fast view of your assigned scope, leave activity, available leave balance, and draft support files.</div>
               </div>
               <span class="surface-pill gold"><i class="fas fa-star"></i> Live Overview</span>
             </div>
@@ -1920,8 +1995,8 @@
                 <span>Pending Leaves</span>
               </div>
               <div class="workspace-stat-card">
-                <strong id="workspaceChatCount">0</strong>
-                <span>Chat Messages</span>
+                <strong id="workspaceAvailableLeaveCount">8</strong>
+                <span>Leave Left</span>
               </div>
               <div class="workspace-stat-card">
                 <strong id="workspaceAttachmentCount">0</strong>
@@ -1929,6 +2004,50 @@
               </div>
             </div>
             <div class="workspace-note" id="workspaceSnapshotNote">Your daily workspace summary updates automatically as you work.</div>
+          </div>
+        </div>
+
+        <div class="team-tools-grid">
+          <div class="workspace-surface">
+            <div class="surface-head">
+              <div>
+                <div class="surface-title">HR Announcements and Holidays</div>
+                <div class="surface-sub">Read the latest HR notices and keep an eye on upcoming company holidays that affect leave calculations.</div>
+              </div>
+              <span class="surface-pill"><i class="fas fa-bullhorn"></i> HR Broadcast</span>
+            </div>
+            <div class="leave-balance-list" id="employeeAnnouncementList">
+              <div class="attachment-empty">No HR announcements yet.</div>
+            </div>
+            <div class="workspace-note" id="upcomingHolidayList">No company holidays configured yet.</div>
+          </div>
+          <div class="workspace-surface">
+            <div class="surface-head">
+              <div>
+                <div class="surface-title">Monthly Goal Tracker</div>
+                <div class="surface-sub">Compare your current month activity against the KPI target set by HR and review any performance notes.</div>
+              </div>
+              <span class="surface-pill gold"><i class="fas fa-bullseye"></i> KPI Progress</span>
+            </div>
+            <div class="workspace-stat-grid">
+              <div class="workspace-stat-card">
+                <strong id="employeeKpiTarget">0</strong>
+                <span>Target</span>
+              </div>
+              <div class="workspace-stat-card">
+                <strong id="employeeKpiAchieved">0</strong>
+                <span>Achieved</span>
+              </div>
+              <div class="workspace-stat-card">
+                <strong id="employeeKpiProgress">0%</strong>
+                <span>Progress</span>
+              </div>
+              <div class="workspace-stat-card">
+                <strong id="employeeAttendanceDays">0</strong>
+                <span>Active Days</span>
+              </div>
+            </div>
+            <div class="workspace-note" id="employeeKpiRemark">HR remarks and target guidance will appear here.</div>
           </div>
         </div>
 
@@ -2391,7 +2510,7 @@
 
           <div class="activity-section" id="customResponsibilitySection" style="display:none">
             <div class="activity-section-header">
-              <i class="fas fa-plus-circle"></i> Manager Added Responsibilities
+              <i class="fas fa-plus-circle"></i> HR Added Responsibilities
             </div>
             <div class="activity-section-body" id="customResponsibilityBody"></div>
           </div>
@@ -2401,7 +2520,7 @@
         <!-- NOTES -->
         <div class="notes-section">
           <div class="notes-label"><i class="fas fa-sticky-note" style="color:var(--warning)"></i> Additional Notes / Comments</div>
-          <textarea class="notes-textarea" id="empNotes" placeholder="Any additional notes, highlights or issues from today's work…"></textarea>
+          <textarea class="notes-textarea" id="empNotes" placeholder="Any additional notes, highlights, or issues from today's work..."></textarea>
         </div>
 
         <div class="attachments-section">
@@ -2425,10 +2544,56 @@
           <div class="workspace-surface">
             <div class="surface-head">
               <div>
-                <div class="surface-title">Leave Request Center</div>
-                <div class="surface-sub">Submit time off directly for manager review and keep a clean history of approvals, pending requests, and notes.</div>
+                <div class="surface-title">Employee Dossier</div>
+                <div class="surface-sub">Review your official profile details, emergency contact, banking record, and uploaded HR documents in one place.</div>
               </div>
-              <span class="surface-pill gold"><i class="fas fa-calendar-check"></i> Manager Review</span>
+              <span class="surface-pill"><i class="fas fa-folder-open"></i> HR Record</span>
+            </div>
+            <div class="workspace-stat-grid">
+              <div class="workspace-stat-card">
+                <strong id="employeeDepartmentCard">Operations</strong>
+                <span>Department</span>
+              </div>
+              <div class="workspace-stat-card">
+                <strong id="employeeTeamLeadCard">HR</strong>
+                <span>Team Lead</span>
+              </div>
+              <div class="workspace-stat-card">
+                <strong id="employeeJoiningDateCard">-</strong>
+                <span>Joining Date</span>
+              </div>
+              <div class="workspace-stat-card">
+                <strong id="employeeCarryForwardCard">0</strong>
+                <span>Carry Forward</span>
+              </div>
+            </div>
+            <div class="workspace-note" id="employeeContactCard">Emergency contact and bank record will appear here once HR completes your profile.</div>
+            <div class="leave-balance-list" id="employeeDocumentList">
+              <div class="attachment-empty">No employee documents uploaded yet.</div>
+            </div>
+          </div>
+          <div class="workspace-surface">
+            <div class="surface-head">
+              <div>
+                <div class="surface-title">Leave Policy Snapshot</div>
+                <div class="surface-sub">View the current leave limits, carry-forward rules, salary impact reminders, and approval rules used by Team Lead and HR.</div>
+              </div>
+              <span class="surface-pill gold"><i class="fas fa-scale-balanced"></i> Policy</span>
+            </div>
+            <div class="leave-balance-list" id="employeePolicySummary">
+              <div class="attachment-empty">Leave policy details will appear here.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="team-tools-grid">
+          <div class="workspace-surface">
+            <div class="surface-head">
+              <div>
+                <div class="surface-title">Leave Request Center</div>
+                <div class="surface-sub">Submit time off for Team Lead and HR review, choose the correct leave type, and keep a clear record of approvals, pending requests, and notes.</div>
+              </div>
+              <span class="surface-pill gold"><i class="fas fa-calendar-check"></i> Team Lead + HR</span>
             </div>
             <div class="leave-form-grid">
               <div class="settings-item">
@@ -2442,12 +2607,24 @@
               <div class="settings-item">
                 <div class="settings-label">Leave Type</div>
                 <select class="settings-value" id="leaveType">
-                  <option value="Paid Leave">Paid Leave</option>
+                  <option value="Annual Leave">Annual Leave</option>
                   <option value="Sick Leave">Sick Leave</option>
                   <option value="Emergency Leave">Emergency Leave</option>
                   <option value="Half Day">Half Day</option>
-                  <option value="Work From Home">Work From Home</option>
                   <option value="Personal Leave">Personal Leave</option>
+                  <option value="Work From Home">Work From Home</option>
+                  <option value="No Salary Leave">No Salary Leave</option>
+                </select>
+              </div>
+              <div class="settings-item">
+                <div class="settings-label">Reason Category</div>
+                <select class="settings-value" id="leaveReasonCategory">
+                  <option value="Medical">Medical</option>
+                  <option value="Family">Family</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Emergency">Emergency</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
               <div class="settings-item">
@@ -2457,33 +2634,43 @@
             </div>
             <div class="settings-item" style="margin-top:8px">
               <div class="settings-label">Reason</div>
-              <textarea class="notes-textarea compact-textarea" id="leaveReason" placeholder="Share the reason, timing, or anything your manager should know."></textarea>
+              <textarea class="notes-textarea compact-textarea" id="leaveReason" placeholder="Share the reason, timing, or anything HR should know."></textarea>
             </div>
             <div class="profile-action-row">
               <button class="btn-settings-save" type="button" onclick="submitLeaveRequest()"><i class="fas fa-paper-plane"></i> Submit Leave Request</button>
             </div>
+            <div class="workspace-note" id="leaveRequestImpactNote">Select dates and a leave type to preview how this request affects your yearly leave balance.</div>
             <div class="leave-request-list" id="employeeLeaveRequestList">
               <div class="attachment-empty">No leave requests submitted yet.</div>
             </div>
           </div>
-          <div class="workspace-surface chat-surface">
+          <div class="workspace-surface">
             <div class="surface-head">
               <div>
-                <div class="surface-title">Team Chat Lounge</div>
-                <div class="surface-sub">Keep handoffs smooth, ask quick questions, and share updates with the rest of the team inside the employee workspace.</div>
+                <div class="surface-title">Annual Leave Balance</div>
+                <div class="surface-sub">Each employee receives the configured yearly paid leave allowance. Once the paid balance is fully used or reserved, use No Salary Leave for new requests.</div>
               </div>
-              <span class="surface-pill"><i class="fas fa-comments"></i> Shared Team Feed</span>
+              <span class="surface-pill"><i class="fas fa-briefcase"></i> Leave Policy</span>
             </div>
-            <div class="chat-message-list" id="employeeChatMessages">
-              <div class="attachment-empty">No team messages yet.</div>
-            </div>
-            <div class="chat-composer">
-              <textarea class="notes-textarea compact-textarea" id="employeeChatInput" placeholder="Share an update, ask for help, or hand off work to a teammate."></textarea>
-              <div class="chat-composer-actions">
-                <span class="chat-char-count" id="employeeChatCount">0 / 600</span>
-                <button class="btn-settings-save" type="button" onclick="sendTeamChatMessage()"><i class="fas fa-comments"></i> Send Message</button>
+            <div class="workspace-stat-grid">
+              <div class="workspace-stat-card">
+                <strong id="leaveBalanceLimit">8</strong>
+                <span>Yearly Allowance</span>
+              </div>
+              <div class="workspace-stat-card">
+                <strong id="leaveBalanceUsed">0</strong>
+                <span>Approved Used</span>
+              </div>
+              <div class="workspace-stat-card">
+                <strong id="leaveBalancePending">0</strong>
+                <span>Pending Review</span>
+              </div>
+              <div class="workspace-stat-card">
+                <strong id="leaveBalanceRemaining">8</strong>
+                <span>Available Now</span>
               </div>
             </div>
+            <div class="workspace-note" id="leaveBalanceNote">Your paid leave balance refreshes automatically as requests move through Team Lead and HR approval.</div>
           </div>
         </div>
 
@@ -2493,10 +2680,10 @@
             <i class="fas fa-save"></i> Save Draft
           </button>
           <button class="btn-action btn-email" onclick="emailCurrentDraft()">
-            <i class="fas fa-envelope"></i> Email Manager Draft
+            <i class="fas fa-envelope"></i> Email HR Draft
           </button>
           <button class="btn-action btn-send" onclick="sendReport()">
-            <i class="fas fa-paper-plane"></i> Submit and Email Manager
+            <i class="fas fa-paper-plane"></i> Submit and Email HR
           </button>
           <button class="btn-action btn-history" onclick="toggleHistory()">
             <i class="fas fa-history"></i> View My History
@@ -2540,7 +2727,7 @@
       <aside class="admin-sidebar">
         <div class="sidebar-logo">
           <img class="sidebar-logo-image app-logo" alt="HELP360MD logo" />
-          <div class="sidebar-logo-sub">Admin Dashboard</div>
+          <div class="sidebar-logo-sub">HR and Admin Dashboard</div>
         </div>
 
         <div class="sidebar-section-title">Overview</div>
@@ -2551,21 +2738,26 @@
           <i class="fas fa-tachometer-alt"></i> Productivity
         </button>
 
-        <div class="sidebar-section-title">Team</div>
+        <div class="sidebar-section-title">People</div>
         <button class="sidebar-nav-item" onclick="showAdminPanel('employees', this)">
           <i class="fas fa-users"></i> Employees
         </button>
         <button class="sidebar-nav-item" onclick="showAdminPanel('reports', this)">
-          <i class="fas fa-file-alt"></i> All Reports
+          <i class="fas fa-file-alt"></i> Activity Reports
+        </button>
+
+        <div class="sidebar-section-title">HR</div>
+        <button class="sidebar-nav-item" onclick="showAdminPanel('hr', this)">
+          <i class="fas fa-briefcase"></i> HR Center
         </button>
         <button class="sidebar-nav-item" onclick="showAdminPanel('leave', this)">
-          <i class="fas fa-calendar-check"></i> Leave Requests
-        </button>
-        <button class="sidebar-nav-item" onclick="showAdminPanel('chat', this)">
-          <i class="fas fa-comments"></i> Team Chat
+          <i class="fas fa-calendar-check"></i> Leave Approvals
         </button>
 
         <div class="sidebar-section-title">System</div>
+        <button class="sidebar-nav-item" onclick="showAdminPanel('audit', this)">
+          <i class="fas fa-clock-rotate-left"></i> Audit Log
+        </button>
         <button class="sidebar-nav-item" onclick="showAdminPanel('settings', this)">
           <i class="fas fa-cog"></i> Settings
         </button>
@@ -2578,7 +2770,7 @@
             <div class="sidebar-manager-avatar" id="sidebarManagerAvatar">UM</div>
             <div>
               <div class="sidebar-manager-name" id="sidebarManagerName">Usama Mazar</div>
-              <div class="sidebar-manager-role">Manager · Admin</div>
+              <div class="sidebar-manager-role">HR · Admin</div>
             </div>
           </div>
         </div>
@@ -2588,6 +2780,16 @@
       <div class="admin-content">
         <header class="admin-header">
           <div class="admin-header-title" id="adminHeaderTitle">📊 Dashboard Overview</div>
+          <select class="filter-select mobile-admin-nav" id="adminMobilePanelSelect" onchange="showAdminPanel(this.value)">
+            <option value="dashboard">Overview</option>
+            <option value="productivity">Productivity</option>
+            <option value="employees">Employees</option>
+            <option value="reports">Activity Reports</option>
+            <option value="hr">HR Center</option>
+            <option value="leave">Leave Approvals</option>
+            <option value="audit">Audit Log</option>
+            <option value="settings">Settings</option>
+          </select>
           <div class="admin-header-right">
             <span class="emp-date-badge" id="adminDateBadge"></span>
             <span style="font-size:13px;color:var(--gray-500)" id="adminManagerName">Usama Mazar</span>
@@ -2757,6 +2959,22 @@
                   <input type="text" class="settings-value" id="newEmployeeTitle" value="Medical Billing Specialist" />
                 </div>
                 <div class="settings-item">
+                  <div class="settings-label">Department</div>
+                  <input type="text" class="settings-value" id="newEmployeeDepartment" value="Operations" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Team Lead</div>
+                  <input type="text" class="settings-value" id="newEmployeeTeamLead" value="Usama Mazar" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Joining Date</div>
+                  <input type="date" class="settings-value" id="newEmployeeJoiningDate" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Salary Per Day</div>
+                  <input type="number" class="settings-value" id="newEmployeeSalaryPerDay" value="0" min="0" />
+                </div>
+                <div class="settings-item">
                   <div class="settings-label">Temporary Password</div>
                   <input type="text" class="settings-value" id="newEmployeePassword" value="help360" />
                 </div>
@@ -2776,15 +2994,23 @@
               <select class="filter-select" id="filterEmployee">
                 <option value="">All Employees</option>
               </select>
+              <select class="filter-select" id="filterDepartment">
+                <option value="">All Departments</option>
+              </select>
+              <input type="month" class="filter-input" id="filterMonth" />
               <input type="date" class="filter-input" id="filterDate" />
               <select class="filter-select" id="filterStatus">
                 <option value="">All Status</option>
                 <option value="sent">Sent</option>
-                <option value="saved">Draft Saved</option>
+                <option value="draft">Draft Saved</option>
               </select>
               <button class="btn-filter" onclick="filterReports()"><i class="fas fa-search"></i> Filter</button>
+              <button class="btn-filter" style="background:#0f766e" onclick="refreshCloudReports()"><i class="fas fa-cloud-arrow-down"></i> Refresh Cloud</button>
               <button class="btn-filter" style="background:var(--success)" onclick="exportCSV()"><i class="fas fa-download"></i> Export CSV</button>
+              <button class="btn-filter" style="background:#1d4ed8" onclick="exportReportBundle('excel')"><i class="fas fa-file-excel"></i> Excel</button>
+              <button class="btn-filter" style="background:#7c3aed" onclick="exportReportBundle('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
             </div>
+            <div class="workspace-note">Exports include monthly activity performance, leave balance, payroll impact from No Salary Leave, and attendance days based on submitted reports.</div>
             <div class="logs-table-wrap">
               <table class="logs-table">
                 <thead>
@@ -2837,8 +3063,28 @@
               <div class="employee-admin-header">
                 <div>
                   <div class="chart-card-title">Leave Inbox</div>
-                  <div class="chart-card-sub">Review, approve, or decline employee leave requests with manager notes for clear follow-up.</div>
+                  <div class="chart-card-sub">Review, approve, or decline employee leave requests with HR notes and a live balance snapshot for each employee.</div>
                 </div>
+              </div>
+              <div class="filter-bar">
+                <select class="filter-select" id="leaveFilterEmployee">
+                  <option value="">All Employees</option>
+                </select>
+                <select class="filter-select" id="leaveFilterDepartment">
+                  <option value="">All Departments</option>
+                </select>
+                <input type="month" class="filter-input" id="leaveFilterMonth" />
+                <select class="filter-select" id="leaveFilterType">
+                  <option value="">All Leave Types</option>
+                </select>
+                <select class="filter-select" id="leaveFilterStage">
+                  <option value="">All Workflow Stages</option>
+                  <option value="team_lead">Team Lead Review</option>
+                  <option value="hr">HR Review</option>
+                  <option value="completed">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <button class="btn-filter" onclick="filterLeaveRequests()"><i class="fas fa-search"></i> Filter</button>
               </div>
               <div class="leave-request-list leave-request-admin-list" id="leaveRequestAdminList">
                 <div class="attachment-empty">No leave requests submitted yet.</div>
@@ -2846,52 +3092,156 @@
             </div>
           </div>
 
-          <div class="admin-panel" id="panel-chat">
-            <div class="charts-grid" style="grid-template-columns:0.9fr 1.1fr">
-              <div class="chart-card">
-                <div class="chart-card-header">
+          <div class="admin-panel" id="panel-hr">
+            <div class="stats-grid">
+              <div class="stat-card blue">
+                <div class="stat-icon blue"><i class="fas fa-inbox"></i></div>
+                <div class="stat-value" id="hrPendingApprovals">0</div>
+                <div class="stat-label">Pending Approvals</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Awaiting HR review</div>
+              </div>
+              <div class="stat-card green">
+                <div class="stat-icon green"><i class="fas fa-shield-heart"></i></div>
+                <div class="stat-value" id="hrHealthyBalanceCount">0</div>
+                <div class="stat-label">Healthy Leave Balance</div>
+                <div class="stat-change up"><i class="fas fa-arrow-up"></i> Above 2 days left</div>
+              </div>
+              <div class="stat-card orange">
+                <div class="stat-icon orange"><i class="fas fa-triangle-exclamation"></i></div>
+                <div class="stat-value" id="hrLowBalanceCount">0</div>
+                <div class="stat-label">Low Leave Balance</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> 2 days or less remaining</div>
+              </div>
+              <div class="stat-card purple">
+                <div class="stat-icon purple"><i class="fas fa-wallet"></i></div>
+                <div class="stat-value" id="hrNoSalaryLeaveUnits">0</div>
+                <div class="stat-label">No Salary Leave Units</div>
+                <div class="stat-change up"><i class="fas fa-arrow-up"></i> Approved or pending</div>
+              </div>
+            </div>
+
+            <div class="charts-grid" style="grid-template-columns:1.05fr .95fr">
+              <div class="employee-admin-card">
+                <div class="employee-admin-header">
                   <div>
-                    <div class="chart-card-title">Team Communication Summary</div>
-                    <div class="chart-card-sub">Monitor message volume, active contributors, and the latest conversation pulse.</div>
+                    <div class="chart-card-title">HR Priority Queue</div>
+                    <div class="chart-card-sub">Spot pending approvals, employees who need follow-up, and operational items that need HR attention today.</div>
                   </div>
                 </div>
-                <div class="workspace-stat-grid chat-summary-grid">
-                  <div class="workspace-stat-card">
-                    <strong id="chatSummaryTotal">0</strong>
-                    <span>Total Messages</span>
-                  </div>
-                  <div class="workspace-stat-card">
-                    <strong id="chatSummaryToday">0</strong>
-                    <span>Today</span>
-                  </div>
-                  <div class="workspace-stat-card">
-                    <strong id="chatSummaryPeople">0</strong>
-                    <span>Contributors</span>
-                  </div>
-                  <div class="workspace-stat-card">
-                    <strong id="chatSummaryManager">0</strong>
-                    <span>Manager Posts</span>
-                  </div>
+                <div class="hr-priority-list" id="hrTaskList">
+                  <div class="attachment-empty">HR actions will appear here once employees start using leave and reporting.</div>
                 </div>
-                <div class="workspace-note" id="chatSummaryNote">The latest team communication snapshot will appear here.</div>
               </div>
               <div class="employee-admin-card">
                 <div class="employee-admin-header">
                   <div>
-                    <div class="chart-card-title">Manager Chat Console</div>
-                    <div class="chart-card-sub">Send updates into the shared team chat and keep an eye on ongoing employee conversations.</div>
+                    <div class="chart-card-title">Leave Balance by Employee</div>
+                    <div class="chart-card-sub">See who still has leave available, who is running low, and who is already using No Salary Leave.</div>
                   </div>
                 </div>
-                <div class="chat-message-list admin-chat-list" id="adminChatMessages">
-                  <div class="attachment-empty">No team messages yet.</div>
+                <div class="leave-balance-list" id="hrLeaveBalanceList">
+                  <div class="attachment-empty">Employee leave balances will appear here.</div>
                 </div>
-                <div class="chat-composer">
-                  <textarea class="notes-textarea compact-textarea" id="adminChatInput" placeholder="Share an announcement, answer questions, or post a team update."></textarea>
-                  <div class="chat-composer-actions">
-                    <span class="chat-char-count" id="adminChatCount">0 / 600</span>
-                    <button class="btn-settings-save" type="button" onclick="sendManagerChatMessage()"><i class="fas fa-bullhorn"></i> Send Update</button>
+              </div>
+            </div>
+
+            <div class="charts-grid" style="grid-template-columns:1fr 1fr">
+              <div class="employee-admin-card">
+                <div class="employee-admin-header">
+                  <div>
+                    <div class="chart-card-title">Payroll Impact Summary</div>
+                    <div class="chart-card-sub">Track No Salary Leave units and estimated daily salary deductions for payroll follow-up.</div>
                   </div>
                 </div>
+                <div class="leave-balance-list" id="payrollImpactList">
+                  <div class="attachment-empty">Payroll impact will appear when No Salary Leave requests are submitted.</div>
+                </div>
+              </div>
+              <div class="employee-admin-card">
+                <div class="employee-admin-header">
+                  <div>
+                    <div class="chart-card-title">Post HR Announcement</div>
+                    <div class="chart-card-sub">Send a one-way update to all employees. New announcements replace the old chat experience.</div>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Title</div>
+                  <input type="text" class="settings-value" id="announcementTitle" placeholder="Example: Friday office closure" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Message</div>
+                  <textarea class="notes-textarea compact-textarea" id="announcementBody" placeholder="Write the announcement employees should see."></textarea>
+                </div>
+                <div class="profile-action-row">
+                  <label class="assignment-toggle">
+                    <input type="checkbox" id="announcementPinned" />
+                    <span>Pin this announcement</span>
+                  </label>
+                  <button class="btn-settings-save" type="button" onclick="publishAnnouncement()"><i class="fas fa-bullhorn"></i> Publish</button>
+                </div>
+                <div class="leave-balance-list" id="announcementAdminList">
+                  <div class="attachment-empty">No announcements published yet.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="perf-table-wrap">
+              <div class="perf-table-header">
+                <span class="history-title"><i class="fas fa-user-check" style="color:var(--success);margin-right:8px"></i>Performance and Attendance Snapshot</span>
+              </div>
+              <table class="perf-table">
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Today</th>
+                    <th>Total Tasks</th>
+                    <th>Leave Left</th>
+                    <th>Pending Leave</th>
+                  </tr>
+                </thead>
+                <tbody id="hrPerformanceBody">
+                  <tr><td colspan="5" class="no-data"><i class="fas fa-inbox"></i><br>No employee activity yet</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="admin-panel" id="panel-audit">
+            <div class="employee-admin-card">
+              <div class="employee-admin-header">
+                <div>
+                  <div class="chart-card-title">Audit Log</div>
+                  <div class="chart-card-sub">Track approvals, employee record edits, settings updates, announcement publishing, and other sensitive HR actions.</div>
+                </div>
+              </div>
+              <div class="filter-bar">
+                <select class="filter-select" id="auditFilterScope">
+                  <option value="">All Scopes</option>
+                  <option value="employee">Employee</option>
+                  <option value="leave">Leave</option>
+                  <option value="policy">Policy</option>
+                  <option value="announcement">Announcement</option>
+                  <option value="settings">Settings</option>
+                </select>
+                <input type="date" class="filter-input" id="auditFilterDate" />
+                <button class="btn-filter" onclick="renderAuditLog()"><i class="fas fa-search"></i> Filter</button>
+              </div>
+              <div class="logs-table-wrap">
+                <table class="logs-table">
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Actor</th>
+                      <th>Scope</th>
+                      <th>Action</th>
+                      <th>Employee</th>
+                      <th>Details</th>
+                    </tr>
+                  </thead>
+                  <tbody id="auditLogBody">
+                    <tr><td colspan="6" class="no-data"><i class="fas fa-inbox"></i><br>No audit activity yet</td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -2902,9 +3252,9 @@
               <div class="settings-card">
                 <h3><i class="fas fa-envelope" style="color:var(--primary)"></i> Email Configuration</h3>
                 <div class="settings-item">
-                  <div class="settings-label">Manager Email</div>
-                  <input type="email" class="settings-value" id="settingManagerEmail" value="usama.mazar@help360.com" placeholder="manager@help360.com" />
-                  <div class="settings-hint">Reports will be sent to this email address</div>
+                  <div class="settings-label">HR Notification Email</div>
+                  <input type="email" class="settings-value" id="settingManagerEmail" value="usama.mazar@help360.com" placeholder="hr@help360.com" />
+                  <div class="settings-hint">Reports will be sent to this HR/Admin email address</div>
                 </div>
                 <div class="settings-item">
                   <div class="settings-label">CC Email (optional)</div>
@@ -2928,7 +3278,7 @@
                 <div style="margin-top:16px;padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0">
                   <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px"><i class="fas fa-info-circle"></i> Setup Instructions</div>
                   <div style="font-size:11px;color:#166534;line-height:1.7">
-                    1. Open Google Sheets → Tools → Apps Script<br>
+                    1. Open Google Sheets &gt; Tools &gt; Apps Script<br>
                     2. Paste the provided <strong>doPost()</strong> script<br>
                     3. Deploy as Web App (Anyone can access)<br>
                     4. Copy the URL and paste it above
@@ -2937,14 +3287,39 @@
               </div>
 
               <div class="settings-card">
-                <h3><i class="fas fa-user-shield" style="color:var(--warning)"></i> Manager Access</h3>
+                <h3><i class="fas fa-database" style="color:#0f766e"></i> Live Database Sync</h3>
                 <div class="settings-item">
-                  <div class="settings-label">Manager Display Name</div>
-                  <input type="text" class="settings-value" id="settingManagerName" placeholder="Manager name" />
+                  <div class="settings-label">Supabase Project URL</div>
+                  <input type="url" class="settings-value" id="settingSupabaseUrl" placeholder="https://your-project.supabase.co" />
+                  <div class="settings-hint">Used to push submitted activity reports into a shared online database for HR.</div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Supabase Publishable / Anon Key</div>
+                  <textarea class="notes-textarea compact-textarea" id="settingSupabaseAnonKey" placeholder="Paste the public anon key from Supabase here."></textarea>
+                </div>
+                <div class="employee-form-grid">
+                  <div class="settings-item">
+                    <div class="settings-label">Reports Table Name</div>
+                    <input type="text" class="settings-value" id="settingSupabaseReportsTable" placeholder="activity_reports" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Refresh Every (seconds)</div>
+                    <input type="number" class="settings-value" id="settingCloudRefreshSeconds" min="15" step="5" />
+                  </div>
+                </div>
+                <div class="workspace-note" id="databaseStatusNote">Cloud sync is off until you add your Supabase project URL and anon key.</div>
+                <button class="btn-settings-save" onclick="saveSettings()"><i class="fas fa-cloud"></i> Save Database Settings</button>
+              </div>
+
+              <div class="settings-card">
+                <h3><i class="fas fa-user-shield" style="color:var(--warning)"></i> HR/Admin Access</h3>
+                <div class="settings-item">
+                  <div class="settings-label">HR/Admin Display Name</div>
+                  <input type="text" class="settings-value" id="settingManagerName" placeholder="HR admin name" />
                 </div>
                 <div class="settings-item">
                   <div class="settings-label">Admin Username</div>
-                  <input type="text" class="settings-value" id="settingAdminUser" placeholder="manager.username" />
+                  <input type="text" class="settings-value" id="settingAdminUser" placeholder="hr.admin" />
                 </div>
                 <div class="settings-item">
                   <div class="settings-label">Current Password</div>
@@ -2958,7 +3333,39 @@
                   <div class="settings-label">Confirm New Password</div>
                   <input type="password" class="settings-value" id="settingConfirmAdminPassword" placeholder="Confirm new password" />
                 </div>
-                <button class="btn-settings-save" onclick="saveManagerAccess()"><i class="fas fa-key"></i> Update Manager Access</button>
+                <button class="btn-settings-save" onclick="saveManagerAccess()"><i class="fas fa-key"></i> Update HR/Admin Access</button>
+              </div>
+
+              <div class="settings-card">
+                <h3><i class="fas fa-calendar-days" style="color:var(--accent)"></i> Holiday Calendar and Leave Policy</h3>
+                <div class="settings-item">
+                  <div class="settings-label">Annual Leave Limit</div>
+                  <input type="number" class="settings-value" id="settingLeaveAllowance" min="0" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Carry Forward Limit</div>
+                  <input type="number" class="settings-value" id="settingCarryForwardLimit" min="0" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Leave Reason Categories</div>
+                  <input type="text" class="settings-value" id="settingLeaveCategories" placeholder="Medical, Family, Travel" />
+                  <div class="settings-hint">Separate categories with commas.</div>
+                </div>
+                <div class="employee-form-grid">
+                  <div class="settings-item">
+                    <div class="settings-label">Holiday Name</div>
+                    <input type="text" class="settings-value" id="holidayName" placeholder="Example: Independence Day" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Holiday Date</div>
+                    <input type="date" class="settings-value" id="holidayDate" />
+                  </div>
+                </div>
+                <button class="btn-settings-save" type="button" onclick="addHoliday()"><i class="fas fa-plus"></i> Add Holiday</button>
+                <div class="leave-balance-list" id="holidayList">
+                  <div class="attachment-empty">No company holidays configured yet.</div>
+                </div>
+                <button class="btn-settings-save" onclick="saveLeavePolicies()"><i class="fas fa-save"></i> Save Leave Policies</button>
               </div>
 
               <div class="settings-card">
@@ -2989,6 +3396,12 @@ function doGet() {
   return ContentService
     .createTextOutput("ok");
 }</pre>
+              </div>
+
+              <div class="settings-card">
+                <h3><i class="fas fa-server" style="color:#0f766e"></i> Supabase SQL Template</h3>
+                <div style="font-size:11px;color:var(--gray-600);margin-bottom:10px">Run this in Supabase SQL Editor before using live sync:</div>
+                <pre id="supabaseSqlTemplate" style="background:#0f172a;color:#bbf7d0;padding:14px;border-radius:8px;font-size:10px;overflow-x:auto;line-height:1.6"></pre>
               </div>
             </div>
           </div>
@@ -3029,9 +3442,55 @@ function doGet() {
               <input type="text" class="settings-value" id="editEmployeeTitle" placeholder="Job title" />
             </div>
             <div class="settings-item">
+              <div class="settings-label">Department</div>
+              <input type="text" class="settings-value" id="editEmployeeDepartment" placeholder="Department" />
+            </div>
+            <div class="settings-item">
+              <div class="settings-label">Team Lead</div>
+              <input type="text" class="settings-value" id="editEmployeeTeamLead" placeholder="Team lead name" />
+            </div>
+            <div class="settings-item">
+              <div class="settings-label">Joining Date</div>
+              <input type="date" class="settings-value" id="editEmployeeJoiningDate" />
+            </div>
+            <div class="settings-item">
+              <div class="settings-label">Carry Forward Days</div>
+              <input type="number" class="settings-value" id="editEmployeeCarryForward" min="0" />
+            </div>
+            <div class="settings-item">
+              <div class="settings-label">Salary Per Day</div>
+              <input type="number" class="settings-value" id="editEmployeeSalaryPerDay" min="0" />
+            </div>
+            <div class="settings-item">
+              <div class="settings-label">Monthly KPI Label</div>
+              <input type="text" class="settings-value" id="editEmployeeKpiLabel" placeholder="Monthly Output" />
+            </div>
+            <div class="settings-item">
+              <div class="settings-label">Monthly Target</div>
+              <input type="number" class="settings-value" id="editEmployeeMonthlyTarget" min="0" />
+            </div>
+            <div class="settings-item">
               <div class="settings-label">Password</div>
               <input type="text" class="settings-value" id="editEmployeePassword" placeholder="Reset password" />
             </div>
+          </div>
+          <div class="employee-modal-grid" style="margin-top:14px">
+            <div class="settings-item">
+              <div class="settings-label">Emergency Contact Name</div>
+              <input type="text" class="settings-value" id="editEmployeeEmergencyName" placeholder="Emergency contact name" />
+            </div>
+            <div class="settings-item">
+              <div class="settings-label">Emergency Contact Phone</div>
+              <input type="text" class="settings-value" id="editEmployeeEmergencyPhone" placeholder="Emergency contact phone" />
+            </div>
+          </div>
+          <div class="settings-item" style="margin-top:14px">
+            <div class="settings-label">Bank Details</div>
+            <textarea class="notes-textarea compact-textarea" id="editEmployeeBankDetails" placeholder="Bank name, account reference, or payroll note"></textarea>
+          </div>
+          <div class="settings-item" style="margin-top:14px">
+            <div class="settings-label">Performance Remark</div>
+            <textarea class="notes-textarea compact-textarea" id="editEmployeePerformanceRemark" placeholder="Monthly KPI guidance or HR remark"></textarea>
           </div>
           <div class="employee-admin-header" style="margin-top:18px">
             <div>
@@ -3044,6 +3503,26 @@ function doGet() {
             </div>
           </div>
           <div class="task-checklist" id="employeeTaskChecklist"></div>
+          <div class="employee-admin-header" style="margin-top:18px">
+            <div>
+              <div class="chart-card-title">Employee Documents</div>
+              <div class="chart-card-sub">Store offer letters, ID proof, and other HR documents with the employee profile.</div>
+            </div>
+            <div class="attachment-actions">
+              <select class="settings-value" id="employeeDocType" style="min-width:180px">
+                <option value="Offer Letter">Offer Letter</option>
+                <option value="ID Proof">ID Proof</option>
+                <option value="Joining Form">Joining Form</option>
+                <option value="Bank Proof">Bank Proof</option>
+                <option value="Other">Other</option>
+              </select>
+              <input type="file" id="employeeDocInput" class="hidden" onchange="handleEmployeeDocSelection(event)" />
+              <button class="btn-filter" type="button" onclick="triggerEmployeeDocPicker()"><i class="fas fa-upload"></i> Upload Document</button>
+            </div>
+          </div>
+          <div class="leave-balance-list" id="employeeDocAdminList">
+            <div class="attachment-empty">No employee documents uploaded yet.</div>
+          </div>
           <button class="btn-settings-save" style="margin-top:16px" onclick="saveEmployeeEdits()"><i class="fas fa-save"></i> Save Employee Updates</button>
         </div>
       </div>
@@ -3820,7 +4299,15 @@ function doGet() {
         managerEmail: 'usama.mazar@help360.com',
         ccEmail: '',
         sheetURL: '',
-        sheetID: ''
+        sheetID: '',
+        supabaseUrl: '',
+        supabaseAnonKey: '',
+        supabaseReportsTable: 'activity_reports',
+        cloudRefreshSeconds: 45,
+        leaveAllowance: 8,
+        carryForwardLimit: 4,
+        leaveReasonCategories: ['Medical', 'Family', 'Travel', 'Personal', 'Emergency', 'Other'],
+        companyHolidays: []
       };
       const DEFAULT_MANAGER = {
         name: 'Usama Mazar',
@@ -3832,7 +4319,9 @@ function doGet() {
       const MAX_ATTACHMENT_SIZE = 700 * 1024;
       const MAX_TOTAL_ATTACHMENT_BYTES = 1200 * 1024;
       const MAX_PROFILE_PHOTO_SIZE = 350 * 1024;
-      const MAX_CHAT_MESSAGE_LENGTH = 600;
+      const MAX_EMPLOYEE_DOCS = 6;
+      const MAX_EMPLOYEE_DOC_SIZE = 350 * 1024;
+      const ANNUAL_LEAVE_LIMIT = 8;
 
       const state = {
         settings: null,
@@ -3842,7 +4331,8 @@ function doGet() {
         customResponsibilities: [],
         reports: [],
         leaveRequests: [],
-        chatMessages: [],
+        announcements: [],
+        auditLog: [],
         currentUser: null,
         currentRole: null,
         historyVisible: false,
@@ -3851,7 +4341,12 @@ function doGet() {
         chartInstances: {},
         autoSaveTimer: null,
         toastTimer: null,
-        suspendAutoSave: false
+        suspendAutoSave: false,
+        supabaseClient: null,
+        supabaseConfigKey: '',
+        cloudReportPollTimer: null,
+        lastCloudSyncAt: '',
+        cloudSyncError: ''
       };
 
       function clone(value) {
@@ -4014,6 +4509,320 @@ function doGet() {
         });
       }
 
+      function asNumber(value, fallback) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+      }
+
+      function annualLeaveAllowance() {
+        return Math.max(asNumber(state.settings && state.settings.leaveAllowance, ANNUAL_LEAVE_LIMIT), 0);
+      }
+
+      function carryForwardLimit() {
+        return Math.max(asNumber(state.settings && state.settings.carryForwardLimit, 0), 0);
+      }
+
+      function leaveReasonCategories() {
+        const values = Array.isArray(state.settings && state.settings.leaveReasonCategories)
+          ? state.settings.leaveReasonCategories
+          : [];
+        return values.length ? values : ['Medical', 'Family', 'Travel', 'Personal', 'Emergency', 'Other'];
+      }
+
+      function companyHolidays() {
+        return Array.isArray(state.settings && state.settings.companyHolidays) ? state.settings.companyHolidays : [];
+      }
+
+      function countCompanyHolidaysBetween(startDate, endDate) {
+        if (!startDate) return 0;
+        const start = startDate;
+        const end = endDate || startDate;
+        return companyHolidays().filter((holiday) => holiday.date >= start && holiday.date <= end).length;
+      }
+
+      function monthKey(value) {
+        return String(value || '').slice(0, 7);
+      }
+
+      function sanitizeTableName(value) {
+        const table = String(value || '').trim();
+        return /^[a-zA-Z0-9_]+$/.test(table) ? table : '';
+      }
+
+      function supabaseProjectUrl() {
+        return String(state.settings && state.settings.supabaseUrl || '').trim().replace(/\/+$/, '');
+      }
+
+      function supabaseAnonKey() {
+        return String(state.settings && state.settings.supabaseAnonKey || '').trim();
+      }
+
+      function supabaseReportsTable() {
+        return sanitizeTableName(state.settings && state.settings.supabaseReportsTable) || 'activity_reports';
+      }
+
+      function cloudRefreshSeconds() {
+        return Math.max(asNumber(state.settings && state.settings.cloudRefreshSeconds, 45), 15);
+      }
+
+      function cloudConfigKey() {
+        return `${supabaseProjectUrl()}|${supabaseAnonKey()}|${supabaseReportsTable()}`;
+      }
+
+      function cloudSyncConfigured() {
+        return Boolean(supabaseProjectUrl() && supabaseAnonKey() && supabaseReportsTable());
+      }
+
+      function getSupabaseClient() {
+        if (!cloudSyncConfigured()) return null;
+        if (!window.supabase || typeof window.supabase.createClient !== 'function') return null;
+        const nextKey = cloudConfigKey();
+        if (state.supabaseClient && state.supabaseConfigKey === nextKey) {
+          return state.supabaseClient;
+        }
+        state.supabaseClient = window.supabase.createClient(supabaseProjectUrl(), supabaseAnonKey(), {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false
+          }
+        });
+        state.supabaseConfigKey = nextKey;
+        return state.supabaseClient;
+      }
+
+      function buildDatabaseReportPayload(report) {
+        return {
+          report_id: String(report.id),
+          employee: report.employee,
+          employee_email: report.employeeEmail || '',
+          employee_title: report.employeeTitle || '',
+          department: report.department || 'Operations',
+          report_date: report.date,
+          report_time: report.time || nowTime(),
+          total_tasks: report.totalTasks,
+          total_count: report.totalCount,
+          status: report.status,
+          notes: report.notes || '',
+          email_method: report.emailMethod || '',
+          cc_email: state.settings.ccEmail || '',
+          sheet_synced: Boolean(report.sheetSynced),
+          attachment_count: (report.attachments || []).length,
+          attachment_names: (report.attachments || []).map((attachment) => attachment.name),
+          task_details: report.tasks || {},
+          assigned_responsibilities: report.assignedResponsibilities || [],
+          submitted_at: report.submittedAt || new Date().toISOString()
+        };
+      }
+
+      function normalizeRemoteReportRow(row) {
+        return normalizeReport({
+          id: Number(row && row.report_id) || Number(row && row.id) || Date.now(),
+          employee: String((row && row.employee) || 'Unknown Employee'),
+          employeeEmail: String((row && row.employee_email) || ''),
+          employeeTitle: String((row && row.employee_title) || 'Medical Billing Specialist'),
+          department: String((row && row.department) || 'Operations'),
+          date: String((row && row.report_date) || todayKey()),
+          dateDisplay: String((row && row.report_date) || todayKey()),
+          time: String((row && row.report_time) || ''),
+          tasks: row && typeof row.task_details === 'object' && row.task_details ? row.task_details : {},
+          totalTasks: Number((row && row.total_tasks) || 0),
+          totalCount: Number((row && row.total_count) || 0),
+          notes: String((row && row.notes) || ''),
+          status: String((row && row.status) || 'sent'),
+          attachments: [],
+          attachmentNames: Array.isArray(row && row.attachment_names) ? row.attachment_names : [],
+          assignedResponsibilities: Array.isArray(row && row.assigned_responsibilities) ? row.assigned_responsibilities : [],
+          emailMethod: String((row && row.email_method) || 'mailto'),
+          sheetSynced: Boolean(row && row.sheet_synced),
+          databaseSynced: true,
+          databaseSyncedAt: String((row && (row.submitted_at || row.created_at || row.updated_at)) || new Date().toISOString()),
+          remoteRowId: String((row && row.id) || ''),
+          databaseSource: 'supabase',
+          submittedAt: String((row && (row.submitted_at || row.created_at || row.updated_at)) || new Date().toISOString())
+        });
+      }
+
+      function mergeRemoteReports(remoteReports) {
+        const merged = new Map();
+        [...state.reports, ...remoteReports].forEach((report) => {
+          const key = String(report.id || report.remoteRowId || createId('report'));
+          const existing = merged.get(key);
+          if (!existing) {
+            merged.set(key, report);
+            return;
+          }
+          const next = Object.assign({}, existing, report);
+          if ((!report.attachments || !report.attachments.length) && existing.attachments && existing.attachments.length) {
+            next.attachments = existing.attachments.map((attachment) => Object.assign({}, attachment));
+          }
+          if ((!report.attachmentNames || !report.attachmentNames.length) && next.attachments && next.attachments.length) {
+            next.attachmentNames = next.attachments.map((attachment) => attachment.name);
+          }
+          merged.set(key, next);
+        });
+        state.reports = [...merged.values()]
+          .sort((left, right) => Number(right.id) - Number(left.id))
+          .slice(0, 320);
+      }
+
+      function cloudStatusMessage() {
+        if (!cloudSyncConfigured()) {
+          return { tone: '', text: 'Cloud sync is off until you add your Supabase project URL and anon key.' };
+        }
+        if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+          return { tone: 'alert', text: 'Supabase client library is not loaded yet. Refresh the page after saving database settings.' };
+        }
+        if (state.cloudSyncError) {
+          return { tone: 'alert', text: `Cloud sync needs attention: ${state.cloudSyncError}` };
+        }
+        if (state.lastCloudSyncAt) {
+          return { tone: 'success', text: `Cloud sync is active. Last shared refresh: ${formatTimestamp(state.lastCloudSyncAt)}.` };
+        }
+        return { tone: 'success', text: 'Cloud sync is configured. The app will refresh shared reports automatically.' };
+      }
+
+      function updateCloudStatusNote() {
+        const node = document.getElementById('databaseStatusNote');
+        if (!node) return;
+        const status = cloudStatusMessage();
+        node.textContent = status.text;
+        node.classList.remove('alert', 'success');
+        if (status.tone) node.classList.add(status.tone);
+      }
+
+      function clearCloudReportPolling() {
+        if (state.cloudReportPollTimer) {
+          clearInterval(state.cloudReportPollTimer);
+          state.cloudReportPollTimer = null;
+        }
+      }
+
+      async function syncReportToDatabase(report) {
+        const client = getSupabaseClient();
+        if (!client) {
+          report.databaseSynced = false;
+          report.databaseSource = 'local';
+          report.databaseSyncError = cloudSyncConfigured() ? 'Cloud client unavailable.' : 'Cloud sync not configured.';
+          updateCloudStatusNote();
+          return { ok: false, reason: report.databaseSyncError };
+        }
+        try {
+          const { data, error } = await client
+            .from(supabaseReportsTable())
+            .insert(buildDatabaseReportPayload(report))
+            .select('id, report_id, submitted_at');
+          if (error) {
+            if (error.code === '23505') {
+              report.databaseSynced = true;
+              report.databaseSource = 'supabase';
+              report.databaseSyncError = '';
+              report.databaseSyncedAt = new Date().toISOString();
+              state.lastCloudSyncAt = report.databaseSyncedAt;
+              state.cloudSyncError = '';
+              updateCloudStatusNote();
+              return { ok: true, row: null };
+            }
+            throw error;
+          }
+          const row = Array.isArray(data) ? data[0] : null;
+          report.databaseSynced = true;
+          report.databaseSource = 'supabase';
+          report.databaseSyncError = '';
+          report.databaseSyncedAt = new Date().toISOString();
+          report.remoteRowId = row && row.id ? String(row.id) : report.remoteRowId;
+          state.lastCloudSyncAt = report.databaseSyncedAt;
+          state.cloudSyncError = '';
+          updateCloudStatusNote();
+          return { ok: true, row };
+        } catch (error) {
+          const message = error && error.message ? error.message : 'Database sync failed.';
+          report.databaseSynced = false;
+          report.databaseSource = 'local';
+          report.databaseSyncError = message;
+          state.cloudSyncError = message;
+          updateCloudStatusNote();
+          return { ok: false, reason: message };
+        }
+      }
+
+      async function refreshCloudReportsFromDatabase(options) {
+        const config = Object.assign({ silent: false }, options || {});
+        const client = getSupabaseClient();
+        if (!client) {
+          updateCloudStatusNote();
+          return false;
+        }
+        try {
+          const { data, error } = await client
+            .from(supabaseReportsTable())
+            .select('*')
+            .order('submitted_at', { ascending: false })
+            .limit(320);
+          if (error) throw error;
+          const remoteReports = (data || []).map(normalizeRemoteReportRow);
+          mergeRemoteReports(remoteReports);
+          persistReports();
+          state.lastCloudSyncAt = new Date().toISOString();
+          state.cloudSyncError = '';
+          updateAdminStats();
+          renderAllReports();
+          renderHistoryTable();
+          renderEmployeeCards();
+          renderHrPanel();
+          if (state.currentRole === 'employee' && state.currentUser) {
+            renderWorkspaceSnapshot();
+          }
+          updateCloudStatusNote();
+          if (!config.silent) {
+            showToast('Shared cloud reports refreshed.', 'success');
+          }
+          return true;
+        } catch (error) {
+          state.cloudSyncError = error && error.message ? error.message : 'Unable to refresh shared reports.';
+          updateCloudStatusNote();
+          if (!config.silent) {
+            showToast(state.cloudSyncError, 'error');
+          }
+          return false;
+        }
+      }
+
+      function setupCloudReportSync() {
+        clearCloudReportPolling();
+        if (!cloudSyncConfigured()) {
+          state.cloudSyncError = '';
+          state.lastCloudSyncAt = '';
+          updateCloudStatusNote();
+          return;
+        }
+        updateCloudStatusNote();
+        refreshCloudReportsFromDatabase({ silent: true });
+        state.cloudReportPollTimer = setInterval(() => {
+          refreshCloudReportsFromDatabase({ silent: true });
+        }, cloudRefreshSeconds() * 1000);
+      }
+
+      function createAuditEntry(action, meta) {
+        return {
+          id: createId('audit'),
+          action: String(action || 'System Update'),
+          actor: state.currentRole === 'admin'
+            ? (state.manager && state.manager.name) || 'HR / Admin'
+            : (state.currentUser || 'System'),
+          actorRole: state.currentRole || 'system',
+          details: String((meta && meta.details) || '').trim(),
+          employeeName: String((meta && meta.employeeName) || '').trim(),
+          scope: String((meta && meta.scope) || 'general').trim(),
+          createdAt: new Date().toISOString()
+        };
+      }
+
+      function logAudit(action, meta) {
+        state.auditLog.unshift(createAuditEntry(action, meta));
+        state.auditLog = state.auditLog.slice(0, 300);
+        persistAuditLog();
+      }
+
       function leaveStatusLabel(status) {
         const normalized = String(status || 'pending').toLowerCase();
         if (normalized === 'approved') return 'Approved';
@@ -4024,6 +4833,81 @@ function doGet() {
       function leaveStatusPill(status) {
         const normalized = String(status || 'pending').toLowerCase();
         return `<span class="status-pill ${normalized}">${escapeHtml(leaveStatusLabel(normalized))}</span>`;
+      }
+
+      function leaveWorkflowLabel(workflowStage) {
+        const stage = String(workflowStage || 'team_lead').toLowerCase();
+        if (stage === 'hr') return 'HR Review';
+        if (stage === 'completed') return 'Fully Approved';
+        if (stage === 'rejected') return 'Rejected';
+        return 'Team Lead Review';
+      }
+
+      function normalizeLeaveType(leaveType) {
+        return String(leaveType || 'Annual Leave').trim().toLowerCase();
+      }
+
+      function leaveConsumesBalance(leaveType) {
+        const normalized = normalizeLeaveType(leaveType);
+        return normalized !== 'work from home' && normalized !== 'no salary leave';
+      }
+
+      function isNoSalaryLeave(leaveType) {
+        return normalizeLeaveType(leaveType) === 'no salary leave';
+      }
+
+      function getLeaveUnits(startDate, endDate, leaveType) {
+        if (!startDate) return 0;
+        if (normalizeLeaveType(leaveType) === 'half day') return 0.5;
+        const start = new Date(`${startDate}T00:00:00`);
+        const end = new Date(`${(endDate || startDate)}T00:00:00`);
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 1;
+        const days = Math.floor((end - start) / 86400000) + 1;
+        const adjusted = days - countCompanyHolidaysBetween(startDate, endDate || startDate);
+        return Math.max(adjusted, 0);
+      }
+
+      function formatLeaveUnits(units) {
+        const value = Math.max(Number(units) || 0, 0);
+        const display = Number.isInteger(value) ? String(value) : value.toFixed(1);
+        return `${display} ${value === 1 ? 'day' : 'days'}`;
+      }
+
+      function getLeaveBalanceYear(dateValue) {
+        const parsed = String(dateValue || todayKey()).slice(0, 4);
+        return Number(parsed) || new Date().getFullYear();
+      }
+
+      function getEmployeeLeaveBalance(employeeName, year) {
+        const targetYear = Number(year) || new Date().getFullYear();
+        const employee = getEmployeeByName(employeeName);
+        const carryForward = Math.min(Math.max(asNumber(employee && employee.carryForwardDays, 0), 0), carryForwardLimit());
+        const allowance = annualLeaveAllowance() + carryForward;
+        const summary = {
+          year: targetYear,
+          baseAllowance: annualLeaveAllowance(),
+          carryForward,
+          allowance,
+          approvedUnits: 0,
+          pendingUnits: 0,
+          remaining: allowance,
+          unpaidUnits: 0
+        };
+
+        state.leaveRequests.forEach((request) => {
+          if (request.employeeName !== employeeName || getLeaveBalanceYear(request.startDate) !== targetYear) return;
+          const units = getLeaveUnits(request.startDate, request.endDate, request.leaveType);
+          if (isNoSalaryLeave(request.leaveType) && request.status !== 'rejected') {
+            summary.unpaidUnits += units;
+            return;
+          }
+          if (!leaveConsumesBalance(request.leaveType)) return;
+          if (request.status === 'approved') summary.approvedUnits += units;
+          if (request.status === 'pending') summary.pendingUnits += units;
+        });
+
+        summary.remaining = Math.max(summary.allowance - summary.approvedUnits - summary.pendingUnits, 0);
+        return summary;
       }
 
       function getEmployeeByName(name) {
@@ -4045,6 +4929,67 @@ function doGet() {
 
       function currentEmployeeRecord() {
         return state.currentUser ? getEmployeeByName(state.currentUser) : null;
+      }
+
+      function departmentOptions() {
+        return [...new Set(state.employees.map((employee) => employee.department).filter(Boolean))].sort((left, right) => left.localeCompare(right));
+      }
+
+      function teamLeadOptions(currentEmployeeId) {
+        return [...new Set([
+          DEFAULT_MANAGER.name,
+          ...state.employees
+            .filter((employee) => employee.id !== currentEmployeeId)
+            .map((employee) => employee.name)
+        ])];
+      }
+
+      function sortedAnnouncements() {
+        return [...state.announcements].sort((left, right) => {
+          if (left.pinned !== right.pinned) return left.pinned ? -1 : 1;
+          return new Date(right.createdAt) - new Date(left.createdAt);
+        });
+      }
+
+      function getEmployeeMonthReports(employeeName, month) {
+        return state.reports.filter((report) => report.employee === employeeName && monthKey(report.date) === monthKey(month || todayKey()));
+      }
+
+      function getEmployeeAttendanceDays(employeeName, month) {
+        return new Set(getEmployeeMonthReports(employeeName, month).map((report) => report.date)).size;
+      }
+
+      function getEmployeeMonthPerformance(employeeName, month) {
+        const employee = getEmployeeByName(employeeName);
+        const reports = getEmployeeMonthReports(employeeName, month);
+        const achieved = reports.reduce((sum, report) => sum + report.totalCount, 0);
+        const target = Math.max(asNumber(employee && employee.monthlyTarget, 0), 0);
+        return {
+          target,
+          achieved,
+          progress: target ? Math.min(Math.round((achieved / target) * 100), 999) : 0,
+          remark: employee ? employee.performanceRemark : '',
+          label: employee ? employee.kpiLabel : 'Monthly Output'
+        };
+      }
+
+      function getEmployeeNoSalaryUnits(employeeName, month) {
+        return state.leaveRequests.reduce((sum, request) => {
+          if (request.employeeName !== employeeName || isNoSalaryLeave(request.leaveType) === false || request.status === 'rejected') return sum;
+          if (month && monthKey(request.startDate) !== monthKey(month)) return sum;
+          return sum + getLeaveUnits(request.startDate, request.endDate, request.leaveType);
+        }, 0);
+      }
+
+      function getEmployeePayrollImpact(employeeName, month) {
+        const employee = getEmployeeByName(employeeName);
+        const salaryPerDay = Math.max(asNumber(employee && employee.salaryPerDay, 0), 0);
+        const unpaidUnits = getEmployeeNoSalaryUnits(employeeName, month);
+        return {
+          unpaidUnits,
+          salaryPerDay,
+          deduction: Number((unpaidUnits * salaryPerDay).toFixed(2))
+        };
       }
 
       function avatarMarkup(employee, className, inlineStyle) {
@@ -4086,11 +5031,7 @@ function doGet() {
       function countUpcomingLeaveDays() {
         return state.leaveRequests.reduce((sum, request) => {
           if (request.status !== 'approved' || request.endDate < todayKey()) return sum;
-          const start = new Date(`${request.startDate}T00:00:00`);
-          const end = new Date(`${request.endDate}T00:00:00`);
-          if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return sum + 1;
-          const days = Math.floor((end - start) / 86400000) + 1;
-          return sum + Math.max(days, 1);
+          return sum + getLeaveUnits(request.startDate, request.endDate, request.leaveType);
         }, 0);
       }
 
@@ -4172,6 +5113,8 @@ function doGet() {
           name,
           email: String((employee && employee.email) || generateWorkEmail(name)).trim(),
           title: String((employee && employee.title) || 'Medical Billing Specialist').trim(),
+          department: String((employee && employee.department) || 'Operations').trim(),
+          teamLead: String((employee && employee.teamLead) || DEFAULT_MANAGER.name).trim(),
           photoDataUrl: employee && (employee.photoDataUrl || employee.photo)
             ? String(employee.photoDataUrl || employee.photo)
             : '',
@@ -4179,7 +5122,16 @@ function doGet() {
             ? [...new Set(employee.responsibilities)]
             : null,
           joinedAt: String((employee && employee.joinedAt) || todayKey()),
-          status: String((employee && employee.status) || 'Active')
+          status: String((employee && employee.status) || 'Active'),
+          carryForwardDays: Math.min(Math.max(asNumber(employee && employee.carryForwardDays, 0), 0), carryForwardLimit()),
+          salaryPerDay: Math.max(asNumber(employee && employee.salaryPerDay, 0), 0),
+          monthlyTarget: Math.max(asNumber(employee && employee.monthlyTarget, 120), 0),
+          kpiLabel: String((employee && employee.kpiLabel) || 'Monthly Output').trim(),
+          performanceRemark: String((employee && employee.performanceRemark) || '').trim(),
+          emergencyContactName: String((employee && employee.emergencyContactName) || '').trim(),
+          emergencyContactPhone: String((employee && employee.emergencyContactPhone) || '').trim(),
+          bankDetails: String((employee && employee.bankDetails) || '').trim(),
+          documents: Array.isArray(employee && employee.documents) ? employee.documents.map(normalizeAttachment) : []
         };
       }
 
@@ -4189,6 +5141,7 @@ function doGet() {
           name: String((attachment && attachment.name) || 'Attachment'),
           size: Number((attachment && attachment.size) || 0),
           type: String((attachment && attachment.type) || 'application/octet-stream'),
+          kind: String((attachment && attachment.kind) || '').trim(),
           dataUrl: attachment && attachment.dataUrl ? String(attachment.dataUrl) : null,
           storageOmitted: Boolean(attachment && attachment.storageOmitted)
         };
@@ -4196,11 +5149,15 @@ function doGet() {
 
       function normalizeReport(report) {
         const employee = getEmployeeByName(report.employee);
+        const reportStatus = String(report.status || 'sent').trim().toLowerCase() === 'saved'
+          ? 'draft'
+          : String(report.status || 'sent').trim().toLowerCase();
         return {
-          id: Number(report.id) || Date.now(),
+          id: Number(report.id || report.reportId) || Date.now(),
           employee: String(report.employee || 'Unknown Employee'),
           employeeEmail: String(report.employeeEmail || (employee ? employee.email : '')),
           employeeTitle: String(report.employeeTitle || (employee ? employee.title : 'Medical Billing Specialist')),
+          department: String(report.department || (employee ? employee.department : 'Operations')),
           date: String(report.date || todayKey()),
           dateDisplay: String(report.dateDisplay || report.date || todayStr()),
           time: String(report.time || ''),
@@ -4208,11 +5165,18 @@ function doGet() {
           totalTasks: Number(report.totalTasks) || Object.keys(report.tasks || {}).length,
           totalCount: Number(report.totalCount) || Object.values(report.tasks || {}).reduce((sum, value) => sum + Number(value || 0), 0),
           notes: String(report.notes || ''),
-          status: String(report.status || 'sent'),
+          status: reportStatus === 'draft' ? 'draft' : 'sent',
           attachments: Array.isArray(report.attachments) ? report.attachments.map(normalizeAttachment) : [],
+          attachmentNames: Array.isArray(report.attachmentNames) ? report.attachmentNames : [],
           assignedResponsibilities: Array.isArray(report.assignedResponsibilities) ? [...new Set(report.assignedResponsibilities)] : [],
           emailMethod: String(report.emailMethod || ''),
-          sheetSynced: Boolean(report.sheetSynced)
+          sheetSynced: Boolean(report.sheetSynced),
+          databaseSynced: Boolean(report.databaseSynced),
+          databaseSyncError: String(report.databaseSyncError || ''),
+          databaseSyncedAt: String(report.databaseSyncedAt || ''),
+          databaseSource: String(report.databaseSource || 'local'),
+          remoteRowId: String(report.remoteRowId || ''),
+          submittedAt: String(report.submittedAt || new Date().toISOString())
         };
       }
 
@@ -4225,25 +5189,48 @@ function doGet() {
           employeeName: String((request && (request.employeeName || request.employee)) || (employee ? employee.name : 'Unknown Employee')).trim(),
           employeeEmail: String((request && request.employeeEmail) || (employee ? employee.email : '')).trim(),
           employeeTitle: String((request && request.employeeTitle) || (employee ? employee.title : 'Medical Billing Specialist')).trim(),
+          department: String((request && request.department) || (employee ? employee.department : 'Operations')).trim(),
           startDate: String((request && request.startDate) || todayKey()),
           endDate: String((request && request.endDate) || (request && request.startDate) || todayKey()),
-          leaveType: String((request && request.leaveType) || 'Paid Leave').trim(),
+          leaveType: String((request && request.leaveType) || 'Annual Leave').trim(),
+          reasonCategory: String((request && request.reasonCategory) || 'Other').trim(),
           coverage: String((request && request.coverage) || '').trim(),
           reason: String((request && request.reason) || '').trim(),
           status: ['approved', 'rejected', 'pending'].includes(status) ? status : 'pending',
           managerNote: String((request && request.managerNote) || '').trim(),
+          teamLeadName: String((request && request.teamLeadName) || (employee ? employee.teamLead : DEFAULT_MANAGER.name)).trim(),
+          workflowStage: String((request && request.workflowStage) || (status === 'approved' ? 'completed' : status === 'rejected' ? 'rejected' : 'team_lead')).trim(),
+          teamLeadStatus: String((request && request.teamLeadStatus) || (status === 'approved' ? 'approved' : status === 'rejected' && String((request && request.rejectedByRole) || '') === 'team_lead' ? 'rejected' : 'pending')).trim(),
+          teamLeadReviewedAt: String((request && request.teamLeadReviewedAt) || '').trim(),
+          hrStatus: String((request && request.hrStatus) || (status === 'approved' ? 'approved' : status === 'rejected' && String((request && request.rejectedByRole) || '') === 'hr' ? 'rejected' : 'waiting')).trim(),
+          hrReviewedAt: String((request && request.hrReviewedAt) || '').trim(),
+          rejectedByRole: String((request && request.rejectedByRole) || '').trim(),
           submittedAt: String((request && request.submittedAt) || new Date().toISOString()),
           reviewedAt: String((request && request.reviewedAt) || '')
         };
       }
 
-      function normalizeChatMessage(message) {
+      function normalizeAnnouncement(announcement) {
         return {
-          id: String((message && message.id) || createId('chat')),
-          authorName: String((message && message.authorName) || 'Unknown User').trim(),
-          authorRole: String((message && message.authorRole) || 'employee').trim(),
-          text: String((message && message.text) || '').trim().slice(0, MAX_CHAT_MESSAGE_LENGTH),
-          createdAt: String((message && message.createdAt) || new Date().toISOString())
+          id: String((announcement && announcement.id) || createId('notice')),
+          title: String((announcement && announcement.title) || 'HR Update').trim(),
+          body: String((announcement && announcement.body) || '').trim(),
+          pinned: Boolean(announcement && announcement.pinned),
+          createdAt: String((announcement && announcement.createdAt) || new Date().toISOString()),
+          author: String((announcement && announcement.author) || (state.manager && state.manager.name) || 'HR / Admin').trim()
+        };
+      }
+
+      function normalizeAuditEntry(entry) {
+        return {
+          id: String((entry && entry.id) || createId('audit')),
+          action: String((entry && entry.action) || 'System Update').trim(),
+          actor: String((entry && entry.actor) || 'System').trim(),
+          actorRole: String((entry && entry.actorRole) || 'system').trim(),
+          details: String((entry && entry.details) || '').trim(),
+          employeeName: String((entry && entry.employeeName) || '').trim(),
+          scope: String((entry && entry.scope) || 'general').trim(),
+          createdAt: String((entry && entry.createdAt) || new Date().toISOString())
         };
       }
 
@@ -4272,9 +5259,9 @@ function doGet() {
         state.leaveRequests = loadJSON('h360_leave_requests', [])
           .map(normalizeLeaveRequest)
           .filter((request) => request.employeeName);
-        state.chatMessages = loadJSON('h360_team_chat', [])
-          .map(normalizeChatMessage)
-          .filter((message) => message.text);
+        state.announcements = loadJSON('h360_announcements', []).map(normalizeAnnouncement);
+        state.auditLog = loadJSON('h360_audit_log', []).map(normalizeAuditEntry);
+        localStorage.removeItem('h360_team_chat');
       }
 
       function persistEmployees() {
@@ -4297,9 +5284,12 @@ function doGet() {
         localStorage.setItem('h360_leave_requests', JSON.stringify(state.leaveRequests));
       }
 
-      function persistChatMessages() {
-        state.chatMessages = state.chatMessages.slice(-250);
-        localStorage.setItem('h360_team_chat', JSON.stringify(state.chatMessages));
+      function persistAnnouncements() {
+        localStorage.setItem('h360_announcements', JSON.stringify(state.announcements));
+      }
+
+      function persistAuditLog() {
+        localStorage.setItem('h360_audit_log', JSON.stringify(state.auditLog));
       }
 
       function persistSettings() {
@@ -4312,6 +5302,7 @@ function doGet() {
           name: attachment.name,
           size: attachment.size,
           type: attachment.type,
+          kind: attachment.kind || '',
           dataUrl: null,
           storageOmitted: true
         };
@@ -4435,7 +5426,7 @@ function doGet() {
         if (sidebarName) sidebarName.textContent = state.manager.name;
         if (sidebarAvatar) sidebarAvatar.textContent = initials(state.manager.name);
         if (headerName) headerName.textContent = state.manager.name;
-        if (roleLabel) roleLabel.textContent = 'Manager / Admin';
+        if (roleLabel) roleLabel.textContent = 'HR / Admin';
         const adminUserInput = document.getElementById('adminUser');
         if (adminUserInput) adminUserInput.placeholder = state.manager.user;
       }
@@ -4463,8 +5454,21 @@ function doGet() {
           }
         }
 
+        const leaveFilterSelect = document.getElementById('leaveFilterEmployee');
+        if (leaveFilterSelect) {
+          const filterValue = leaveFilterSelect.value;
+          leaveFilterSelect.innerHTML = [
+            '<option value="">All Employees</option>',
+            ...state.employees.map((employee) => `<option value="${escapeHtml(employee.name)}">${escapeHtml(employee.name)}</option>`)
+          ].join('');
+          if (employeeNames().includes(filterValue)) {
+            leaveFilterSelect.value = filterValue;
+          }
+        }
+
         const statNode = document.getElementById('statTotalEmp');
         if (statNode) statNode.textContent = String(state.employees.length);
+        renderFilterOptions();
       }
 
       function renderAssignedTaskChips(tasks) {
@@ -4493,7 +5497,7 @@ function doGet() {
           row.style.display = showOnly && !isAssigned ? 'none' : 'flex';
         });
         document.getElementById('assignedTaskSummary').textContent = assignedTasks.length
-          ? `${assignedTasks.length} responsibility tasks assigned by your manager.`
+          ? `${assignedTasks.length} responsibility tasks assigned by HR/Admin.`
           : 'No responsibilities are assigned yet.';
         renderAssignedTaskChips(assignedTasks);
       }
@@ -4508,8 +5512,13 @@ function doGet() {
         applyAssignedTaskState();
         renderEmployeeProfileSurface();
         renderWorkspaceSnapshot();
+        renderEmployeeAnnouncementsAndHolidays();
+        renderEmployeeGoalTracker();
+        renderEmployeeDossier();
+        renderEmployeePolicySummary();
+        renderEmployeeLeaveBalance();
         renderEmployeeLeaveRequests();
-        renderChatPanels();
+        renderLeaveRequestPreview();
       }
 
       function collectFormData() {
@@ -4641,20 +5650,22 @@ function doGet() {
         const leaveRequests = getEmployeeLeaveRequests(employee.name);
         const pendingLeaves = leaveRequests.filter((request) => request.status === 'pending').length;
         const assignedCount = (employee.responsibilities || []).length;
-        const totalMessages = state.chatMessages.length;
+        const leaveBalance = getEmployeeLeaveBalance(employee.name);
         const attachmentCount = state.currentAttachments.length;
         document.getElementById('workspaceAssignedCount').textContent = String(assignedCount);
         document.getElementById('workspacePendingLeaveCount').textContent = String(pendingLeaves);
-        document.getElementById('workspaceChatCount').textContent = String(totalMessages);
+        document.getElementById('workspaceAvailableLeaveCount').textContent = String(leaveBalance.remaining);
         document.getElementById('workspaceAttachmentCount').textContent = String(attachmentCount);
         const snapshotNote = document.getElementById('workspaceSnapshotNote');
         if (!snapshotNote) return;
         if (!employee.photoDataUrl) {
           snapshotNote.textContent = 'Upload your passport photo to complete your employee profile.';
+        } else if (leaveBalance.remaining <= 0) {
+          snapshotNote.textContent = `Your ${leaveBalance.year} paid leave balance is fully used or reserved. Select No Salary Leave for new requests.`;
         } else if (pendingLeaves) {
-          snapshotNote.textContent = `${pendingLeaves} leave request${pendingLeaves === 1 ? '' : 's'} awaiting manager review.`;
-        } else if (state.chatMessages.length) {
-          snapshotNote.textContent = `Latest team message posted ${formatTimestamp(state.chatMessages[state.chatMessages.length - 1].createdAt)}.`;
+          snapshotNote.textContent = `${pendingLeaves} leave request${pendingLeaves === 1 ? '' : 's'} awaiting HR review.`;
+        } else if (leaveBalance.remaining <= 2) {
+          snapshotNote.textContent = `Only ${formatLeaveUnits(leaveBalance.remaining)} remain in your ${leaveBalance.year} paid leave balance.`;
         } else {
           snapshotNote.textContent = 'Your daily workspace summary updates automatically as you work.';
         }
@@ -4674,19 +5685,319 @@ function doGet() {
             <div class="leave-card-top">
               <div>
                 <div class="leave-card-title">${escapeHtml(request.leaveType)}</div>
-                <div class="leave-meta">${escapeHtml(formatDateRange(request.startDate, request.endDate))} | Submitted ${escapeHtml(formatTimestamp(request.submittedAt))}</div>
+                <div class="leave-meta">${escapeHtml(formatDateRange(request.startDate, request.endDate))} | ${escapeHtml(request.reasonCategory || 'Other')} | ${escapeHtml(formatLeaveUnits(getLeaveUnits(request.startDate, request.endDate, request.leaveType)))} | Submitted ${escapeHtml(formatTimestamp(request.submittedAt))}</div>
               </div>
-              ${leaveStatusPill(request.status)}
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                ${leaveStatusPill(request.status)}
+                <span class="metric-chip">${escapeHtml(leaveWorkflowLabel(request.workflowStage))}</span>
+              </div>
             </div>
             <div class="leave-reason">${escapeHtml(request.reason || 'No reason provided.')}</div>
             ${request.coverage ? `<div class="leave-note">Coverage: ${escapeHtml(request.coverage)}</div>` : ''}
-            ${request.managerNote ? `<div class="leave-note">Manager note: ${escapeHtml(request.managerNote)}</div>` : ''}
+            <div class="leave-note">Team Lead: ${escapeHtml(request.teamLeadName || DEFAULT_MANAGER.name)} | Team Lead status: ${escapeHtml(request.teamLeadStatus)} | HR status: ${escapeHtml(request.hrStatus)}</div>
+            ${request.managerNote ? `<div class="leave-note">HR note: ${escapeHtml(request.managerNote)}</div>` : ''}
           </div>
         `).join('');
       }
 
+      function renderEmployeeLeaveBalance() {
+        const employee = currentEmployeeRecord();
+        if (!employee) return;
+        const balance = getEmployeeLeaveBalance(employee.name);
+        const limitNode = document.getElementById('leaveBalanceLimit');
+        const usedNode = document.getElementById('leaveBalanceUsed');
+        const pendingNode = document.getElementById('leaveBalancePending');
+        const remainingNode = document.getElementById('leaveBalanceRemaining');
+        const noteNode = document.getElementById('leaveBalanceNote');
+        if (limitNode) limitNode.textContent = String(balance.allowance);
+        if (usedNode) usedNode.textContent = String(balance.approvedUnits);
+        if (pendingNode) pendingNode.textContent = String(balance.pendingUnits);
+        if (remainingNode) remainingNode.textContent = String(balance.remaining);
+        if (noteNode) {
+          noteNode.classList.remove('alert', 'success');
+          if (balance.remaining <= 0) {
+            noteNode.textContent = `Your ${balance.year} paid leave balance is fully used or reserved. Use No Salary Leave for new requests.`;
+            noteNode.classList.add('alert');
+          } else if (balance.remaining <= 2) {
+            noteNode.textContent = `Only ${formatLeaveUnits(balance.remaining)} remain in ${balance.year}. Plan the next request carefully.`;
+            noteNode.classList.add('alert');
+          } else {
+            noteNode.textContent = `${formatLeaveUnits(balance.approvedUnits)} approved, ${formatLeaveUnits(balance.pendingUnits)} pending, and ${formatLeaveUnits(balance.remaining)} still available in ${balance.year}.`;
+            noteNode.classList.add('success');
+          }
+        }
+      }
+
+      function renderEmployeeAnnouncementsAndHolidays() {
+        const announcementList = document.getElementById('employeeAnnouncementList');
+        if (announcementList) {
+          const notices = sortedAnnouncements().slice(0, 4);
+          if (!notices.length) {
+            announcementList.innerHTML = '<div class="attachment-empty">No HR announcements yet.</div>';
+          } else {
+            announcementList.innerHTML = notices.map((notice) => `
+              <div class="leave-balance-item">
+                <div>
+                  <div class="custom-responsibility-name">${escapeHtml(notice.title)}</div>
+                  <div class="leave-balance-meta">${escapeHtml(formatTimestamp(notice.createdAt))} | ${escapeHtml(notice.author)}</div>
+                  <div class="leave-reason">${escapeHtml(notice.body || 'No announcement details provided.')}</div>
+                </div>
+                <span class="metric-chip ${notice.pinned ? 'success' : ''}">${notice.pinned ? 'Pinned' : 'Notice'}</span>
+              </div>
+            `).join('');
+          }
+        }
+
+        const holidayNode = document.getElementById('upcomingHolidayList');
+        if (holidayNode) {
+          const today = todayKey();
+          const upcoming = companyHolidays().filter((holiday) => holiday.date >= today).sort((left, right) => left.date.localeCompare(right.date)).slice(0, 4);
+          holidayNode.classList.remove('alert', 'success');
+          if (!upcoming.length) {
+            holidayNode.textContent = 'No company holidays configured yet.';
+          } else {
+            holidayNode.textContent = `Upcoming holidays: ${upcoming.map((holiday) => `${holiday.name} (${formatShortDate(holiday.date)})`).join(' • ')}.`;
+            holidayNode.classList.add('success');
+          }
+        }
+      }
+
+      function renderEmployeeGoalTracker() {
+        const employee = currentEmployeeRecord();
+        if (!employee) return;
+        const performance = getEmployeeMonthPerformance(employee.name, todayKey());
+        const targetNode = document.getElementById('employeeKpiTarget');
+        const achievedNode = document.getElementById('employeeKpiAchieved');
+        const progressNode = document.getElementById('employeeKpiProgress');
+        const attendanceNode = document.getElementById('employeeAttendanceDays');
+        const remarkNode = document.getElementById('employeeKpiRemark');
+        if (targetNode) targetNode.textContent = String(performance.target);
+        if (achievedNode) achievedNode.textContent = String(performance.achieved);
+        if (progressNode) progressNode.textContent = `${performance.progress}%`;
+        if (attendanceNode) attendanceNode.textContent = String(getEmployeeAttendanceDays(employee.name, todayKey()));
+        if (remarkNode) {
+          remarkNode.classList.remove('alert', 'success');
+          remarkNode.textContent = performance.remark
+            ? `${performance.label}: ${performance.remark}`
+            : `${performance.label}: HR has not added a monthly remark yet.`;
+          remarkNode.classList.add(performance.progress >= 100 ? 'success' : 'alert');
+        }
+      }
+
+      function renderEmployeeDocumentList(employee, containerId, adminView) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const docs = (employee && employee.documents) || [];
+        if (!docs.length) {
+          container.innerHTML = '<div class="attachment-empty">No employee documents uploaded yet.</div>';
+          return;
+        }
+        container.innerHTML = docs.map((doc) => `
+          <div class="leave-balance-item">
+            <div>
+              <div class="custom-responsibility-name">${escapeHtml(doc.name)}</div>
+              <div class="leave-balance-meta">${escapeHtml(doc.kind || 'Document')} | ${escapeHtml(formatBytes(doc.size || 0))}${doc.storageOmitted ? ' | stored without file bytes' : ''}</div>
+            </div>
+            <div class="attachment-item-actions">
+              <button class="btn-ghost" type="button" onclick="downloadEmployeeDocument('${employee.id}', '${doc.id}')"><i class="fas fa-download"></i> View</button>
+              ${adminView ? `<button class="btn-ghost" type="button" onclick="removeEmployeeDocument('${employee.id}', '${doc.id}')"><i class="fas fa-trash-alt"></i> Remove</button>` : ''}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function renderEmployeeDossier() {
+        const employee = currentEmployeeRecord();
+        if (!employee) return;
+        const departmentNode = document.getElementById('employeeDepartmentCard');
+        const teamLeadNode = document.getElementById('employeeTeamLeadCard');
+        const joiningNode = document.getElementById('employeeJoiningDateCard');
+        const carryNode = document.getElementById('employeeCarryForwardCard');
+        const contactNode = document.getElementById('employeeContactCard');
+        if (departmentNode) departmentNode.textContent = employee.department || 'Operations';
+        if (teamLeadNode) teamLeadNode.textContent = employee.teamLead || DEFAULT_MANAGER.name;
+        if (joiningNode) joiningNode.textContent = formatShortDate(employee.joinedAt);
+        if (carryNode) carryNode.textContent = String(employee.carryForwardDays || 0);
+        if (contactNode) {
+          const contact = employee.emergencyContactName || employee.emergencyContactPhone
+            ? `Emergency: ${employee.emergencyContactName || 'Not set'}${employee.emergencyContactPhone ? ` | ${employee.emergencyContactPhone}` : ''}`
+            : 'Emergency contact not added yet.';
+          const bank = employee.bankDetails ? ` Bank: ${employee.bankDetails}` : ' Bank details not added yet.';
+          contactNode.textContent = `${contact}${bank}`;
+        }
+        renderEmployeeDocumentList(employee, 'employeeDocumentList', false);
+      }
+
+      function renderEmployeePolicySummary() {
+        const container = document.getElementById('employeePolicySummary');
+        if (!container) return;
+        const employee = currentEmployeeRecord();
+        const carryForward = employee ? Math.min(Math.max(asNumber(employee.carryForwardDays, 0), 0), carryForwardLimit()) : 0;
+        const policies = [
+          { title: 'Annual Leave', meta: `${annualLeaveAllowance()} paid units per year.` },
+          { title: 'Sick and Personal Leave', meta: 'Requests are tracked in the same leave center so Team Lead and HR can review them together.' },
+          { title: 'Half Day', meta: 'Half Day requests deduct 0.5 day from the paid balance.' },
+          { title: 'Carry Forward', meta: `${carryForward} unit(s) active for you. Company limit: ${carryForwardLimit()}.` },
+          { title: 'Reason Categories', meta: leaveReasonCategories().join(', ') || 'None configured' },
+          { title: 'No Salary Leave', meta: 'Used when paid leave balance is exhausted; payroll deduction is calculated from salary per day.' },
+          { title: 'Approval Workflow', meta: 'Requests move from Team Lead review to HR approval before completion.' }
+        ];
+        container.innerHTML = policies.map((item) => `
+          <div class="leave-balance-item">
+            <div>
+              <div class="custom-responsibility-name">${escapeHtml(item.title)}</div>
+              <div class="leave-balance-meta">${escapeHtml(item.meta)}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function renderAnnouncementAdminList() {
+        const container = document.getElementById('announcementAdminList');
+        if (!container) return;
+        const notices = sortedAnnouncements();
+        if (!notices.length) {
+          container.innerHTML = '<div class="attachment-empty">No announcements published yet.</div>';
+          return;
+        }
+        container.innerHTML = notices.map((notice) => `
+          <div class="leave-balance-item">
+            <div>
+              <div class="custom-responsibility-name">${escapeHtml(notice.title)}</div>
+              <div class="leave-balance-meta">${escapeHtml(formatTimestamp(notice.createdAt))} | ${notice.pinned ? 'Pinned' : 'Standard'}</div>
+              <div class="leave-reason">${escapeHtml(notice.body || 'No announcement details provided.')}</div>
+            </div>
+            <div class="attachment-item-actions">
+              <button class="btn-ghost" type="button" onclick="toggleAnnouncementPin('${notice.id}')"><i class="fas fa-thumbtack"></i> ${notice.pinned ? 'Unpin' : 'Pin'}</button>
+              <button class="btn-ghost" type="button" onclick="removeAnnouncement('${notice.id}')"><i class="fas fa-trash-alt"></i> Remove</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function renderHolidayList() {
+        const container = document.getElementById('holidayList');
+        if (!container) return;
+        const holidays = [...companyHolidays()].sort((left, right) => left.date.localeCompare(right.date));
+        if (!holidays.length) {
+          container.innerHTML = '<div class="attachment-empty">No company holidays configured yet.</div>';
+          return;
+        }
+        container.innerHTML = holidays.map((holiday) => `
+          <div class="leave-balance-item">
+            <div>
+              <div class="custom-responsibility-name">${escapeHtml(holiday.name)}</div>
+              <div class="leave-balance-meta">${escapeHtml(formatShortDate(holiday.date))}</div>
+            </div>
+            <button class="btn-ghost" type="button" onclick="removeHoliday('${holiday.id}')"><i class="fas fa-trash-alt"></i> Remove</button>
+          </div>
+        `).join('');
+      }
+
+      function renderAuditLog() {
+        const body = document.getElementById('auditLogBody');
+        if (!body) return;
+        const scopeFilter = (document.getElementById('auditFilterScope') || {}).value || '';
+        const dateFilter = (document.getElementById('auditFilterDate') || {}).value || '';
+        let rows = [...state.auditLog];
+        if (scopeFilter) rows = rows.filter((entry) => entry.scope === scopeFilter);
+        if (dateFilter) rows = rows.filter((entry) => String(entry.createdAt || '').slice(0, 10) === dateFilter);
+        if (!rows.length) {
+          body.innerHTML = '<tr><td colspan="6" class="no-data"><i class="fas fa-inbox"></i><br>No audit activity found</td></tr>';
+          return;
+        }
+        body.innerHTML = rows.map((entry) => `
+          <tr>
+            <td>${escapeHtml(formatTimestamp(entry.createdAt))}</td>
+            <td>${escapeHtml(entry.actor)}</td>
+            <td>${escapeHtml(entry.scope)}</td>
+            <td>${escapeHtml(entry.action)}</td>
+            <td>${escapeHtml(entry.employeeName || '-')}</td>
+            <td>${escapeHtml(entry.details || '-')}</td>
+          </tr>
+        `).join('');
+      }
+
+      function renderLeaveReasonCategoryOptions(selectedValue) {
+        const select = document.getElementById('leaveReasonCategory');
+        if (!select) return;
+        const current = selectedValue || select.value || 'Other';
+        select.innerHTML = leaveReasonCategories().map((category) => `
+          <option value="${escapeHtml(category)}" ${category === current ? 'selected' : ''}>${escapeHtml(category)}</option>
+        `).join('');
+      }
+
+      function renderFilterOptions() {
+        const departmentMarkup = ['<option value="">All Departments</option>', ...departmentOptions().map((department) => `<option value="${escapeHtml(department)}">${escapeHtml(department)}</option>`)].join('');
+        const reportDepartment = document.getElementById('filterDepartment');
+        const leaveDepartment = document.getElementById('leaveFilterDepartment');
+        if (reportDepartment) {
+          const current = reportDepartment.value;
+          reportDepartment.innerHTML = departmentMarkup;
+          reportDepartment.value = departmentOptions().includes(current) ? current : '';
+        }
+        if (leaveDepartment) {
+          const current = leaveDepartment.value;
+          leaveDepartment.innerHTML = departmentMarkup;
+          leaveDepartment.value = departmentOptions().includes(current) ? current : '';
+        }
+
+        const leaveTypeSelect = document.getElementById('leaveFilterType');
+        if (leaveTypeSelect) {
+          const current = leaveTypeSelect.value;
+          const leaveTypes = [...new Set(state.leaveRequests.map((request) => request.leaveType).filter(Boolean))].sort((left, right) => left.localeCompare(right));
+          leaveTypeSelect.innerHTML = ['<option value="">All Leave Types</option>', ...leaveTypes.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`)].join('');
+          leaveTypeSelect.value = leaveTypes.includes(current) ? current : '';
+        }
+
+        renderLeaveReasonCategoryOptions();
+      }
+
+      function renderLeaveRequestPreview() {
+        const noteNode = document.getElementById('leaveRequestImpactNote');
+        if (!noteNode) return;
+        const employee = currentEmployeeRecord();
+        if (!employee) {
+          noteNode.textContent = 'Select dates and a leave type to preview how this request affects your yearly leave balance.';
+          noteNode.classList.remove('alert', 'success');
+          return;
+        }
+        const startDate = document.getElementById('leaveStartDate').value;
+        const endDate = document.getElementById('leaveEndDate').value || startDate;
+        const leaveType = document.getElementById('leaveType').value || 'Annual Leave';
+        noteNode.classList.remove('alert', 'success');
+        if (!startDate) {
+          noteNode.textContent = `Each employee receives ${annualLeaveAllowance()} paid leave units per year before carry forward. Select dates to preview the impact before you submit.`;
+          return;
+        }
+        if (endDate && endDate < startDate) {
+          noteNode.textContent = 'The leave end date cannot be earlier than the start date.';
+          noteNode.classList.add('alert');
+          return;
+        }
+        const units = getLeaveUnits(startDate, endDate, leaveType);
+        const year = getLeaveBalanceYear(startDate);
+        const balance = getEmployeeLeaveBalance(employee.name, year);
+        if (!leaveConsumesBalance(leaveType)) {
+          noteNode.textContent = isNoSalaryLeave(leaveType)
+            ? `This request will be submitted as ${formatLeaveUnits(units)} of No Salary Leave and will not use the paid balance.`
+            : `This request will be logged as ${formatLeaveUnits(units)} of Work From Home and will not reduce the paid leave balance.`;
+          noteNode.classList.add('success');
+          return;
+        }
+        const remainingAfterRequest = balance.remaining - units;
+        if (remainingAfterRequest < 0) {
+          noteNode.textContent = `This request needs ${formatLeaveUnits(units)}, but only ${formatLeaveUnits(balance.remaining)} remain in ${year}. Choose No Salary Leave or shorten the request.`;
+          noteNode.classList.add('alert');
+          return;
+        }
+        noteNode.textContent = `This request will use ${formatLeaveUnits(units)} from your ${year} paid balance. ${formatLeaveUnits(remainingAfterRequest)} would remain after submission.`;
+        noteNode.classList.add('success');
+      }
+
       function renderAdminLeaveRequests() {
         const container = document.getElementById('leaveRequestAdminList');
+        renderFilterOptions();
         if (document.getElementById('leaveStatPending')) {
           document.getElementById('leaveStatPending').textContent = String(state.leaveRequests.filter((request) => request.status === 'pending').length);
           document.getElementById('leaveStatApproved').textContent = String(state.leaveRequests.filter((request) => request.status === 'approved').length);
@@ -4698,13 +6009,45 @@ function doGet() {
           container.innerHTML = '<div class="attachment-empty">No leave requests submitted yet.</div>';
           return;
         }
-        const order = { pending: 0, approved: 1, rejected: 2 };
-        const data = [...state.leaveRequests].sort((left, right) => {
-          if (order[left.status] !== order[right.status]) return order[left.status] - order[right.status];
+        const employeeFilter = (document.getElementById('leaveFilterEmployee') || {}).value || '';
+        const departmentFilter = (document.getElementById('leaveFilterDepartment') || {}).value || '';
+        const monthFilter = (document.getElementById('leaveFilterMonth') || {}).value || '';
+        const typeFilter = (document.getElementById('leaveFilterType') || {}).value || '';
+        const stageFilter = (document.getElementById('leaveFilterStage') || {}).value || '';
+        const order = { team_lead: 0, hr: 1, completed: 2, rejected: 3 };
+        const data = [...state.leaveRequests]
+          .filter((request) => !employeeFilter || request.employeeName === employeeFilter)
+          .filter((request) => !departmentFilter || request.department === departmentFilter)
+          .filter((request) => !monthFilter || monthKey(request.startDate) === monthFilter)
+          .filter((request) => !typeFilter || request.leaveType === typeFilter)
+          .filter((request) => !stageFilter || request.workflowStage === stageFilter)
+          .sort((left, right) => {
+          if (order[left.workflowStage] !== order[right.workflowStage]) return order[left.workflowStage] - order[right.workflowStage];
           return new Date(right.submittedAt) - new Date(left.submittedAt);
         });
+        if (!data.length) {
+          container.innerHTML = '<div class="attachment-empty">No leave requests match the selected filters.</div>';
+          return;
+        }
         container.innerHTML = data.map((request) => {
           const employee = getEmployeeByName(request.employeeName) || { name: request.employeeName, photoDataUrl: '' };
+          const leaveBalance = getEmployeeLeaveBalance(request.employeeName, getLeaveBalanceYear(request.startDate));
+          const payroll = getEmployeePayrollImpact(request.employeeName, request.startDate);
+          const workflowChipClass = request.workflowStage === 'completed' ? 'success' : request.workflowStage === 'rejected' ? 'alert' : '';
+          let actionButtons = '';
+          if (request.workflowStage === 'team_lead' && request.status === 'pending') {
+            actionButtons = `
+              <button class="btn-filter" type="button" onclick="updateLeaveRequestStatus('${request.id}', 'team_lead_approve')"><i class="fas fa-user-check"></i> Team Lead Approve</button>
+              <button class="btn-ghost leave-reject-btn" type="button" onclick="updateLeaveRequestStatus('${request.id}', 'team_lead_reject')"><i class="fas fa-ban"></i> Team Lead Reject</button>
+            `;
+          } else if (request.workflowStage === 'hr' && request.status === 'pending') {
+            actionButtons = `
+              <button class="btn-filter" type="button" onclick="updateLeaveRequestStatus('${request.id}', 'hr_approve')"><i class="fas fa-check"></i> HR Approve</button>
+              <button class="btn-ghost leave-reject-btn" type="button" onclick="updateLeaveRequestStatus('${request.id}', 'hr_reject')"><i class="fas fa-ban"></i> HR Reject</button>
+            `;
+          } else {
+            actionButtons = `<button class="btn-ghost" type="button" onclick="updateLeaveRequestStatus('${request.id}', 'reset')"><i class="fas fa-rotate-left"></i> Reset Workflow</button>`;
+          }
           return `
             <div class="leave-request-card">
               <div class="leave-card-person">
@@ -4712,92 +6055,175 @@ function doGet() {
                   ${avatarMarkup(employee, 'emp-mini-avatar', 'width:48px;height:48px;font-size:16px')}
                   <div>
                     <div class="leave-card-title">${escapeHtml(request.employeeName)}</div>
-                    <div class="leave-meta">${escapeHtml(request.employeeTitle || 'Medical Billing Specialist')} | ${escapeHtml(request.employeeEmail || 'No email')}</div>
+                    <div class="leave-meta">${escapeHtml(request.employeeTitle || 'Medical Billing Specialist')} | ${escapeHtml(request.department || 'Operations')} | ${escapeHtml(request.employeeEmail || 'No email')}</div>
                   </div>
                 </div>
-                ${leaveStatusPill(request.status)}
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  ${leaveStatusPill(request.status)}
+                  <span class="metric-chip ${workflowChipClass}">${escapeHtml(leaveWorkflowLabel(request.workflowStage))}</span>
+                </div>
               </div>
-              <div class="leave-meta" style="margin-top:10px">${escapeHtml(formatDateRange(request.startDate, request.endDate))} | ${escapeHtml(request.leaveType)} | Submitted ${escapeHtml(formatTimestamp(request.submittedAt))}</div>
+              <div class="leave-meta" style="margin-top:10px">${escapeHtml(formatDateRange(request.startDate, request.endDate))} | ${escapeHtml(request.leaveType)} | ${escapeHtml(request.reasonCategory || 'Other')} | ${escapeHtml(formatLeaveUnits(getLeaveUnits(request.startDate, request.endDate, request.leaveType)))} | Submitted ${escapeHtml(formatTimestamp(request.submittedAt))}</div>
               <div class="leave-reason">${escapeHtml(request.reason || 'No reason provided.')}</div>
               ${request.coverage ? `<div class="leave-note">Coverage: ${escapeHtml(request.coverage)}</div>` : ''}
+              <div class="leave-note">Workflow: Team Lead ${escapeHtml(request.teamLeadName || DEFAULT_MANAGER.name)} | Team Lead status: ${escapeHtml(request.teamLeadStatus)} | HR status: ${escapeHtml(request.hrStatus)}</div>
+              <div class="leave-note">Balance snapshot: ${escapeHtml(formatLeaveUnits(leaveBalance.remaining))} remaining, ${escapeHtml(formatLeaveUnits(leaveBalance.pendingUnits))} pending, ${escapeHtml(formatLeaveUnits(leaveBalance.approvedUnits))} approved in ${leaveBalance.year}.</div>
+              ${isNoSalaryLeave(request.leaveType) ? `<div class="leave-note">Payroll impact: ${escapeHtml(formatLeaveUnits(getLeaveUnits(request.startDate, request.endDate, request.leaveType)))} no salary leave | Salary per day ${escapeHtml(String(payroll.salaryPerDay || 0))} | Estimated deduction ${escapeHtml(String(payroll.deduction))}</div>` : ''}
               <div class="leave-note-row">
-                <input type="text" class="settings-value" id="leaveNote_${request.id}" value="${escapeHtml(request.managerNote || '')}" placeholder="Optional manager note" />
+                <input type="text" class="settings-value" id="leaveNote_${request.id}" value="${escapeHtml(request.managerNote || '')}" placeholder="Optional HR note" />
                 <button class="btn-ghost" type="button" onclick="saveLeaveManagerNote('${request.id}')"><i class="fas fa-sticky-note"></i> Save Note</button>
               </div>
               <div class="leave-card-actions" style="margin-top:12px">
-                <button class="btn-filter" type="button" onclick="updateLeaveRequestStatus('${request.id}', 'approved')"><i class="fas fa-check"></i> Approve</button>
-                <button class="btn-ghost leave-reject-btn" type="button" onclick="updateLeaveRequestStatus('${request.id}', 'rejected')"><i class="fas fa-ban"></i> Decline</button>
-                <button class="btn-ghost" type="button" onclick="updateLeaveRequestStatus('${request.id}', 'pending')"><i class="fas fa-rotate-left"></i> Pending</button>
+                ${actionButtons}
               </div>
             </div>
           `;
         }).join('');
       }
 
-      function updateChatComposerCount(inputId, counterId) {
-        const input = document.getElementById(inputId);
-        const counter = document.getElementById(counterId);
-        if (!counter) return;
-        const length = Math.min(((input && input.value) || '').length, MAX_CHAT_MESSAGE_LENGTH);
-        counter.textContent = `${length} / ${MAX_CHAT_MESSAGE_LENGTH}`;
-      }
+      function renderHrPanel() {
+        const pendingApprovals = state.leaveRequests.filter((request) => request.status === 'pending').length;
+        const leaveSummaries = state.employees.map((employee) => ({
+          employee,
+          balance: getEmployeeLeaveBalance(employee.name)
+        }));
+        const lowBalance = leaveSummaries.filter((item) => item.balance.remaining <= 2);
+        const noSalaryUnits = state.leaveRequests.reduce((sum, request) => {
+          if (request.status === 'rejected' || !isNoSalaryLeave(request.leaveType)) return sum;
+          return sum + getLeaveUnits(request.startDate, request.endDate, request.leaveType);
+        }, 0);
 
-      function renderChatFeed(containerId, currentName) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        if (!state.chatMessages.length) {
-          container.innerHTML = '<div class="attachment-empty">No team messages yet.</div>';
-          return;
-        }
-        const messages = state.chatMessages.slice(-80);
-        container.innerHTML = messages.map((message) => {
-          const sender = message.authorRole === 'manager'
-            ? { name: message.authorName, photoDataUrl: '' }
-            : (getEmployeeByName(message.authorName) || { name: message.authorName, photoDataUrl: '' });
-          const mine = currentName && message.authorName === currentName;
-          const roleBadge = message.authorRole === 'manager'
-            ? '<span class="employee-meta-pill" style="padding:2px 8px;font-size:10px">Manager</span>'
-            : '';
-          const avatar = avatarMarkup(sender, 'chat-avatar');
-          return `
-            <div class="chat-message ${mine ? 'mine' : ''}">
-              ${mine ? '' : avatar}
-              <div class="chat-message-body">
-                <div class="chat-bubble-meta">
-                  <span class="chat-author">${escapeHtml(message.authorName)}</span>
-                  ${roleBadge}
-                  <span>${escapeHtml(formatTimestamp(message.createdAt))}</span>
+        const pendingNode = document.getElementById('hrPendingApprovals');
+        const healthyNode = document.getElementById('hrHealthyBalanceCount');
+        const lowBalanceNode = document.getElementById('hrLowBalanceCount');
+        const noSalaryNode = document.getElementById('hrNoSalaryLeaveUnits');
+        if (pendingNode) pendingNode.textContent = String(pendingApprovals);
+        if (healthyNode) healthyNode.textContent = String(Math.max(state.employees.length - lowBalance.length, 0));
+        if (lowBalanceNode) lowBalanceNode.textContent = String(lowBalance.length);
+        if (noSalaryNode) noSalaryNode.textContent = String(noSalaryUnits);
+        renderAnnouncementAdminList();
+        renderHolidayList();
+        renderEmployeeAnnouncementsAndHolidays();
+        renderAuditLog();
+
+        const taskList = document.getElementById('hrTaskList');
+        if (taskList) {
+          const tasks = [];
+          state.leaveRequests
+            .filter((request) => request.status === 'pending')
+            .sort((left, right) => new Date(left.submittedAt) - new Date(right.submittedAt))
+            .slice(0, 4)
+            .forEach((request) => {
+              tasks.push({
+                title: `${request.employeeName} needs leave approval`,
+                meta: `${request.leaveType} | ${formatLeaveUnits(getLeaveUnits(request.startDate, request.endDate, request.leaveType))} | ${formatDateRange(request.startDate, request.endDate)}`,
+                chip: 'Pending approval',
+                tone: 'alert'
+              });
+            });
+
+          lowBalance.slice(0, 3).forEach((item) => {
+            tasks.push({
+              title: `${item.employee.name} is low on leave balance`,
+              meta: `${formatLeaveUnits(item.balance.remaining)} remaining in ${item.balance.year}. Review future requests carefully.`,
+              chip: 'Low balance',
+              tone: 'alert'
+            });
+          });
+
+          state.employees
+            .filter((employee) => !employee.photoDataUrl)
+            .slice(0, 2)
+            .forEach((employee) => {
+              tasks.push({
+                title: `${employee.name} still needs a profile photo`,
+                meta: 'Their employee profile is incomplete and should be updated for a polished HR dashboard.',
+                chip: 'Profile task',
+                tone: 'neutral'
+              });
+            });
+
+          if (!tasks.length) {
+            taskList.innerHTML = '<div class="attachment-empty">No urgent HR actions right now. Leave approvals, profile gaps, and balance alerts will appear here automatically.</div>';
+          } else {
+            taskList.innerHTML = tasks.map((task) => `
+              <div class="hr-priority-item">
+                <div>
+                  <div class="custom-responsibility-name">${escapeHtml(task.title)}</div>
+                  <div class="hr-priority-meta">${escapeHtml(task.meta)}</div>
                 </div>
-                <div class="chat-bubble">${escapeHtmlWithBreaks(message.text)}</div>
+                <span class="metric-chip ${task.tone === 'alert' ? 'alert' : ''}">${escapeHtml(task.chip)}</span>
               </div>
-              ${mine ? avatar : ''}
-            </div>
-          `;
-        }).join('');
-        container.scrollTop = container.scrollHeight;
-      }
-
-      function renderChatPanels() {
-        renderChatFeed('employeeChatMessages', state.currentRole === 'employee' ? state.currentUser : '');
-        renderChatFeed('adminChatMessages', state.manager ? state.manager.name : '');
-        if (document.getElementById('chatSummaryTotal')) {
-          const todayMessages = state.chatMessages.filter((message) => {
-            const created = new Date(message.createdAt);
-            return !Number.isNaN(created.getTime()) && dateKeyFromDate(created) === todayKey();
-          }).length;
-          document.getElementById('chatSummaryTotal').textContent = String(state.chatMessages.length);
-          document.getElementById('chatSummaryToday').textContent = String(todayMessages);
-          document.getElementById('chatSummaryPeople').textContent = String(new Set(state.chatMessages.map((message) => message.authorName)).size);
-          document.getElementById('chatSummaryManager').textContent = String(state.chatMessages.filter((message) => message.authorRole === 'manager').length);
-          const note = document.getElementById('chatSummaryNote');
-          if (note) {
-            note.textContent = state.chatMessages.length
-              ? `Latest message from ${state.chatMessages[state.chatMessages.length - 1].authorName} at ${formatTimestamp(state.chatMessages[state.chatMessages.length - 1].createdAt)}.`
-              : 'The latest team communication snapshot will appear here.';
+            `).join('');
           }
         }
-        updateChatComposerCount('employeeChatInput', 'employeeChatCount');
-        updateChatComposerCount('adminChatInput', 'adminChatCount');
+
+        const balanceList = document.getElementById('hrLeaveBalanceList');
+        if (balanceList) {
+          const ordered = [...leaveSummaries].sort((left, right) => left.balance.remaining - right.balance.remaining || left.employee.name.localeCompare(right.employee.name));
+          if (!ordered.length) {
+            balanceList.innerHTML = '<div class="attachment-empty">Employee leave balances will appear here.</div>';
+          } else {
+            balanceList.innerHTML = ordered.map(({ employee, balance }) => `
+              <div class="leave-balance-item">
+                <div>
+                  <div class="custom-responsibility-name">${escapeHtml(employee.name)}</div>
+                  <div class="leave-balance-meta">${escapeHtml(employee.title || 'Medical Billing Specialist')} | ${escapeHtml(formatLeaveUnits(balance.approvedUnits))} approved | ${escapeHtml(formatLeaveUnits(balance.pendingUnits))} pending${balance.unpaidUnits ? ` | ${escapeHtml(formatLeaveUnits(balance.unpaidUnits))} no salary` : ''}</div>
+                </div>
+                <span class="metric-chip ${balance.remaining <= 2 ? 'alert' : 'success'}">${escapeHtml(formatLeaveUnits(balance.remaining))} left</span>
+              </div>
+            `).join('');
+          }
+        }
+
+        const payrollList = document.getElementById('payrollImpactList');
+        if (payrollList) {
+          const monthlyKey = monthKey(todayKey());
+          const payrollRows = state.employees.map((employee) => ({
+            employee,
+            impact: getEmployeePayrollImpact(employee.name, monthlyKey)
+          })).filter((item) => item.impact.unpaidUnits > 0 || item.impact.deduction > 0);
+          if (!payrollRows.length) {
+            payrollList.innerHTML = '<div class="attachment-empty">Payroll impact will appear when No Salary Leave requests are submitted.</div>';
+          } else {
+            payrollList.innerHTML = payrollRows.map(({ employee, impact }) => `
+              <div class="leave-balance-item">
+                <div>
+                  <div class="custom-responsibility-name">${escapeHtml(employee.name)}</div>
+                  <div class="leave-balance-meta">${escapeHtml(employee.department || 'Operations')} | ${escapeHtml(formatLeaveUnits(impact.unpaidUnits))} no salary leave | Salary/day ${escapeHtml(String(impact.salaryPerDay || 0))}</div>
+                </div>
+                <span class="metric-chip alert">${escapeHtml(String(impact.deduction))} deduction</span>
+              </div>
+            `).join('');
+          }
+        }
+
+        const hrPerformanceBody = document.getElementById('hrPerformanceBody');
+        if (hrPerformanceBody) {
+          hrPerformanceBody.innerHTML = state.employees.map((employee) => {
+            const reports = state.reports.filter((report) => report.employee === employee.name);
+            const todayCount = reports.filter((report) => report.date === todayKey()).reduce((sum, report) => sum + report.totalCount, 0);
+            const totalCount = reports.reduce((sum, report) => sum + report.totalCount, 0);
+            const pendingLeaveCount = state.leaveRequests.filter((request) => request.employeeName === employee.name && request.status === 'pending').length;
+            const balance = getEmployeeLeaveBalance(employee.name);
+            const performance = getEmployeeMonthPerformance(employee.name, todayKey());
+            return `
+              <tr>
+                <td>
+                  <div class="emp-name-cell">
+                    ${avatarMarkup(employee, 'emp-mini-avatar')}
+                    <strong>${escapeHtml(employee.name)}</strong><br>
+                    <span class="table-secondary">${escapeHtml(employee.department || 'Operations')} | ${escapeHtml(performance.label)}</span>
+                  </div>
+                </td>
+                <td>${todayCount}</td>
+                <td>${totalCount}</td>
+                <td>${escapeHtml(formatLeaveUnits(balance.remaining))}<div class="table-secondary">Target ${performance.target} / Achieved ${performance.achieved}</div></td>
+                <td>${pendingLeaveCount}</td>
+              </tr>
+            `;
+          }).join('');
+        }
       }
 
       function openDownload(dataUrl, name) {
@@ -4875,11 +6301,13 @@ function doGet() {
         const employee = getEmployeeByName(state.currentUser);
         const tasks = collectFormData();
         const totalCount = Object.values(tasks).reduce((sum, value) => sum + Number(value || 0), 0);
+        const submittedAt = new Date().toISOString();
         return {
           id: Date.now(),
           employee: state.currentUser,
           employeeEmail: employee ? employee.email : '',
           employeeTitle: employee ? employee.title : 'Medical Billing Specialist',
+          department: employee ? employee.department : 'Operations',
           date: todayKey(),
           dateDisplay: todayStr(),
           time: nowTime(),
@@ -4891,7 +6319,13 @@ function doGet() {
           attachments: state.currentAttachments.map((attachment) => Object.assign({}, attachment)),
           assignedResponsibilities: employee ? [...employee.responsibilities] : [],
           emailMethod: '',
-          sheetSynced: false
+          sheetSynced: false,
+          databaseSynced: false,
+          databaseSyncError: '',
+          databaseSyncedAt: '',
+          databaseSource: 'local',
+          remoteRowId: '',
+          submittedAt
         };
       }
 
@@ -4914,6 +6348,7 @@ function doGet() {
           ? `Attachments: ${report.attachments.map((attachment) => attachment.name).join(', ')}`
           : 'Attachments: None');
         lines.push(`Role: ${report.employeeTitle || 'Medical Billing Specialist'}`);
+        lines.push(`Department: ${report.department || 'Operations'}`);
         lines.push(`Date: ${report.dateDisplay}`);
         lines.push(`Time: ${report.time || nowTime()}`);
         return lines.join('\n');
@@ -4922,7 +6357,7 @@ function doGet() {
       function openEmailDraft(report, previewOnly) {
         const managerEmail = (state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail).trim();
         if (!managerEmail) {
-          showToast('Please set a manager email in Settings first.', 'error');
+          showToast('Please set an HR notification email in Settings first.', 'error');
           return { method: 'not-configured' };
         }
         const ccPart = state.settings.ccEmail ? `&cc=${encodeURIComponent(state.settings.ccEmail)}` : '';
@@ -4946,9 +6381,11 @@ function doGet() {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({
+              reportId: report.id,
               date: report.date,
               employee: report.employee,
               employeeEmail: report.employeeEmail,
+              department: report.department,
               totalTasks: report.totalTasks,
               totalCount: report.totalCount,
               status: report.status,
@@ -4966,9 +6403,24 @@ function doGet() {
       }
 
       function reportDeliverySummary(report) {
-        const attachmentCount = (report.attachments || []).length;
+        const attachmentCount = (report.attachments || []).length || (report.attachmentNames || []).length;
         const attachmentText = attachmentCount ? `${attachmentCount} file${attachmentCount === 1 ? '' : 's'}` : 'No files';
-        return `${attachmentText} · ${report.sheetSynced ? 'sheet synced' : 'saved locally'}`;
+        const emailText = report.emailMethod
+          ? report.emailMethod === 'preview-mailto'
+            ? 'email draft ready'
+            : 'email draft opened'
+          : 'email not opened';
+        const sheetText = report.sheetSynced
+          ? 'sheet synced'
+          : state.settings && state.settings.sheetURL
+            ? 'sheet pending'
+            : 'sheet off';
+        const cloudText = report.databaseSynced
+          ? 'cloud synced'
+          : cloudSyncConfigured()
+            ? 'cloud pending'
+            : 'cloud off';
+        return `${attachmentText} - ${emailText} - ${sheetText} - ${cloudText}`;
       }
 
       function setSendButtonState(isBusy) {
@@ -4979,7 +6431,7 @@ function doGet() {
           sendButton.innerHTML = '<span class="spinner"></span> Sending...';
           sendButton.disabled = true;
         } else {
-          sendButton.innerHTML = sendButton.dataset.originalLabel || '<i class="fas fa-paper-plane"></i> Submit and Email Manager';
+          sendButton.innerHTML = sendButton.dataset.originalLabel || '<i class="fas fa-paper-plane"></i> Submit and Email HR';
           sendButton.disabled = false;
         }
       }
@@ -5031,6 +6483,20 @@ function doGet() {
         document.getElementById('settingCCEmail').value = state.settings.ccEmail || '';
         document.getElementById('settingSheetURL').value = state.settings.sheetURL || '';
         document.getElementById('settingSheetID').value = state.settings.sheetID || '';
+        const supabaseUrlNode = document.getElementById('settingSupabaseUrl');
+        const supabaseKeyNode = document.getElementById('settingSupabaseAnonKey');
+        const supabaseTableNode = document.getElementById('settingSupabaseReportsTable');
+        const cloudRefreshNode = document.getElementById('settingCloudRefreshSeconds');
+        if (supabaseUrlNode) supabaseUrlNode.value = state.settings.supabaseUrl || '';
+        if (supabaseKeyNode) supabaseKeyNode.value = state.settings.supabaseAnonKey || '';
+        if (supabaseTableNode) supabaseTableNode.value = supabaseReportsTable();
+        if (cloudRefreshNode) cloudRefreshNode.value = String(cloudRefreshSeconds());
+        const leaveAllowanceNode = document.getElementById('settingLeaveAllowance');
+        const carryForwardNode = document.getElementById('settingCarryForwardLimit');
+        const leaveCategoriesNode = document.getElementById('settingLeaveCategories');
+        if (leaveAllowanceNode) leaveAllowanceNode.value = String(annualLeaveAllowance());
+        if (carryForwardNode) carryForwardNode.value = String(carryForwardLimit());
+        if (leaveCategoriesNode) leaveCategoriesNode.value = leaveReasonCategories().join(', ');
 
         const managerName = document.getElementById('settingManagerName');
         const managerUser = document.getElementById('settingAdminUser');
@@ -5047,13 +6513,16 @@ function doGet() {
         if (passwordList) {
           passwordList.innerHTML = state.employees.map((employee) => `
             <div class="settings-item">
-              <div class="settings-label">${escapeHtml(employee.name)} <span class="employee-card-subtext">${escapeHtml(employee.email)}</span></div>
+              <div class="settings-label">${escapeHtml(employee.name)} <span class="employee-card-subtext">${escapeHtml(employee.email)} | ${escapeHtml(employee.department || 'Operations')}</span></div>
               <input type="text" class="settings-value" id="pw_${employee.id}" value="${escapeHtml(state.passwords[employee.name] || 'help360')}" />
             </div>
           `).join('');
         }
 
-        const templateNode = document.querySelector('#panel-settings pre');
+        renderHolidayList();
+        renderAnnouncementAdminList();
+
+        const templateNode = document.querySelector('#panel-settings .settings-card pre');
         if (templateNode) {
           templateNode.textContent = `function doPost(e) {
   var sheet = SpreadsheetApp
@@ -5082,6 +6551,53 @@ function doGet() {
     .createTextOutput("ok");
 }`;
         }
+
+        const supabaseSqlNode = document.getElementById('supabaseSqlTemplate');
+        if (supabaseSqlNode) {
+          const tableName = supabaseReportsTable();
+          supabaseSqlNode.textContent = `create table if not exists public.${tableName} (
+  id bigint generated by default as identity primary key,
+  report_id text not null unique,
+  employee text not null,
+  employee_email text,
+  employee_title text,
+  department text,
+  report_date date not null,
+  report_time text,
+  total_tasks integer not null default 0,
+  total_count integer not null default 0,
+  status text not null default 'sent',
+  notes text,
+  email_method text,
+  cc_email text,
+  sheet_synced boolean not null default false,
+  attachment_count integer not null default 0,
+  attachment_names jsonb not null default '[]'::jsonb,
+  task_details jsonb not null default '{}'::jsonb,
+  assigned_responsibilities jsonb not null default '[]'::jsonb,
+  submitted_at timestamptz not null default now()
+);
+
+alter table public.${tableName} enable row level security;
+
+grant usage on schema public to anon;
+grant select, insert on public.${tableName} to anon;
+grant usage, select on sequence public.${tableName}_id_seq to anon;
+
+create policy "anon can read ${tableName}"
+on public.${tableName}
+for select
+to anon
+using (true);
+
+create policy "anon can insert ${tableName}"
+on public.${tableName}
+for insert
+to anon
+with check (true);`;
+        }
+
+        updateCloudStatusNote();
       }
 
       function renderEmployeeCards() {
@@ -5094,13 +6610,14 @@ function doGet() {
           const previewTasks = employee.responsibilities.slice(0, 5);
           const remaining = Math.max(employee.responsibilities.length - previewTasks.length, 0);
           const pendingLeaves = state.leaveRequests.filter((request) => request.employeeName === employee.name && request.status === 'pending').length;
+          const leaveBalance = getEmployeeLeaveBalance(employee.name);
           return `
             <div style="background:white;border-radius:var(--radius);border:1px solid var(--gray-200);padding:20px;box-shadow:var(--shadow-sm)">
               <div style="display:flex;align-items:center;gap:12px">
                 ${avatarMarkup(employee, 'emp-mini-avatar', 'width:44px;height:44px;font-size:16px')}
                 <div style="min-width:0">
                   <div style="font-size:14px;font-weight:700;color:var(--dark)">${escapeHtml(employee.name)}</div>
-                  <div class="employee-card-subtext">${escapeHtml(employee.title)}</div>
+                  <div class="employee-card-subtext">${escapeHtml(employee.title)} | ${escapeHtml(employee.department || 'Operations')}</div>
                   <div class="employee-card-subtext">${escapeHtml(employee.email)}</div>
                 </div>
               </div>
@@ -5108,6 +6625,7 @@ function doGet() {
                 <span class="employee-meta-pill"><i class="fas fa-list-check"></i>${employee.responsibilities.length} assigned</span>
                 <span class="employee-meta-pill"><i class="fas fa-camera"></i>${employee.photoDataUrl ? 'Photo ready' : 'Photo needed'}</span>
                 ${pendingLeaves ? `<span class="employee-meta-pill"><i class="fas fa-calendar-day"></i>${pendingLeaves} pending leave</span>` : ''}
+                <span class="employee-meta-pill" style="${leaveBalance.remaining <= 2 ? 'background:rgba(239,68,68,.1);color:#b42318' : ''}"><i class="fas fa-briefcase"></i>${escapeHtml(formatLeaveUnits(leaveBalance.remaining))} leave left</span>
                 ${draft ? `<span class="employee-meta-pill"><i class="fas fa-save"></i>Draft saved ${escapeHtml(draft.savedAt || '')}</span>` : ''}
               </div>
               <div class="employee-kpi-grid">
@@ -5141,7 +6659,7 @@ function doGet() {
             <td>${index + 1}</td>
             <td>
               <strong>${escapeHtml(report.employee)}</strong>
-              <div class="table-secondary">${escapeHtml(report.employeeEmail || 'No employee email')}</div>
+              <div class="table-secondary">${escapeHtml(report.employeeEmail || 'No employee email')} | ${escapeHtml(report.department || 'Operations')}</div>
             </td>
             <td>${escapeHtml(report.date)}</td>
             <td>${escapeHtml(report.time || '-')}</td>
@@ -5412,12 +6930,12 @@ function doGet() {
       function initAdminDashboard() {
         populateEmployeeSelects();
         refreshManagerChrome();
-        document.getElementById('adminHeaderTitle').textContent = 'Dashboard Overview';
+        document.getElementById('adminHeaderTitle').textContent = 'Operations Overview';
         updateAdminStats();
         renderAllReports();
         renderEmployeeCards();
         renderAdminLeaveRequests();
-        renderChatPanels();
+        renderHrPanel();
         renderSettingsPage();
         renderCustomResponsibilityList();
         renderCustomResponsibilitySection();
@@ -5451,8 +6969,8 @@ function doGet() {
             </div>
             <div class="report-meta-card">
               <div class="report-meta-label">Delivery</div>
-              <div><strong>${report.sheetSynced ? 'Sheet synced' : 'Saved locally'}</strong></div>
-              <div class="table-secondary">${escapeHtml(report.emailMethod || 'Email draft opened')}</div>
+              <div><strong>${report.databaseSynced ? 'Cloud synced' : report.sheetSynced ? 'Sheet synced' : 'Saved locally'}</strong></div>
+              <div class="table-secondary">${escapeHtml(reportDeliverySummary(report))}</div>
             </div>
           </div>
           <div class="report-meta-grid">
@@ -5466,7 +6984,7 @@ function doGet() {
             </div>
             <div class="report-meta-card">
               <div class="report-meta-label">Attachments</div>
-              <div><strong>${(report.attachments || []).length}</strong></div>
+              <div><strong>${(report.attachments || []).length || (report.attachmentNames || []).length}</strong></div>
             </div>
             <div class="report-meta-card">
               <div class="report-meta-label">Status</div>
@@ -5524,6 +7042,25 @@ function doGet() {
                     </div>
                     <div class="attachment-item-actions">
                       <button class="btn-ghost" type="button" onclick="downloadReportAttachment(${report.id}, '${attachment.id}')"><i class="fas fa-download"></i> Download</button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        } else if (report.attachmentNames && report.attachmentNames.length) {
+          html += `
+            <div class="report-modal-section">
+              <div style="font-size:13px;font-weight:700;color:var(--dark);margin-bottom:8px">Attachments</div>
+              <div class="attachment-list">
+                ${report.attachmentNames.map((attachmentName) => `
+                  <div class="attachment-item">
+                    <div class="attachment-main">
+                      <div class="attachment-icon"><i class="fas fa-file-alt"></i></div>
+                      <div>
+                        <div class="attachment-name">${escapeHtml(attachmentName)}</div>
+                        <div class="attachment-meta">Stored in shared cloud history without local file bytes</div>
+                      </div>
                     </div>
                   </div>
                 `).join('')}
@@ -5671,7 +7208,7 @@ function doGet() {
             persistEmployees();
             syncCurrentEmployeeContext();
             renderEmployeeCards();
-            renderChatPanels();
+            renderHrPanel();
             showToast('Profile photo updated successfully.', 'success');
           } catch (error) {
             showToast('Unable to read that image file.', 'error');
@@ -5688,7 +7225,7 @@ function doGet() {
           persistEmployees();
           syncCurrentEmployeeContext();
           renderEmployeeCards();
-          renderChatPanels();
+          renderHrPanel();
           showToast('Profile photo removed.', 'info');
         };
 
@@ -5735,7 +7272,8 @@ function doGet() {
           if (!employee) return;
           const startDate = document.getElementById('leaveStartDate').value;
           const endDate = document.getElementById('leaveEndDate').value || startDate;
-          const leaveType = document.getElementById('leaveType').value.trim() || 'Paid Leave';
+          const leaveType = document.getElementById('leaveType').value.trim() || 'Annual Leave';
+          const reasonCategory = (document.getElementById('leaveReasonCategory').value || 'Other').trim();
           const coverage = document.getElementById('leaveCoverage').value.trim();
           const reason = document.getElementById('leaveReason').value.trim();
           if (!startDate) {
@@ -5754,45 +7292,118 @@ function doGet() {
             showToast('Add a short reason for the leave request.', 'error');
             return;
           }
+          const leaveUnits = getLeaveUnits(startDate, endDate, leaveType);
+          if (leaveUnits <= 0) {
+            showToast('This date range only contains company holidays. No leave unit would be used.', 'error');
+            return;
+          }
+          const balanceYear = getLeaveBalanceYear(startDate);
+          const leaveBalance = getEmployeeLeaveBalance(employee.name, balanceYear);
+          if (leaveConsumesBalance(leaveType) && leaveUnits > leaveBalance.remaining) {
+            showToast(`Only ${formatLeaveUnits(leaveBalance.remaining)} remain in ${balanceYear}. Choose No Salary Leave or shorten the request.`, 'error');
+            return;
+          }
           state.leaveRequests.push(normalizeLeaveRequest({
             id: createId('leave'),
             employeeId: employee.id,
             employeeName: employee.name,
             employeeEmail: employee.email,
             employeeTitle: employee.title,
+            department: employee.department,
             startDate,
             endDate,
             leaveType,
+            reasonCategory,
             coverage,
             reason,
             status: 'pending',
+            teamLeadName: employee.teamLead || DEFAULT_MANAGER.name,
+            workflowStage: 'team_lead',
+            teamLeadStatus: 'pending',
+            hrStatus: 'waiting',
             submittedAt: new Date().toISOString()
           }));
           persistLeaveRequests();
+          logAudit('Leave request submitted', {
+            scope: 'leave',
+            employeeName: employee.name,
+            details: `${leaveType} | ${reasonCategory} | ${formatDateRange(startDate, endDate)} | ${formatLeaveUnits(leaveUnits)}`
+          });
+          renderEmployeeLeaveBalance();
+          renderLeaveRequestPreview();
           renderEmployeeLeaveRequests();
           renderAdminLeaveRequests();
+          renderHrPanel();
           renderEmployeeCards();
           renderWorkspaceSnapshot();
           document.getElementById('leaveStartDate').value = '';
           document.getElementById('leaveEndDate').value = '';
-          document.getElementById('leaveType').value = 'Paid Leave';
+          document.getElementById('leaveType').value = 'Annual Leave';
+          document.getElementById('leaveReasonCategory').value = leaveReasonCategories()[0] || 'Other';
           document.getElementById('leaveCoverage').value = '';
           document.getElementById('leaveReason').value = '';
-          showToast('Leave request submitted for manager review.', 'success');
+          renderLeaveRequestPreview();
+          showToast('Leave request submitted for team lead review.', 'success');
         };
 
-        window.updateLeaveRequestStatus = (requestId, status) => {
+        window.updateLeaveRequestStatus = (requestId, action) => {
           if (state.currentRole !== 'admin') return;
           const request = state.leaveRequests.find((item) => item.id === requestId);
           if (!request) return;
-          request.status = status;
-          request.reviewedAt = new Date().toISOString();
+          const now = new Date().toISOString();
+          let auditMessage = '';
+          if (action === 'team_lead_approve') {
+            request.teamLeadStatus = 'approved';
+            request.teamLeadReviewedAt = now;
+            request.workflowStage = 'hr';
+            request.hrStatus = 'pending';
+            request.status = 'pending';
+            auditMessage = 'Team lead approved leave request';
+          } else if (action === 'team_lead_reject') {
+            request.teamLeadStatus = 'rejected';
+            request.teamLeadReviewedAt = now;
+            request.workflowStage = 'rejected';
+            request.rejectedByRole = 'team_lead';
+            request.status = 'rejected';
+            auditMessage = 'Team lead rejected leave request';
+          } else if (action === 'hr_approve') {
+            request.hrStatus = 'approved';
+            request.hrReviewedAt = now;
+            request.workflowStage = 'completed';
+            request.status = 'approved';
+            auditMessage = 'HR approved leave request';
+          } else if (action === 'hr_reject') {
+            request.hrStatus = 'rejected';
+            request.hrReviewedAt = now;
+            request.workflowStage = 'rejected';
+            request.rejectedByRole = 'hr';
+            request.status = 'rejected';
+            auditMessage = 'HR rejected leave request';
+          } else {
+            request.status = 'pending';
+            request.workflowStage = 'team_lead';
+            request.teamLeadStatus = 'pending';
+            request.hrStatus = 'waiting';
+            request.rejectedByRole = '';
+            request.teamLeadReviewedAt = '';
+            request.hrReviewedAt = '';
+            auditMessage = 'Leave workflow reset';
+          }
+          request.reviewedAt = now;
           persistLeaveRequests();
+          logAudit(auditMessage, {
+            scope: 'leave',
+            employeeName: request.employeeName,
+            details: `${request.leaveType} | ${leaveWorkflowLabel(request.workflowStage)}`
+          });
           renderAdminLeaveRequests();
+          renderHrPanel();
+          renderEmployeeLeaveBalance();
+          renderLeaveRequestPreview();
           renderEmployeeLeaveRequests();
           renderEmployeeCards();
           renderWorkspaceSnapshot();
-          showToast(`Leave request marked ${leaveStatusLabel(status).toLowerCase()}.`, 'success');
+          showToast(auditMessage, 'success');
         };
 
         window.saveLeaveManagerNote = (requestId) => {
@@ -5803,46 +7414,15 @@ function doGet() {
           request.managerNote = input.value.trim();
           request.reviewedAt = request.managerNote ? new Date().toISOString() : request.reviewedAt;
           persistLeaveRequests();
+          logAudit('HR note updated on leave request', {
+            scope: 'leave',
+            employeeName: request.employeeName,
+            details: request.managerNote || 'HR note cleared'
+          });
           renderAdminLeaveRequests();
+          renderHrPanel();
           renderEmployeeLeaveRequests();
-          showToast('Manager note saved.', 'success');
-        };
-
-        const postTeamMessage = (authorName, authorRole, inputId, counterId) => {
-          const input = document.getElementById(inputId);
-          if (!input) return;
-          const text = input.value.trim();
-          if (!text) {
-            showToast('Enter a message before sending.', 'error');
-            return;
-          }
-          if (text.length > MAX_CHAT_MESSAGE_LENGTH) {
-            showToast(`Keep each chat message under ${MAX_CHAT_MESSAGE_LENGTH} characters.`, 'error');
-            return;
-          }
-          state.chatMessages.push(normalizeChatMessage({
-            id: createId('chat'),
-            authorName,
-            authorRole,
-            text,
-            createdAt: new Date().toISOString()
-          }));
-          persistChatMessages();
-          input.value = '';
-          updateChatComposerCount(inputId, counterId);
-          renderChatPanels();
-          if (state.currentRole === 'employee') renderWorkspaceSnapshot();
-          showToast('Team message sent.', 'success');
-        };
-
-        window.sendTeamChatMessage = () => {
-          if (state.currentRole !== 'employee' || !state.currentUser) return;
-          postTeamMessage(state.currentUser, 'employee', 'employeeChatInput', 'employeeChatCount');
-        };
-
-        window.sendManagerChatMessage = () => {
-          if (state.currentRole !== 'admin') return;
-          postTeamMessage(state.manager.name, 'manager', 'adminChatInput', 'adminChatCount');
+          showToast('HR note saved.', 'success');
         };
 
         window.removeAttachment = (attachmentId) => {
@@ -5877,7 +7457,7 @@ function doGet() {
           }
           saveDraft(true);
           openEmailDraft(report, true);
-          showToast('Email draft opened for the manager.', 'success');
+          showToast('Email draft opened for HR.', 'success');
         };
 
         window.sendReport = async () => {
@@ -5893,18 +7473,29 @@ function doGet() {
           const emailResult = openEmailDraft(report, false);
           report.emailMethod = emailResult.method;
           report.sheetSynced = await syncReportToSheet(report);
+          const databaseResult = await syncReportToDatabase(report);
           persistReports();
           setSendButtonState(false);
+          if (databaseResult && databaseResult.ok) {
+            await refreshCloudReportsFromDatabase({ silent: true });
+          }
           clearStoredDraft(state.currentUser);
           resetEmployeeForm({ removeDraft: true, resetSavedLabel: true });
           renderHistoryTable();
           updateAdminStats();
+          renderEmployeeCards();
+          renderHrPanel();
           const managerEmail = (state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail).trim();
+          const messageParts = [`Email draft opened for HR at ${managerEmail}.`];
+          if (state.settings.sheetURL) {
+            messageParts.push(report.sheetSynced ? 'Google Sheet synced.' : 'Google Sheet sync pending.');
+          }
+          if (cloudSyncConfigured()) {
+            messageParts.push(report.databaseSynced ? 'Cloud database synced.' : 'Cloud database sync pending.');
+          }
           showToast(
-            report.sheetSynced
-              ? `Report saved and email draft opened for ${managerEmail}.`
-              : `Report saved locally and email draft opened for ${managerEmail}. Sheet sync is pending.`,
-            report.sheetSynced ? 'success' : 'info'
+            `Report saved. ${messageParts.join(' ')}`,
+            report.sheetSynced || report.databaseSynced ? 'success' : 'info'
           );
         };
 
@@ -5920,31 +7511,42 @@ function doGet() {
           document.querySelectorAll('.sidebar-nav-item').forEach((item) => item.classList.remove('active'));
           document.getElementById(`panel-${id}`).classList.add('active');
           if (button) button.classList.add('active');
+          const mobileSelect = document.getElementById('adminMobilePanelSelect');
+          if (mobileSelect) mobileSelect.value = id;
           const titles = {
-            dashboard: 'Dashboard Overview',
+            dashboard: 'Operations Overview',
             productivity: 'Productivity Analytics',
             employees: 'Employee Management',
-            reports: 'All Reports',
-            leave: 'Leave Requests',
-            chat: 'Team Chat',
+            reports: 'Activity Reports',
+            hr: 'HR Command Center',
+            leave: 'Leave Approvals',
+            audit: 'Audit Log',
             settings: 'Settings'
           };
-          document.getElementById('adminHeaderTitle').textContent = titles[id] || 'Admin Dashboard';
+          document.getElementById('adminHeaderTitle').textContent = titles[id] || 'HR Dashboard';
           if (id === 'dashboard') initDashboardCharts();
           if (id === 'productivity') initProductivityCharts();
           if (id === 'employees') renderEmployeeCards();
-          if (id === 'reports') renderAllReports();
+          if (id === 'reports') {
+            renderAllReports();
+            refreshCloudReportsFromDatabase({ silent: true });
+          }
+          if (id === 'hr') renderHrPanel();
           if (id === 'leave') renderAdminLeaveRequests();
-          if (id === 'chat') renderChatPanels();
+          if (id === 'audit') renderAuditLog();
           if (id === 'settings') renderSettingsPage();
         };
 
         window.filterReports = () => {
           const employeeFilter = document.getElementById('filterEmployee').value;
+          const departmentFilter = document.getElementById('filterDepartment').value;
+          const monthFilter = document.getElementById('filterMonth').value;
           const dateFilter = document.getElementById('filterDate').value;
           const statusFilter = document.getElementById('filterStatus').value;
           let filtered = [...state.reports];
           if (employeeFilter) filtered = filtered.filter((report) => report.employee === employeeFilter);
+          if (departmentFilter) filtered = filtered.filter((report) => report.department === departmentFilter);
+          if (monthFilter) filtered = filtered.filter((report) => monthKey(report.date) === monthFilter);
           if (dateFilter) filtered = filtered.filter((report) => report.date === dateFilter);
           if (statusFilter) filtered = filtered.filter((report) => report.status === statusFilter);
           renderAllReports(filtered);
@@ -5955,6 +7557,7 @@ function doGet() {
             'ID',
             'Employee',
             'Employee Email',
+            'Department',
             'Date',
             'Time',
             'Total Tasks',
@@ -5972,6 +7575,7 @@ function doGet() {
               report.id,
               report.employee,
               report.employeeEmail || '',
+              report.department || '',
               report.date,
               report.time || '',
               report.totalTasks,
@@ -5998,9 +7602,22 @@ function doGet() {
           state.settings.ccEmail = document.getElementById('settingCCEmail').value.trim();
           state.settings.sheetURL = document.getElementById('settingSheetURL').value.trim();
           state.settings.sheetID = document.getElementById('settingSheetID').value.trim();
+          state.settings.supabaseUrl = document.getElementById('settingSupabaseUrl').value.trim();
+          state.settings.supabaseAnonKey = document.getElementById('settingSupabaseAnonKey').value.trim();
+          state.settings.supabaseReportsTable = sanitizeTableName(document.getElementById('settingSupabaseReportsTable').value.trim()) || DEFAULT_SETTINGS.supabaseReportsTable;
+          state.settings.cloudRefreshSeconds = Math.max(asNumber(document.getElementById('settingCloudRefreshSeconds').value, cloudRefreshSeconds()), 15);
           persistSettings();
+          setupCloudReportSync();
           renderSettingsPage();
+          logAudit('General settings updated', {
+            scope: 'settings',
+            details: `Email ${state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail} | Cloud ${cloudSyncConfigured() ? supabaseReportsTable() : 'off'}`
+          });
           showToast('Settings saved!', 'success');
+        };
+
+        window.refreshCloudReports = async () => {
+          await refreshCloudReportsFromDatabase();
         };
 
         window.saveManagerAccess = () => {
@@ -6017,12 +7634,12 @@ function doGet() {
           const confirmPassword = confirmNode ? confirmNode.value.trim() : '';
 
           if (!name || !user) {
-            showToast('Manager name and admin username are required.', 'error');
+            showToast('HR/Admin name and username are required.', 'error');
             return;
           }
           if (newPassword || confirmPassword || user !== state.manager.user) {
             if (!currentPassword || currentPassword !== state.manager.pass) {
-              showToast('Enter the current manager password to update access settings.', 'error');
+              showToast('Enter the current HR/Admin password to update access settings.', 'error');
               return;
             }
           }
@@ -6039,7 +7656,11 @@ function doGet() {
           persistManager();
           refreshManagerChrome();
           renderSettingsPage();
-          showToast('Manager access updated!', 'success');
+          logAudit('HR access updated', {
+            scope: 'settings',
+            details: `HR/Admin username changed to ${user}`
+          });
+          showToast('HR/Admin access updated!', 'success');
         };
 
         window.savePasswords = () => {
@@ -6050,7 +7671,219 @@ function doGet() {
             }
           });
           persistPasswords();
+          logAudit('Employee passwords updated', {
+            scope: 'settings',
+            details: 'One or more employee passwords were changed.'
+          });
           showToast('Employee passwords updated!', 'success');
+        };
+
+        window.saveLeavePolicies = () => {
+          state.settings.leaveAllowance = Math.max(asNumber(document.getElementById('settingLeaveAllowance').value, annualLeaveAllowance()), 0);
+          state.settings.carryForwardLimit = Math.max(asNumber(document.getElementById('settingCarryForwardLimit').value, carryForwardLimit()), 0);
+          state.settings.leaveReasonCategories = String(document.getElementById('settingLeaveCategories').value || '')
+            .split(',')
+            .map((value) => value.trim())
+            .filter(Boolean);
+          persistSettings();
+          renderSettingsPage();
+          renderFilterOptions();
+          renderEmployeePolicySummary();
+          renderEmployeeLeaveBalance();
+          renderLeaveRequestPreview();
+          renderEmployeeLeaveRequests();
+          renderEmployeeCards();
+          renderWorkspaceSnapshot();
+          renderAdminLeaveRequests();
+          renderHrPanel();
+          logAudit('Leave policies updated', {
+            scope: 'policy',
+            details: `Allowance ${state.settings.leaveAllowance}, carry forward ${state.settings.carryForwardLimit}, categories ${state.settings.leaveReasonCategories.join(', ')}`
+          });
+          showToast('Leave policies saved!', 'success');
+        };
+
+        window.addHoliday = () => {
+          const name = document.getElementById('holidayName').value.trim();
+          const date = document.getElementById('holidayDate').value;
+          if (!name || !date) {
+            showToast('Enter both holiday name and date.', 'error');
+            return;
+          }
+          state.settings.companyHolidays = companyHolidays().filter((holiday) => holiday.date !== date || holiday.name.toLowerCase() !== name.toLowerCase());
+          state.settings.companyHolidays.push({ id: createId('holiday'), name, date });
+          persistSettings();
+          renderHolidayList();
+          renderEmployeeAnnouncementsAndHolidays();
+          renderEmployeePolicySummary();
+          renderEmployeeLeaveBalance();
+          renderLeaveRequestPreview();
+          renderEmployeeLeaveRequests();
+          renderEmployeeCards();
+          renderWorkspaceSnapshot();
+          renderAdminLeaveRequests();
+          renderHrPanel();
+          document.getElementById('holidayName').value = '';
+          document.getElementById('holidayDate').value = '';
+          logAudit('Company holiday added', {
+            scope: 'policy',
+            details: `${name} on ${date}`
+          });
+          showToast('Company holiday added.', 'success');
+        };
+
+        window.removeHoliday = (holidayId) => {
+          state.settings.companyHolidays = companyHolidays().filter((holiday) => holiday.id !== holidayId);
+          persistSettings();
+          renderHolidayList();
+          renderEmployeeAnnouncementsAndHolidays();
+          renderEmployeePolicySummary();
+          renderEmployeeLeaveBalance();
+          renderLeaveRequestPreview();
+          renderEmployeeLeaveRequests();
+          renderEmployeeCards();
+          renderWorkspaceSnapshot();
+          renderAdminLeaveRequests();
+          renderHrPanel();
+          logAudit('Company holiday removed', {
+            scope: 'policy',
+            details: `Holiday id ${holidayId} removed`
+          });
+          showToast('Company holiday removed.', 'info');
+        };
+
+        window.publishAnnouncement = () => {
+          const title = document.getElementById('announcementTitle').value.trim();
+          const body = document.getElementById('announcementBody').value.trim();
+          const pinned = Boolean(document.getElementById('announcementPinned').checked);
+          if (!title || !body) {
+            showToast('Add both an announcement title and message.', 'error');
+            return;
+          }
+          state.announcements.unshift(normalizeAnnouncement({
+            id: createId('notice'),
+            title,
+            body,
+            pinned,
+            createdAt: new Date().toISOString(),
+            author: state.manager.name
+          }));
+          state.announcements = state.announcements.slice(0, 30);
+          persistAnnouncements();
+          renderAnnouncementAdminList();
+          renderEmployeeAnnouncementsAndHolidays();
+          document.getElementById('announcementTitle').value = '';
+          document.getElementById('announcementBody').value = '';
+          document.getElementById('announcementPinned').checked = false;
+          logAudit('HR announcement published', {
+            scope: 'announcement',
+            details: title
+          });
+          showToast('Announcement published.', 'success');
+        };
+
+        window.toggleAnnouncementPin = (announcementId) => {
+          const notice = state.announcements.find((item) => item.id === announcementId);
+          if (!notice) return;
+          notice.pinned = !notice.pinned;
+          persistAnnouncements();
+          renderAnnouncementAdminList();
+          renderEmployeeAnnouncementsAndHolidays();
+          logAudit('Announcement pin updated', {
+            scope: 'announcement',
+            details: `${notice.title} is now ${notice.pinned ? 'pinned' : 'unpinned'}`
+          });
+        };
+
+        window.removeAnnouncement = (announcementId) => {
+          const notice = state.announcements.find((item) => item.id === announcementId);
+          state.announcements = state.announcements.filter((item) => item.id !== announcementId);
+          persistAnnouncements();
+          renderAnnouncementAdminList();
+          renderEmployeeAnnouncementsAndHolidays();
+          logAudit('Announcement removed', {
+            scope: 'announcement',
+            details: notice ? notice.title : announcementId
+          });
+          showToast('Announcement removed.', 'info');
+        };
+
+        window.filterLeaveRequests = () => {
+          renderAdminLeaveRequests();
+        };
+
+        window.exportReportBundle = (format) => {
+          const month = (document.getElementById('filterMonth') || {}).value || monthKey(todayKey());
+          const rows = state.employees.map((employee) => {
+            const performance = getEmployeeMonthPerformance(employee.name, month);
+            const leaveBalance = getEmployeeLeaveBalance(employee.name);
+            const payroll = getEmployeePayrollImpact(employee.name, month);
+            return {
+              employee: employee.name,
+              department: employee.department || 'Operations',
+              title: employee.title || '',
+              attendanceDays: getEmployeeAttendanceDays(employee.name, month),
+              kpiLabel: performance.label,
+              target: performance.target,
+              achieved: performance.achieved,
+              leaveRemaining: leaveBalance.remaining,
+              pendingLeave: leaveBalance.pendingUnits,
+              noSalaryUnits: payroll.unpaidUnits,
+              payrollDeduction: payroll.deduction
+            };
+          });
+          const headers = ['Employee', 'Department', 'Role', 'Attendance Days', 'KPI', 'Target', 'Achieved', 'Leave Remaining', 'Pending Leave', 'No Salary Leave', 'Payroll Deduction'];
+          const dataRows = rows.map((row) => [
+            row.employee,
+            row.department,
+            row.title,
+            row.attendanceDays,
+            row.kpiLabel,
+            row.target,
+            row.achieved,
+            row.leaveRemaining,
+            row.pendingLeave,
+            row.noSalaryUnits,
+            row.payrollDeduction
+          ]);
+
+          if (format === 'pdf') {
+            const html = `
+              <html><head><title>HR Report</title><style>
+                body{font-family:Arial,sans-serif;padding:24px;color:#111827}
+                h1{font-size:20px;margin-bottom:8px}
+                p{font-size:12px;color:#4b5563}
+                table{width:100%;border-collapse:collapse;margin-top:16px}
+                th,td{border:1px solid #d1d5db;padding:8px;font-size:12px;text-align:left}
+                th{background:#f3f4f6}
+              </style></head><body>
+              <h1>HR Export Summary</h1>
+              <p>Month: ${escapeHtml(month || monthKey(todayKey()))}</p>
+              <table><thead><tr>${headers.map((header) => `<th>${escapeHtml(header)}</th>`).join('')}</tr></thead>
+              <tbody>${dataRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(String(cell))}</td>`).join('')}</tr>`).join('')}</tbody></table>
+              </body></html>`;
+            const popup = window.open('', '_blank', 'width=1080,height=720');
+            if (popup) {
+              popup.document.write(html);
+              popup.document.close();
+              popup.focus();
+              popup.print();
+            }
+            showToast('PDF export view opened.', 'success');
+            return;
+          }
+
+          const delimiter = format === 'excel' ? '\t' : ',';
+          const mime = format === 'excel' ? 'application/vnd.ms-excel' : 'text/csv';
+          const extension = format === 'excel' ? 'xls' : 'csv';
+          const content = [headers, ...dataRows]
+            .map((row) => row.map((cell) => format === 'excel' ? String(cell) : `"${String(cell).replace(/"/g, '""')}"`).join(delimiter))
+            .join('\n');
+          const link = document.createElement('a');
+          link.href = `data:${mime};charset=utf-8,${encodeURIComponent(content)}`;
+          link.download = `help360_hr_export_${month || monthKey(todayKey())}.${extension}`;
+          link.click();
+          showToast(`${format === 'excel' ? 'Excel' : 'CSV'} export created.`, 'success');
         };
 
         window.toggleChecklistSelection = (containerId, checked) => {
@@ -6100,6 +7933,10 @@ function doGet() {
           const name = document.getElementById('newEmployeeName').value.trim();
           const email = document.getElementById('newEmployeeEmail').value.trim();
           const title = document.getElementById('newEmployeeTitle').value.trim();
+          const department = document.getElementById('newEmployeeDepartment').value.trim();
+          const teamLead = document.getElementById('newEmployeeTeamLead').value.trim();
+          const joiningDate = document.getElementById('newEmployeeJoiningDate').value || todayKey();
+          const salaryPerDay = document.getElementById('newEmployeeSalaryPerDay').value.trim();
           const password = document.getElementById('newEmployeePassword').value.trim();
           const responsibilities = getSelectedChecklistTasks('newEmployeeTaskChecklist');
 
@@ -6121,8 +7958,11 @@ function doGet() {
             name,
             email: email || generateWorkEmail(name),
             title: title || 'Medical Billing Specialist',
+            department: department || 'Operations',
+            teamLead: teamLead || DEFAULT_MANAGER.name,
             responsibilities,
-            joinedAt: todayKey(),
+            joinedAt: joiningDate,
+            salaryPerDay: asNumber(salaryPerDay, 0),
             status: 'Active'
           }, state.employees.length);
 
@@ -6132,10 +7972,20 @@ function doGet() {
           persistPasswords();
           populateEmployeeSelects();
           renderEmployeeCards();
+          renderHrPanel();
           renderSettingsPage();
+          logAudit('Employee added', {
+            scope: 'employee',
+            employeeName: employee.name,
+            details: `${employee.department} | Team lead ${employee.teamLead}`
+          });
           document.getElementById('newEmployeeName').value = '';
           document.getElementById('newEmployeeEmail').value = '';
           document.getElementById('newEmployeeTitle').value = 'Medical Billing Specialist';
+          document.getElementById('newEmployeeDepartment').value = 'Operations';
+          document.getElementById('newEmployeeTeamLead').value = DEFAULT_MANAGER.name;
+          document.getElementById('newEmployeeJoiningDate').value = '';
+          document.getElementById('newEmployeeSalaryPerDay').value = '0';
           document.getElementById('newEmployeePassword').value = 'help360';
           renderTaskChecklist('newEmployeeTaskChecklist', getTaskLabels());
           showToast(`${employee.name} was added successfully.`, 'success');
@@ -6149,8 +7999,20 @@ function doGet() {
           document.getElementById('editEmployeeName').value = employee.name;
           document.getElementById('editEmployeeEmail').value = employee.email || '';
           document.getElementById('editEmployeeTitle').value = employee.title || '';
+          document.getElementById('editEmployeeDepartment').value = employee.department || 'Operations';
+          document.getElementById('editEmployeeTeamLead').value = employee.teamLead || DEFAULT_MANAGER.name;
+          document.getElementById('editEmployeeJoiningDate').value = employee.joinedAt || todayKey();
+          document.getElementById('editEmployeeCarryForward').value = String(employee.carryForwardDays || 0);
+          document.getElementById('editEmployeeSalaryPerDay').value = String(employee.salaryPerDay || 0);
+          document.getElementById('editEmployeeKpiLabel').value = employee.kpiLabel || 'Monthly Output';
+          document.getElementById('editEmployeeMonthlyTarget').value = String(employee.monthlyTarget || 0);
+          document.getElementById('editEmployeeEmergencyName').value = employee.emergencyContactName || '';
+          document.getElementById('editEmployeeEmergencyPhone').value = employee.emergencyContactPhone || '';
+          document.getElementById('editEmployeeBankDetails').value = employee.bankDetails || '';
+          document.getElementById('editEmployeePerformanceRemark').value = employee.performanceRemark || '';
           document.getElementById('editEmployeePassword').value = state.passwords[employee.name] || 'help360';
           renderTaskChecklist('employeeTaskChecklist', employee.responsibilities);
+          renderEmployeeDocumentList(employee, 'employeeDocAdminList', true);
           document.getElementById('employeeEditorModal').classList.add('open');
         };
 
@@ -6164,6 +8026,17 @@ function doGet() {
           if (!employee) return;
           const email = document.getElementById('editEmployeeEmail').value.trim();
           const title = document.getElementById('editEmployeeTitle').value.trim();
+          const department = document.getElementById('editEmployeeDepartment').value.trim();
+          const teamLead = document.getElementById('editEmployeeTeamLead').value.trim();
+          const joiningDate = document.getElementById('editEmployeeJoiningDate').value;
+          const carryForward = document.getElementById('editEmployeeCarryForward').value.trim();
+          const salaryPerDay = document.getElementById('editEmployeeSalaryPerDay').value.trim();
+          const kpiLabel = document.getElementById('editEmployeeKpiLabel').value.trim();
+          const monthlyTarget = document.getElementById('editEmployeeMonthlyTarget').value.trim();
+          const emergencyName = document.getElementById('editEmployeeEmergencyName').value.trim();
+          const emergencyPhone = document.getElementById('editEmployeeEmergencyPhone').value.trim();
+          const bankDetails = document.getElementById('editEmployeeBankDetails').value.trim();
+          const performanceRemark = document.getElementById('editEmployeePerformanceRemark').value.trim();
           const password = document.getElementById('editEmployeePassword').value.trim();
           const responsibilities = getSelectedChecklistTasks('employeeTaskChecklist');
           if (!responsibilities.length) {
@@ -6172,18 +8045,112 @@ function doGet() {
           }
           employee.email = email || generateWorkEmail(employee.name);
           employee.title = title || 'Medical Billing Specialist';
+          employee.department = department || 'Operations';
+          employee.teamLead = teamLead || DEFAULT_MANAGER.name;
+          employee.joinedAt = joiningDate || employee.joinedAt || todayKey();
+          employee.carryForwardDays = Math.min(Math.max(asNumber(carryForward, 0), 0), carryForwardLimit());
+          employee.salaryPerDay = Math.max(asNumber(salaryPerDay, 0), 0);
+          employee.kpiLabel = kpiLabel || 'Monthly Output';
+          employee.monthlyTarget = Math.max(asNumber(monthlyTarget, 0), 0);
+          employee.emergencyContactName = emergencyName;
+          employee.emergencyContactPhone = emergencyPhone;
+          employee.bankDetails = bankDetails;
+          employee.performanceRemark = performanceRemark;
           employee.responsibilities = responsibilities;
           if (password) state.passwords[employee.name] = password;
           persistEmployees();
           persistPasswords();
           populateEmployeeSelects();
           renderEmployeeCards();
+          renderHrPanel();
           renderSettingsPage();
+          logAudit('Employee profile updated', {
+            scope: 'employee',
+            employeeName: employee.name,
+            details: `${employee.department} | target ${employee.monthlyTarget} | team lead ${employee.teamLead}`
+          });
           if (state.currentRole === 'employee' && state.currentUser === employee.name) {
             syncCurrentEmployeeContext();
           }
           window.closeEmployeeEditor();
           showToast(`${employee.name} updated successfully.`, 'success');
+        };
+
+        window.triggerEmployeeDocPicker = () => {
+          if (!state.currentEditingEmployeeId) return;
+          const input = document.getElementById('employeeDocInput');
+          if (input) input.click();
+        };
+
+        window.handleEmployeeDocSelection = async (event) => {
+          const employee = getEmployeeById(state.currentEditingEmployeeId);
+          const file = event.target && event.target.files && event.target.files[0];
+          if (!employee || !file) return;
+          if ((employee.documents || []).length >= MAX_EMPLOYEE_DOCS) {
+            showToast(`Store up to ${MAX_EMPLOYEE_DOCS} documents per employee profile.`, 'error');
+            event.target.value = '';
+            return;
+          }
+          if (file.size > MAX_EMPLOYEE_DOC_SIZE) {
+            showToast(`Keep employee documents under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)} for reliable local storage.`, 'error');
+            event.target.value = '';
+            return;
+          }
+          try {
+            const dataUrl = await readFileAsDataUrl(file);
+            employee.documents = employee.documents || [];
+            employee.documents.push(normalizeAttachment({
+              id: createId('doc'),
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              dataUrl,
+              kind: document.getElementById('employeeDocType').value || 'Other'
+            }));
+            persistEmployees();
+            renderEmployeeDocumentList(employee, 'employeeDocAdminList', true);
+            if (state.currentRole === 'employee' && state.currentUser === employee.name) {
+              renderEmployeeDossier();
+            }
+            renderEmployeeCards();
+            logAudit('Employee document uploaded', {
+              scope: 'employee',
+              employeeName: employee.name,
+              details: file.name
+            });
+            showToast('Employee document uploaded.', 'success');
+          } catch (error) {
+            showToast('Unable to read that document.', 'error');
+          } finally {
+            event.target.value = '';
+          }
+        };
+
+        window.downloadEmployeeDocument = (employeeId, docId) => {
+          const employee = getEmployeeById(employeeId);
+          const doc = employee && (employee.documents || []).find((item) => item.id === docId);
+          if (!doc) return;
+          if (!openDownload(doc.dataUrl, doc.name)) {
+            showToast('This document was saved without local file bytes.', 'error');
+          }
+        };
+
+        window.removeEmployeeDocument = (employeeId, docId) => {
+          const employee = getEmployeeById(employeeId);
+          if (!employee) return;
+          employee.documents = (employee.documents || []).filter((item) => item.id !== docId);
+          persistEmployees();
+          renderEmployeeDocumentList(employee, 'employeeDocAdminList', true);
+          renderEmployeeCards();
+          if (state.currentRole === 'employee' && state.currentUser === employee.name) {
+            renderEmployeeDossier();
+          }
+          logAudit('Employee document removed', {
+            scope: 'employee',
+            employeeName: employee.name,
+            details: `Document ${docId} removed`
+          });
+          showToast('Employee document removed.', 'info');
         };
 
         window.viewReport = (reportId) => {
@@ -6207,13 +8174,12 @@ function doGet() {
           });
         });
         document.getElementById('empNotes').addEventListener('input', queueAutoSave);
-        document.getElementById('employeeChatInput').addEventListener('input', () => updateChatComposerCount('employeeChatInput', 'employeeChatCount'));
-        document.getElementById('adminChatInput').addEventListener('input', () => updateChatComposerCount('adminChatInput', 'adminChatCount'));
-        document.getElementById('employeeChatInput').addEventListener('keydown', (event) => {
-          if (event.ctrlKey && event.key === 'Enter') window.sendTeamChatMessage();
-        });
-        document.getElementById('adminChatInput').addEventListener('keydown', (event) => {
-          if (event.ctrlKey && event.key === 'Enter') window.sendManagerChatMessage();
+        ['leaveStartDate', 'leaveEndDate', 'leaveType', 'leaveReasonCategory', 'leaveCoverage', 'leaveReason'].forEach((id) => {
+          const node = document.getElementById(id);
+          if (node) {
+            node.addEventListener('input', renderLeaveRequestPreview);
+            node.addEventListener('change', renderLeaveRequestPreview);
+          }
         });
         document.getElementById('empPassword').addEventListener('keydown', (event) => {
           if (event.key === 'Enter') window.employeeLogin();
@@ -6231,6 +8197,7 @@ function doGet() {
           if (state.currentRole === 'employee' && state.currentUser) {
             saveDraft(true);
           }
+          clearCloudReportPolling();
         });
         window.addEventListener('storage', (event) => {
           if (event.key === 'h360_employees') {
@@ -6238,6 +8205,7 @@ function doGet() {
             ensureTaskAssignments();
             populateEmployeeSelects();
             renderEmployeeCards();
+            renderHrPanel();
             if (state.currentRole === 'employee' && state.currentUser) syncCurrentEmployeeContext();
           }
           if (event.key === 'h360_reports') {
@@ -6246,18 +8214,40 @@ function doGet() {
             renderAllReports();
             renderHistoryTable();
             renderEmployeeCards();
+            renderHrPanel();
           }
           if (event.key === 'h360_leave_requests') {
             state.leaveRequests = loadJSON('h360_leave_requests', []).map(normalizeLeaveRequest).filter((request) => request.employeeName);
             renderAdminLeaveRequests();
+            renderHrPanel();
+            renderEmployeeLeaveBalance();
+            renderLeaveRequestPreview();
             renderEmployeeLeaveRequests();
             renderEmployeeCards();
             renderWorkspaceSnapshot();
           }
-          if (event.key === 'h360_team_chat') {
-            state.chatMessages = loadJSON('h360_team_chat', []).map(normalizeChatMessage).filter((message) => message.text);
-            renderChatPanels();
+          if (event.key === 'h360_announcements') {
+            state.announcements = loadJSON('h360_announcements', []).map(normalizeAnnouncement);
+            renderAnnouncementAdminList();
+            renderEmployeeAnnouncementsAndHolidays();
+          }
+          if (event.key === 'h360_audit_log') {
+            state.auditLog = loadJSON('h360_audit_log', []).map(normalizeAuditEntry);
+            renderAuditLog();
+          }
+          if (event.key === 'h360_settings') {
+            state.settings = Object.assign({}, DEFAULT_SETTINGS, loadJSON('h360_settings', DEFAULT_SETTINGS));
+            renderSettingsPage();
+            renderFilterOptions();
+            renderEmployeeAnnouncementsAndHolidays();
+            renderEmployeePolicySummary();
+            renderEmployeeLeaveBalance();
+            renderLeaveRequestPreview();
+            renderEmployeeLeaveRequests();
+            renderEmployeeCards();
             renderWorkspaceSnapshot();
+            renderHrPanel();
+            setupCloudReportSync();
           }
         });
       }
@@ -6277,14 +8267,17 @@ function doGet() {
         renderTaskChecklist('newEmployeeTaskChecklist', getTaskLabels());
         renderSettingsPage();
         renderCurrentAttachments();
+        renderFilterOptions();
         updateSummaryInternal();
         renderAdminLeaveRequests();
-        renderChatPanels();
+        renderHrPanel();
+        renderLeaveRequestPreview();
+        setupCloudReportSync();
         const employeeTitle = document.querySelector('.emp-page-title');
         const employeeSubtitle = document.querySelector('.emp-page-subtitle');
         if (employeeTitle) employeeTitle.textContent = 'Daily Activity Workspace';
-        if (employeeSubtitle) employeeSubtitle.textContent = 'Track your daily output, keep your profile polished, request leave, and stay connected with your team from one professional workspace.';
-        document.title = 'HELP360MD - Employee Activity Tracker';
+        if (employeeSubtitle) employeeSubtitle.textContent = 'Track your daily output, monitor leave balance, and submit polished updates from one professional workspace.';
+        document.title = 'HELP360MD - Workforce Activity Tracker';
         bindDomEvents();
       }
 
