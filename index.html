@@ -1875,6 +1875,10 @@
           <div class="login-error" id="adminLoginError">Invalid HR/Admin credentials.</div>
         </div>
 
+        <button class="btn-filter" type="button" style="width:100%;justify-content:center;margin-top:14px;background:#0f766e" onclick="openCareersPortal()">
+          <i class="fas fa-briefcase"></i> View Careers and Apply
+        </button>
+
         <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--gray-400)">
           <i class="fas fa-lock" style="margin-right:4px"></i>Secured Portal | Help360 2025
         </p>
@@ -2753,6 +2757,21 @@
         <button class="sidebar-nav-item" onclick="showAdminPanel('leave', this)">
           <i class="fas fa-calendar-check"></i> Leave Approvals
         </button>
+        <button class="sidebar-nav-item" onclick="showAdminPanel('recruitment', this)">
+          <i class="fas fa-user-plus"></i> Recruitment
+        </button>
+        <button class="sidebar-nav-item" onclick="showAdminPanel('attendance', this)">
+          <i class="fas fa-fingerprint"></i> Attendance
+        </button>
+        <button class="sidebar-nav-item" onclick="showAdminPanel('payroll', this)">
+          <i class="fas fa-file-invoice-dollar"></i> Payroll
+        </button>
+        <button class="sidebar-nav-item" onclick="showAdminPanel('compliance', this)">
+          <i class="fas fa-scale-balanced"></i> Compliance
+        </button>
+        <button class="sidebar-nav-item" onclick="showAdminPanel('analytics', this)">
+          <i class="fas fa-chart-pie"></i> Analytics
+        </button>
 
         <div class="sidebar-section-title">System</div>
         <button class="sidebar-nav-item" onclick="showAdminPanel('audit', this)">
@@ -2787,6 +2806,11 @@
             <option value="reports">Activity Reports</option>
             <option value="hr">HR Center</option>
             <option value="leave">Leave Approvals</option>
+            <option value="recruitment">Recruitment</option>
+            <option value="attendance">Attendance</option>
+            <option value="payroll">Payroll</option>
+            <option value="compliance">Compliance</option>
+            <option value="analytics">Analytics</option>
             <option value="audit">Audit Log</option>
             <option value="settings">Settings</option>
           </select>
@@ -2951,6 +2975,10 @@
                   <input type="text" class="settings-value" id="newEmployeeName" placeholder="Enter employee name" />
                 </div>
                 <div class="settings-item">
+                  <div class="settings-label">Employee Code</div>
+                  <input type="text" class="settings-value" id="newEmployeeCode" placeholder="EMP-008" />
+                </div>
+                <div class="settings-item">
                   <div class="settings-label">Work Email</div>
                   <input type="email" class="settings-value" id="newEmployeeEmail" placeholder="employee@help360.com" />
                 </div>
@@ -2969,6 +2997,10 @@
                 <div class="settings-item">
                   <div class="settings-label">Joining Date</div>
                   <input type="date" class="settings-value" id="newEmployeeJoiningDate" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Birth Date</div>
+                  <input type="date" class="settings-value" id="newEmployeeBirthDate" />
                 </div>
                 <div class="settings-item">
                   <div class="settings-label">Salary Per Day</div>
@@ -3206,6 +3238,654 @@
             </div>
           </div>
 
+          <div class="admin-panel" id="panel-recruitment">
+            <div class="stats-grid">
+              <div class="stat-card blue">
+                <div class="stat-icon blue"><i class="fas fa-briefcase"></i></div>
+                <div class="stat-value" id="recruitmentOpenJobs">0</div>
+                <div class="stat-label">Open Jobs</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Careers page live</div>
+              </div>
+              <div class="stat-card green">
+                <div class="stat-icon green"><i class="fas fa-file-signature"></i></div>
+                <div class="stat-value" id="recruitmentAppliedCount">0</div>
+                <div class="stat-label">Applications</div>
+                <div class="stat-change up"><i class="fas fa-arrow-up"></i> Candidate funnel</div>
+              </div>
+              <div class="stat-card orange">
+                <div class="stat-icon orange"><i class="fas fa-calendar-days"></i></div>
+                <div class="stat-value" id="recruitmentInterviewCount">0</div>
+                <div class="stat-label">Interviews Scheduled</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> HR follow-up</div>
+              </div>
+              <div class="stat-card purple">
+                <div class="stat-icon purple"><i class="fas fa-user-check"></i></div>
+                <div class="stat-value" id="recruitmentHireCount">0</div>
+                <div class="stat-label">Hires</div>
+                <div class="stat-change up"><i class="fas fa-arrow-up"></i> Talent conversion</div>
+              </div>
+            </div>
+
+            <div class="charts-grid" style="grid-template-columns:1fr 1fr">
+              <div class="employee-admin-card">
+                <div class="employee-admin-header">
+                  <div>
+                    <div class="chart-card-title">Job Posting Management</div>
+                    <div class="chart-card-sub">Publish roles to the public careers page, control vacancy status, and keep openings current.</div>
+                  </div>
+                </div>
+                <div class="employee-form-grid" style="margin-top:16px">
+                  <div class="settings-item">
+                    <div class="settings-label">Role Title</div>
+                    <input type="text" class="settings-value" id="jobPostTitle" placeholder="Medical Billing Executive" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Department</div>
+                    <input type="text" class="settings-value" id="jobPostDepartment" value="Operations" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Location</div>
+                    <input type="text" class="settings-value" id="jobPostLocation" value="Remote" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Employment Type</div>
+                    <select class="settings-value" id="jobPostEmploymentType">
+                      <option value="Full Time">Full Time</option>
+                      <option value="Part Time">Part Time</option>
+                      <option value="Contract">Contract</option>
+                      <option value="Internship">Internship</option>
+                    </select>
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Openings</div>
+                    <input type="number" class="settings-value" id="jobPostOpenings" min="1" value="1" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Closes On</div>
+                    <input type="date" class="settings-value" id="jobPostClosesOn" />
+                  </div>
+                </div>
+                <div class="settings-item" style="margin-top:12px">
+                  <div class="settings-label">Role Description</div>
+                  <textarea class="notes-textarea compact-textarea" id="jobPostDescription" placeholder="Add responsibilities, requirements, and role highlights."></textarea>
+                </div>
+                <button class="btn-settings-save" type="button" onclick="publishJobPost()"><i class="fas fa-plus"></i> Publish Job</button>
+                <div class="leave-balance-list" id="jobPostAdminList">
+                  <div class="attachment-empty">No vacancies posted yet.</div>
+                </div>
+              </div>
+
+              <div class="employee-admin-card">
+                <div class="employee-admin-header">
+                  <div>
+                    <div class="chart-card-title">ATS Pipeline and Interview Tracking</div>
+                    <div class="chart-card-sub">Move candidates from application to hiring, store notes, scorecards, feedback, and generate offers.</div>
+                  </div>
+                </div>
+                <div class="filter-bar">
+                  <select class="filter-select" id="candidateFilterStage">
+                    <option value="">All Stages</option>
+                    <option value="Applied">Applied</option>
+                    <option value="Shortlisted">Shortlisted</option>
+                    <option value="Interview">Interview</option>
+                    <option value="Hired">Hired</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Talent Pool">Talent Pool</option>
+                  </select>
+                  <select class="filter-select" id="candidateFilterJob">
+                    <option value="">All Jobs</option>
+                  </select>
+                  <button class="btn-filter" type="button" onclick="renderRecruitmentPanel()"><i class="fas fa-search"></i> Filter</button>
+                </div>
+                <div class="leave-balance-list" id="candidatePipelineList">
+                  <div class="attachment-empty">Candidates from the careers page will appear here.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-panel" id="panel-attendance">
+            <div class="stats-grid">
+              <div class="stat-card blue">
+                <div class="stat-icon blue"><i class="fas fa-user-check"></i></div>
+                <div class="stat-value" id="attendancePresentToday">0</div>
+                <div class="stat-label">Present Today</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Attendance register</div>
+              </div>
+              <div class="stat-card orange">
+                <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+                <div class="stat-value" id="attendanceLateToday">0</div>
+                <div class="stat-label">Late Arrivals</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Grace policy applied</div>
+              </div>
+              <div class="stat-card purple">
+                <div class="stat-icon purple"><i class="fas fa-business-time"></i></div>
+                <div class="stat-value" id="attendanceOvertimeToday">0</div>
+                <div class="stat-label">Overtime Hours</div>
+                <div class="stat-change up"><i class="fas fa-arrow-up"></i> Daily overtime</div>
+              </div>
+              <div class="stat-card green">
+                <div class="stat-icon green"><i class="fas fa-user-slash"></i></div>
+                <div class="stat-value" id="attendanceAbsentToday">0</div>
+                <div class="stat-label">Absent Today</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Attendance risk</div>
+              </div>
+            </div>
+
+            <div class="charts-grid" style="grid-template-columns:1fr 1fr">
+              <div class="employee-admin-card">
+                <div class="employee-admin-header">
+                  <div>
+                    <div class="chart-card-title">ZKTeco Device and Attendance Policy</div>
+                    <div class="chart-card-sub">Store device settings, grace periods, weekend policies, and sync notes for biometric attendance management.</div>
+                  </div>
+                </div>
+                <div class="employee-form-grid" style="margin-top:16px">
+                  <div class="settings-item">
+                    <div class="settings-label">Device Name</div>
+                    <input type="text" class="settings-value" id="attendanceDeviceName" placeholder="ZKTeco Main Device" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Device Endpoint / IP</div>
+                    <input type="text" class="settings-value" id="attendanceDeviceEndpoint" placeholder="192.168.0.150 or API bridge URL" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Sync Mode</div>
+                    <input type="text" class="settings-value" id="attendanceDeviceMode" placeholder="CSV Import / API Bridge" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Bridge URL</div>
+                    <input type="url" class="settings-value" id="attendanceBridgeUrl" placeholder="https://attendance-bridge.example.com" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Bridge Admin Key</div>
+                    <input type="text" class="settings-value" id="attendanceBridgeApiKey" placeholder="Optional bridge admin key" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Device Timezone</div>
+                    <input type="text" class="settings-value" id="attendanceTimezone" placeholder="UTC / Asia/Karachi / America/New_York" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Grace Minutes</div>
+                    <input type="number" class="settings-value" id="attendanceGraceMinutes" min="0" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Early Exit Grace</div>
+                    <input type="number" class="settings-value" id="attendanceEarlyExitGrace" min="0" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Auto Warning Threshold</div>
+                    <input type="number" class="settings-value" id="attendanceAutoWarningThreshold" min="1" />
+                  </div>
+                </div>
+                <div class="settings-item" style="margin-top:12px">
+                  <div class="settings-label">Weekend Policy</div>
+                  <input type="text" class="settings-value" id="attendanceWeekendPolicy" placeholder="Sunday Off / Alternate Saturday Off" />
+                </div>
+                <div class="settings-item" style="margin-top:12px">
+                  <div class="settings-label">Penalty Rule</div>
+                  <textarea class="notes-textarea compact-textarea" id="attendancePenaltyRule" placeholder="Describe late coming, early exit, or overtime rules."></textarea>
+                </div>
+                <div class="profile-action-row">
+                  <button class="btn-settings-save" type="button" onclick="saveAttendanceConfig()"><i class="fas fa-save"></i> Save Policy</button>
+                  <button class="btn-filter" type="button" style="background:#0f766e" onclick="runAttendanceSync()"><i class="fas fa-rotate"></i> Run ZKTeco Sync</button>
+                </div>
+                <div class="workspace-note" id="attendanceSyncNote">Device sync has not been run yet.</div>
+                <div class="workspace-note" id="attendanceBridgeHint" style="margin-top:8px">Deploy the Node bridge first, then point the device PUSH / ADMS host to that bridge.</div>
+              </div>
+
+              <div class="employee-admin-card">
+                <div class="employee-admin-header">
+                  <div>
+                    <div class="chart-card-title">Shift Builder</div>
+                    <div class="chart-card-sub">Create morning, night, or rotational shifts and keep weekend rules attached to each definition.</div>
+                  </div>
+                </div>
+                <div class="employee-form-grid" style="margin-top:16px">
+                  <div class="settings-item">
+                    <div class="settings-label">Shift Name</div>
+                    <input type="text" class="settings-value" id="shiftDefinitionName" placeholder="Morning Shift" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Start</div>
+                    <input type="time" class="settings-value" id="shiftDefinitionStart" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">End</div>
+                    <input type="time" class="settings-value" id="shiftDefinitionEnd" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Rotation</div>
+                    <input type="text" class="settings-value" id="shiftDefinitionRotation" placeholder="Fixed / Weekly Rotation" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Weekend Rule</div>
+                    <input type="text" class="settings-value" id="shiftDefinitionWeekend" placeholder="Sunday Off" />
+                  </div>
+                </div>
+                <button class="btn-settings-save" type="button" onclick="addShiftDefinition()"><i class="fas fa-plus"></i> Add Shift</button>
+                <div class="leave-balance-list" id="shiftDefinitionList">
+                  <div class="attachment-empty">Shift definitions will appear here.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="employee-admin-card">
+              <div class="employee-admin-header">
+                <div>
+                  <div class="chart-card-title">Attendance Register and Overtime</div>
+                  <div class="chart-card-sub">Capture manual attendance, imported biometric logs, overtime, late coming, and early exit behavior.</div>
+                </div>
+              </div>
+              <div class="employee-form-grid" style="margin-top:16px">
+                <div class="settings-item">
+                  <div class="settings-label">Employee</div>
+                  <select class="settings-value" id="attendanceEmployee"></select>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Date</div>
+                  <input type="date" class="settings-value" id="attendanceDate" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Shift</div>
+                  <select class="settings-value" id="attendanceShiftName"></select>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Clock In</div>
+                  <input type="time" class="settings-value" id="attendanceClockIn" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Clock Out</div>
+                  <input type="time" class="settings-value" id="attendanceClockOut" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Source</div>
+                  <select class="settings-value" id="attendanceSource">
+                    <option value="Manual">Manual</option>
+                    <option value="ZKTeco Sync">ZKTeco Sync</option>
+                    <option value="Activity Sync">Activity Sync</option>
+                  </select>
+                </div>
+              </div>
+              <div class="settings-item" style="margin-top:12px">
+                <div class="settings-label">Remarks</div>
+                <textarea class="notes-textarea compact-textarea" id="attendanceRemarks" placeholder="Optional note for the register."></textarea>
+              </div>
+              <button class="btn-settings-save" type="button" onclick="recordAttendanceEntry()"><i class="fas fa-save"></i> Save Attendance</button>
+              <div class="leave-balance-list" id="attendanceRecordList">
+                <div class="attachment-empty">Attendance records will appear here.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-panel" id="panel-payroll">
+            <div class="stats-grid">
+              <div class="stat-card blue">
+                <div class="stat-icon blue"><i class="fas fa-sack-dollar"></i></div>
+                <div class="stat-value" id="payrollMonthTotal">0</div>
+                <div class="stat-label">Monthly Payroll</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Generated payslips</div>
+              </div>
+              <div class="stat-card orange">
+                <div class="stat-icon orange"><i class="fas fa-hand-holding-dollar"></i></div>
+                <div class="stat-value" id="payrollLoanCount">0</div>
+                <div class="stat-label">Active Loans</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> EMI tracking</div>
+              </div>
+              <div class="stat-card purple">
+                <div class="stat-icon purple"><i class="fas fa-receipt"></i></div>
+                <div class="stat-value" id="payrollPayslipCount">0</div>
+                <div class="stat-label">Payslips Generated</div>
+                <div class="stat-change up"><i class="fas fa-arrow-up"></i> Salary history</div>
+              </div>
+              <div class="stat-card green">
+                <div class="stat-icon green"><i class="fas fa-file-circle-check"></i></div>
+                <div class="stat-value" id="payrollSettlementPending">0</div>
+                <div class="stat-label">Final Settlements</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Exit processing</div>
+              </div>
+            </div>
+
+            <div class="charts-grid" style="grid-template-columns:1fr 1fr">
+              <div class="employee-admin-card">
+                <div class="employee-admin-header">
+                  <div>
+                    <div class="chart-card-title">Payslip Generator and Salary Structure</div>
+                    <div class="chart-card-sub">Create a structured monthly payslip with salary components, tax, loans, overtime, and leave deductions.</div>
+                  </div>
+                </div>
+                <div class="employee-form-grid" style="margin-top:16px">
+                  <div class="settings-item">
+                    <div class="settings-label">Employee</div>
+                    <select class="settings-value" id="payrollEmployee"></select>
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Month</div>
+                    <input type="month" class="settings-value" id="payrollMonth" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Basic Salary</div>
+                    <input type="number" class="settings-value" id="payrollBasicSalary" min="0" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Allowances</div>
+                    <input type="number" class="settings-value" id="payrollAllowances" min="0" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Bonuses</div>
+                    <input type="number" class="settings-value" id="payrollBonuses" min="0" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Manual Deductions</div>
+                    <input type="number" class="settings-value" id="payrollDeductions" min="0" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Tax</div>
+                    <input type="number" class="settings-value" id="payrollTax" min="0" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Leave Deduction</div>
+                    <input type="number" class="settings-value" id="payrollLeaveDeduction" min="0" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Overtime Pay</div>
+                    <input type="number" class="settings-value" id="payrollOvertimePay" min="0" />
+                  </div>
+                </div>
+                <div class="settings-item" style="margin-top:12px">
+                  <div class="settings-label">Payroll Notes</div>
+                  <textarea class="notes-textarea compact-textarea" id="payrollNotes" placeholder="Optional salary note, tax note, or payroll remark."></textarea>
+                </div>
+                <button class="btn-settings-save" type="button" onclick="generatePayslipRecord()"><i class="fas fa-file-invoice-dollar"></i> Generate Payslip</button>
+                <div class="leave-balance-list" id="payrollRunList">
+                  <div class="attachment-empty">Generated payslips will appear here.</div>
+                </div>
+              </div>
+
+              <div class="employee-admin-card">
+                <div class="employee-admin-header">
+                  <div>
+                    <div class="chart-card-title">Loan and Advance Salary</div>
+                    <div class="chart-card-sub">Manage employee loans, EMI plans, and auto salary deductions inside payroll history.</div>
+                  </div>
+                </div>
+                <div class="employee-form-grid" style="margin-top:16px">
+                  <div class="settings-item">
+                    <div class="settings-label">Employee</div>
+                    <select class="settings-value" id="loanEmployee"></select>
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Type</div>
+                    <select class="settings-value" id="loanType">
+                      <option value="Loan">Loan</option>
+                      <option value="Advance Salary">Advance Salary</option>
+                    </select>
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Amount</div>
+                    <input type="number" class="settings-value" id="loanAmount" min="0" />
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-label">Monthly EMI</div>
+                    <input type="number" class="settings-value" id="loanEmi" min="0" />
+                  </div>
+                </div>
+                <div class="settings-item" style="margin-top:12px">
+                  <div class="settings-label">Reason / Note</div>
+                  <textarea class="notes-textarea compact-textarea" id="loanReason" placeholder="Why is the loan or advance being requested?"></textarea>
+                </div>
+                <button class="btn-settings-save" type="button" onclick="submitLoanRequest()"><i class="fas fa-hand-holding-dollar"></i> Save Loan / Advance</button>
+                <div class="leave-balance-list" id="loanRequestList">
+                  <div class="attachment-empty">No loan or advance records yet.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="employee-admin-card">
+              <div class="employee-admin-header">
+                <div>
+                  <div class="chart-card-title">Final Settlement Module</div>
+                  <div class="chart-card-sub">Prepare resignation settlements with leave encashment, pending deductions, recoveries, and signature status.</div>
+                </div>
+              </div>
+              <div class="employee-form-grid" style="margin-top:16px">
+                <div class="settings-item">
+                  <div class="settings-label">Employee</div>
+                  <select class="settings-value" id="settlementEmployee"></select>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Resignation Date</div>
+                  <input type="date" class="settings-value" id="settlementResignationDate" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Final Working Date</div>
+                  <input type="date" class="settings-value" id="settlementFinalWorkingDate" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Leave Encashment</div>
+                  <input type="number" class="settings-value" id="settlementLeaveEncashment" min="0" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Pending Deductions</div>
+                  <input type="number" class="settings-value" id="settlementPendingDeductions" min="0" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Recovery Amount</div>
+                  <input type="number" class="settings-value" id="settlementRecoveryAmount" min="0" />
+                </div>
+              </div>
+              <div class="settings-item" style="margin-top:12px">
+                <div class="settings-label">Settlement Note</div>
+                <textarea class="notes-textarea compact-textarea" id="settlementNotes" placeholder="Add any final settlement note, resignation detail, or HR comment."></textarea>
+              </div>
+              <button class="btn-settings-save" type="button" onclick="createFinalSettlement()"><i class="fas fa-file-circle-check"></i> Save Final Settlement</button>
+              <div class="leave-balance-list" id="finalSettlementList">
+                <div class="attachment-empty">No final settlement records yet.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-panel" id="panel-compliance">
+            <div class="stats-grid">
+              <div class="stat-card blue">
+                <div class="stat-icon blue"><i class="fas fa-triangle-exclamation"></i></div>
+                <div class="stat-value" id="disciplineOpenCount">0</div>
+                <div class="stat-label">Open Actions</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Needs follow-up</div>
+              </div>
+              <div class="stat-card orange">
+                <div class="stat-icon orange"><i class="fas fa-route"></i></div>
+                <div class="stat-value" id="disciplinePipCount">0</div>
+                <div class="stat-label">Active PIPs</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Improvement plans</div>
+              </div>
+              <div class="stat-card purple">
+                <div class="stat-icon purple"><i class="fas fa-ban"></i></div>
+                <div class="stat-value" id="disciplineSuspensionCount">0</div>
+                <div class="stat-label">Suspension Records</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Compliance history</div>
+              </div>
+              <div class="stat-card green">
+                <div class="stat-icon green"><i class="fas fa-signature"></i></div>
+                <div class="stat-value" id="disciplineSignaturePending">0</div>
+                <div class="stat-label">Pending Signatures</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Digital acknowledgements</div>
+              </div>
+            </div>
+
+            <div class="employee-admin-card">
+              <div class="employee-admin-header">
+                <div>
+                  <div class="chart-card-title">Corrective and Disciplinary Actions</div>
+                  <div class="chart-card-sub">Track verbal warnings, warning letters, written notices, suspension records, and performance improvement plans.</div>
+                </div>
+              </div>
+              <div class="employee-form-grid" style="margin-top:16px">
+                <div class="settings-item">
+                  <div class="settings-label">Employee</div>
+                  <select class="settings-value" id="disciplineEmployee"></select>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Action Type</div>
+                  <select class="settings-value" id="disciplineType">
+                    <option value="Verbal Warning">Verbal Warning</option>
+                    <option value="Warning Letter">Warning Letter</option>
+                    <option value="Written Notice">Written Notice</option>
+                    <option value="Suspension">Suspension</option>
+                    <option value="PIP">Improvement Plan (PIP)</option>
+                  </select>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Severity</div>
+                  <select class="settings-value" id="disciplineSeverity">
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Issue Date</div>
+                  <input type="date" class="settings-value" id="disciplineIssueDate" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Due / Review Date</div>
+                  <input type="date" class="settings-value" id="disciplineDueDate" />
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Suspension Days</div>
+                  <input type="number" class="settings-value" id="disciplineSuspensionDays" min="0" value="0" />
+                </div>
+              </div>
+              <div class="settings-item" style="margin-top:12px">
+                <div class="settings-label">Reason / Violation</div>
+                <textarea class="notes-textarea compact-textarea" id="disciplineReason" placeholder="Describe the incident, policy violation, or performance concern."></textarea>
+              </div>
+              <div class="settings-item" style="margin-top:12px">
+                <div class="settings-label">Action Taken / Notice Text</div>
+                <textarea class="notes-textarea compact-textarea" id="disciplineActionTaken" placeholder="Describe the corrective action, warning letter content, or suspension note."></textarea>
+              </div>
+              <div class="settings-item" style="margin-top:12px">
+                <div class="settings-label">Improvement Plan (PIP)</div>
+                <textarea class="notes-textarea compact-textarea" id="disciplineImprovementPlan" placeholder="Goals, timeline, expectations, and review checkpoints."></textarea>
+              </div>
+              <button class="btn-settings-save" type="button" onclick="issueDisciplinaryAction()"><i class="fas fa-scale-balanced"></i> Save Action</button>
+              <div class="leave-balance-list" id="disciplinaryActionList">
+                <div class="attachment-empty">No disciplinary actions recorded yet.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-panel" id="panel-analytics">
+            <div class="stats-grid">
+              <div class="stat-card blue">
+                <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                <div class="stat-value" id="analyticsHeadcount">0</div>
+                <div class="stat-label">Headcount</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Active workforce</div>
+              </div>
+              <div class="stat-card orange">
+                <div class="stat-icon orange"><i class="fas fa-arrows-rotate"></i></div>
+                <div class="stat-value" id="analyticsTurnover">0%</div>
+                <div class="stat-label">Turnover Rate</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> Exit trend</div>
+              </div>
+              <div class="stat-card purple">
+                <div class="stat-icon purple"><i class="fas fa-bed"></i></div>
+                <div class="stat-value" id="analyticsAbsenteeism">0%</div>
+                <div class="stat-label">Absenteeism</div>
+                <div class="stat-change neutral"><i class="fas fa-minus"></i> This month</div>
+              </div>
+              <div class="stat-card green">
+                <div class="stat-icon green"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-value" id="analyticsAttrition">0</div>
+                <div class="stat-label">Attrition Cases</div>
+                <div class="stat-change up"><i class="fas fa-arrow-up"></i> Completed exits</div>
+              </div>
+            </div>
+
+            <div class="charts-grid" style="grid-template-columns:1fr 1fr">
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <div>
+                    <div class="chart-card-title">Department Headcount</div>
+                    <div class="chart-card-sub">See how employees are distributed across departments.</div>
+                  </div>
+                </div>
+                <div class="chart-wrap"><canvas id="analyticsHeadcountChart"></canvas></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <div>
+                    <div class="chart-card-title">Attendance Mix</div>
+                    <div class="chart-card-sub">Present, late, overtime, and absent trends for the current month.</div>
+                  </div>
+                </div>
+                <div class="chart-wrap"><canvas id="analyticsAttendanceChart"></canvas></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <div>
+                    <div class="chart-card-title">Recruitment Funnel</div>
+                    <div class="chart-card-sub">Track the conversion from applications to hires.</div>
+                  </div>
+                </div>
+                <div class="chart-wrap"><canvas id="analyticsRecruitmentChart"></canvas></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <div>
+                    <div class="chart-card-title">Attrition and Settlements</div>
+                    <div class="chart-card-sub">Review completed or in-progress exits and settlement exposure.</div>
+                  </div>
+                </div>
+                <div class="chart-wrap"><canvas id="analyticsAttritionChart"></canvas></div>
+              </div>
+            </div>
+
+            <div class="charts-grid" style="grid-template-columns:1fr 1fr">
+              <div class="employee-admin-card">
+                <div class="employee-admin-header">
+                  <div>
+                    <div class="chart-card-title">Birthday Alerts</div>
+                    <div class="chart-card-sub">Upcoming birthdays help HR prepare messages and recognition activities.</div>
+                  </div>
+                </div>
+                <div class="leave-balance-list" id="birthdayAlertList">
+                  <div class="attachment-empty">No upcoming birthdays available yet.</div>
+                </div>
+              </div>
+              <div class="employee-admin-card">
+                <div class="employee-admin-header">
+                  <div>
+                    <div class="chart-card-title">Work Anniversary Alerts</div>
+                    <div class="chart-card-sub">Use joining dates to celebrate employee anniversaries and tenure milestones.</div>
+                  </div>
+                </div>
+                <div class="leave-balance-list" id="anniversaryAlertList">
+                  <div class="attachment-empty">No upcoming anniversaries available yet.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="perf-table-wrap">
+              <div class="perf-table-header">
+                <span class="history-title"><i class="fas fa-chart-simple" style="color:var(--accent);margin-right:8px"></i>HR Analytics Snapshot</span>
+              </div>
+              <table class="perf-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                    <th>Context</th>
+                  </tr>
+                </thead>
+                <tbody id="analyticsInsightBody">
+                  <tr><td colspan="3" class="no-data"><i class="fas fa-inbox"></i><br>No analytics insight yet</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <div class="admin-panel" id="panel-audit">
             <div class="employee-admin-card">
               <div class="employee-admin-header">
@@ -3221,6 +3901,10 @@
                   <option value="leave">Leave</option>
                   <option value="policy">Policy</option>
                   <option value="announcement">Announcement</option>
+                  <option value="recruitment">Recruitment</option>
+                  <option value="attendance">Attendance</option>
+                  <option value="payroll">Payroll</option>
+                  <option value="discipline">Discipline</option>
                   <option value="settings">Settings</option>
                 </select>
                 <input type="date" class="filter-input" id="auditFilterDate" />
@@ -3421,6 +4105,72 @@ function doGet() {
       </div>
     </div>
 
+    <div class="modal-overlay" id="careersPortalModal">
+      <div class="modal-box employee-editor-box">
+        <div class="modal-header">
+          <span class="modal-title">Careers at HELP360MD</span>
+          <button class="modal-close" onclick="closeCareersPortal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="employee-admin-card">
+            <div class="employee-admin-header">
+              <div>
+                <div class="chart-card-title">Open Roles</div>
+                <div class="chart-card-sub">Browse live vacancies and apply directly to the HR team.</div>
+              </div>
+            </div>
+            <div class="leave-balance-list" id="publicCareerList">
+              <div class="attachment-empty">No open roles published yet.</div>
+            </div>
+          </div>
+          <div class="employee-admin-card" style="margin-top:18px">
+            <div class="employee-admin-header">
+              <div>
+                <div class="chart-card-title">Application Form</div>
+                <div class="chart-card-sub">Applications land in the shared ATS pipeline and stay visible to HR in real time.</div>
+              </div>
+            </div>
+            <div class="employee-form-grid" style="margin-top:16px">
+              <div class="settings-item">
+                <div class="settings-label">Full Name</div>
+                <input type="text" class="settings-value" id="careerApplicantName" placeholder="Your full name" />
+              </div>
+              <div class="settings-item">
+                <div class="settings-label">Email</div>
+                <input type="email" class="settings-value" id="careerApplicantEmail" placeholder="you@example.com" />
+              </div>
+              <div class="settings-item">
+                <div class="settings-label">Phone</div>
+                <input type="text" class="settings-value" id="careerApplicantPhone" placeholder="+1 555 000 1234" />
+              </div>
+              <div class="settings-item">
+                <div class="settings-label">Apply For</div>
+                <select class="settings-value" id="careerApplicantJob"></select>
+              </div>
+              <div class="settings-item">
+                <div class="settings-label">Expected Salary</div>
+                <input type="number" class="settings-value" id="careerExpectedSalary" min="0" />
+              </div>
+              <div class="settings-item">
+                <div class="settings-label">Source</div>
+                <input type="text" class="settings-value" id="careerApplicantSource" value="Careers Page" />
+              </div>
+            </div>
+            <div class="settings-item" style="margin-top:12px">
+              <div class="settings-label">Cover Letter / Note</div>
+              <textarea class="notes-textarea compact-textarea" id="careerCoverLetter" placeholder="Tell us why you are a fit for the role."></textarea>
+            </div>
+            <div class="profile-action-row">
+              <input type="file" id="careerResumeInput" class="hidden" accept=".pdf,.doc,.docx,image/*" onchange="handleCareerResumeSelection(event)" />
+              <button class="btn-filter" type="button" onclick="triggerCareerResumePicker()"><i class="fas fa-upload"></i> Upload Resume</button>
+              <span class="workspace-note" id="careerResumeMeta" style="margin:0;flex:1">No resume uploaded yet.</span>
+            </div>
+            <button class="btn-settings-save" style="margin-top:14px" type="button" onclick="submitCareerApplication()"><i class="fas fa-paper-plane"></i> Submit Application</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-overlay" id="employeeEditorModal">
       <div class="modal-box employee-editor-box">
         <div class="modal-header">
@@ -3432,6 +4182,10 @@ function doGet() {
             <div class="settings-item">
               <div class="settings-label">Employee Name</div>
               <input type="text" class="settings-value" id="editEmployeeName" readonly />
+            </div>
+            <div class="settings-item">
+              <div class="settings-label">Employee Code</div>
+              <input type="text" class="settings-value" id="editEmployeeCode" placeholder="EMP-001" />
             </div>
             <div class="settings-item">
               <div class="settings-label">Work Email</div>
@@ -3454,12 +4208,29 @@ function doGet() {
               <input type="date" class="settings-value" id="editEmployeeJoiningDate" />
             </div>
             <div class="settings-item">
+              <div class="settings-label">Birth Date</div>
+              <input type="date" class="settings-value" id="editEmployeeBirthDate" />
+            </div>
+            <div class="settings-item">
               <div class="settings-label">Carry Forward Days</div>
               <input type="number" class="settings-value" id="editEmployeeCarryForward" min="0" />
             </div>
             <div class="settings-item">
               <div class="settings-label">Salary Per Day</div>
               <input type="number" class="settings-value" id="editEmployeeSalaryPerDay" min="0" />
+            </div>
+            <div class="settings-item">
+              <div class="settings-label">Status</div>
+              <select class="settings-value" id="editEmployeeStatus">
+                <option value="Active">Active</option>
+                <option value="Probation">Probation</option>
+                <option value="Notice Period">Notice Period</option>
+                <option value="Resigned">Resigned</option>
+              </select>
+            </div>
+            <div class="settings-item">
+              <div class="settings-label">Default Shift</div>
+              <input type="text" class="settings-value" id="editEmployeeShiftName" placeholder="Morning Shift" />
             </div>
             <div class="settings-item">
               <div class="settings-label">Monthly KPI Label</div>
@@ -4314,6 +5085,27 @@ function doGet() {
         user: 'usama.mazar',
         pass: 'admin360'
       };
+      const DEFAULT_ATTENDANCE_CONFIG = {
+        deviceName: 'ZKTeco Main Device',
+        deviceEndpoint: '',
+        deviceMode: 'CSV Import / API Bridge',
+        bridgeUrl: '',
+        bridgeApiKey: '',
+        timezone: 'UTC',
+        lastSyncAt: '',
+        bridgeStatus: '',
+        lastSyncSummary: '',
+        graceMinutes: 10,
+        earlyExitGraceMinutes: 10,
+        autoWarningThreshold: 3,
+        weekendPolicy: 'Sunday Off',
+        penaltyRule: 'Issue a warning after 3 late arrivals in one month.',
+        shifts: [
+          { id: 'shift_morning', name: 'Morning Shift', start: '09:00', end: '18:00', rotation: 'Fixed', weekend: 'Sunday Off' },
+          { id: 'shift_night', name: 'Night Shift', start: '18:00', end: '03:00', rotation: 'Fixed', weekend: 'Sunday Off' },
+          { id: 'shift_rotational', name: 'Rotational Shift', start: '10:00', end: '19:00', rotation: 'Weekly Rotation', weekend: 'Roster Based' }
+        ]
+      };
       const AVATAR_COLORS = ['#17316d', '#1f6f59', '#c39149', '#8f2d36', '#176a73', '#415da2', '#7a5a31'];
       const MAX_ATTACHMENTS = 3;
       const MAX_ATTACHMENT_SIZE = 700 * 1024;
@@ -4322,7 +5114,24 @@ function doGet() {
       const MAX_EMPLOYEE_DOCS = 6;
       const MAX_EMPLOYEE_DOC_SIZE = 350 * 1024;
       const ANNUAL_LEAVE_LIMIT = 8;
-      const SHARED_CLOUD_SCOPES = ['settings', 'manager_account', 'passwords', 'custom_responsibilities', 'employees', 'leave_requests', 'announcements', 'audit_log'];
+      const SHARED_CLOUD_SCOPES = [
+        'settings',
+        'manager_account',
+        'passwords',
+        'custom_responsibilities',
+        'employees',
+        'leave_requests',
+        'announcements',
+        'audit_log',
+        'disciplinary_actions',
+        'job_posts',
+        'candidates',
+        'attendance_config',
+        'attendance_records',
+        'payroll_runs',
+        'loans',
+        'final_settlements'
+      ];
 
       const state = {
         settings: null,
@@ -4334,6 +5143,15 @@ function doGet() {
         leaveRequests: [],
         announcements: [],
         auditLog: [],
+        disciplinaryActions: [],
+        jobPosts: [],
+        candidates: [],
+        attendanceConfig: null,
+        attendanceRecords: [],
+        payrollRuns: [],
+        loans: [],
+        finalSettlements: [],
+        currentCareerResume: null,
         currentUser: null,
         currentRole: null,
         historyVisible: false,
@@ -4567,6 +5385,20 @@ function doGet() {
 
       function sharedStateTable() {
         return 'help360_shared_state';
+      }
+
+      function attendanceBridgeBaseUrl() {
+        const config = state.attendanceConfig || DEFAULT_ATTENDANCE_CONFIG;
+        const explicit = String(config.bridgeUrl || '').trim();
+        if (explicit) {
+          return explicit.replace(/\/+$/, '');
+        }
+        const legacy = String(config.deviceEndpoint || '').trim();
+        return /^https?:\/\//i.test(legacy) ? legacy.replace(/\/+$/, '') : '';
+      }
+
+      function attendanceBridgeAdminKey() {
+        return String(state.attendanceConfig && state.attendanceConfig.bridgeApiKey || '').trim();
       }
 
       function cloudRefreshSeconds() {
@@ -4908,6 +5740,30 @@ function doGet() {
         if (scope === 'audit_log') {
           return state.auditLog.slice(0, 300).map((entry) => clone(normalizeAuditEntry(entry)));
         }
+        if (scope === 'disciplinary_actions') {
+          return state.disciplinaryActions.map((entry) => clone(normalizeDisciplinaryAction(entry)));
+        }
+        if (scope === 'job_posts') {
+          return state.jobPosts.map((entry) => clone(normalizeJobPost(entry)));
+        }
+        if (scope === 'candidates') {
+          return state.candidates.map((entry) => clone(normalizeCandidate(entry)));
+        }
+        if (scope === 'attendance_config') {
+          return clone(normalizeAttendanceConfig(state.attendanceConfig));
+        }
+        if (scope === 'attendance_records') {
+          return state.attendanceRecords.map((entry) => clone(normalizeAttendanceEntry(entry)));
+        }
+        if (scope === 'payroll_runs') {
+          return state.payrollRuns.map((entry) => clone(normalizePayrollRun(entry)));
+        }
+        if (scope === 'loans') {
+          return state.loans.map((entry) => clone(normalizeLoan(entry)));
+        }
+        if (scope === 'final_settlements') {
+          return state.finalSettlements.map((entry) => clone(normalizeFinalSettlement(entry)));
+        }
         return null;
       }
 
@@ -4956,6 +5812,38 @@ function doGet() {
         }
         if (scope === 'audit_log') {
           state.auditLog = Array.isArray(payload) ? payload.map(normalizeAuditEntry).slice(0, 300) : [];
+          return true;
+        }
+        if (scope === 'disciplinary_actions') {
+          state.disciplinaryActions = Array.isArray(payload) ? payload.map(normalizeDisciplinaryAction) : [];
+          return true;
+        }
+        if (scope === 'job_posts') {
+          state.jobPosts = Array.isArray(payload) ? payload.map(normalizeJobPost) : [];
+          return true;
+        }
+        if (scope === 'candidates') {
+          state.candidates = Array.isArray(payload) ? payload.map(normalizeCandidate) : [];
+          return true;
+        }
+        if (scope === 'attendance_config') {
+          state.attendanceConfig = normalizeAttendanceConfig(payload);
+          return true;
+        }
+        if (scope === 'attendance_records') {
+          state.attendanceRecords = Array.isArray(payload) ? payload.map(normalizeAttendanceEntry) : [];
+          return true;
+        }
+        if (scope === 'payroll_runs') {
+          state.payrollRuns = Array.isArray(payload) ? payload.map(normalizePayrollRun) : [];
+          return true;
+        }
+        if (scope === 'loans') {
+          state.loans = Array.isArray(payload) ? payload.map(normalizeLoan) : [];
+          return true;
+        }
+        if (scope === 'final_settlements') {
+          state.finalSettlements = Array.isArray(payload) ? payload.map(normalizeFinalSettlement) : [];
           return true;
         }
         return false;
@@ -5037,6 +5925,14 @@ function doGet() {
         persistLeaveRequests({ skipCloud: true });
         persistAnnouncements({ skipCloud: true });
         persistAuditLog({ skipCloud: true });
+        persistDisciplinaryActions({ skipCloud: true });
+        persistJobPosts({ skipCloud: true });
+        persistCandidates({ skipCloud: true });
+        persistAttendanceConfig({ skipCloud: true });
+        persistAttendanceRecords({ skipCloud: true });
+        persistPayrollRuns({ skipCloud: true });
+        persistLoans({ skipCloud: true });
+        persistFinalSettlements({ skipCloud: true });
       }
 
       function refreshSharedViews() {
@@ -5065,6 +5961,12 @@ function doGet() {
         renderAnnouncementAdminList();
         renderAuditLog();
         renderHrPanel();
+        renderRecruitmentPanel();
+        renderAttendancePanel();
+        renderPayrollPanel();
+        renderCompliancePanel();
+        renderAnalyticsPanel();
+        renderCareersPortal();
         if (state.currentRole === 'employee' && state.currentUser) {
           syncCurrentEmployeeContext();
         }
@@ -5158,6 +6060,43 @@ function doGet() {
           }
         }
         return ok;
+      }
+
+      async function requestAttendanceBridgeSync() {
+        const baseUrl = attendanceBridgeBaseUrl();
+        if (!baseUrl) {
+          return { ok: false, reason: 'Add the ZKTeco bridge URL first.' };
+        }
+        const headers = {
+          'Content-Type': 'application/json',
+          'X-Requested-By': state.currentRole === 'admin'
+            ? (state.manager && state.manager.name) || 'HR / Admin'
+            : (state.currentUser || 'Employee')
+        };
+        const adminKey = attendanceBridgeAdminKey();
+        if (adminKey) {
+          headers['X-Bridge-Key'] = adminKey;
+        }
+        try {
+          const response = await fetch(`${baseUrl}/api/zkteco/sync`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              requestedAt: new Date().toISOString(),
+              requestedBy: headers['X-Requested-By']
+            })
+          });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok || !payload || payload.ok === false) {
+            throw new Error(payload && payload.error ? payload.error : `Bridge sync failed with status ${response.status}.`);
+          }
+          return { ok: true, data: payload };
+        } catch (error) {
+          return {
+            ok: false,
+            reason: error && error.message ? error.message : 'Unable to reach the ZKTeco bridge.'
+          };
+        }
       }
 
       function createAuditEntry(action, meta) {
@@ -5397,6 +6336,169 @@ function doGet() {
         return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       }
 
+      function timeToMinutes(value) {
+        const [hours, minutes] = String(value || '').split(':').map((part) => Number(part || 0));
+        if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return 0;
+        return (hours * 60) + minutes;
+      }
+
+      function durationMinutes(start, end) {
+        const startMinutes = timeToMinutes(start);
+        const endMinutes = timeToMinutes(end);
+        if (!start || !end) return 0;
+        return endMinutes >= startMinutes ? (endMinutes - startMinutes) : ((24 * 60) - startMinutes + endMinutes);
+      }
+
+      function shiftDefinitions() {
+        return state.attendanceConfig && Array.isArray(state.attendanceConfig.shifts) ? state.attendanceConfig.shifts : DEFAULT_ATTENDANCE_CONFIG.shifts;
+      }
+
+      function shiftOptions() {
+        return shiftDefinitions().map((shift) => shift.name);
+      }
+
+      function getShiftDefinitionByName(name) {
+        return shiftDefinitions().find((shift) => shift.name === name) || shiftDefinitions()[0] || DEFAULT_ATTENDANCE_CONFIG.shifts[0];
+      }
+
+      function computeAttendanceFlags(record) {
+        const shift = getShiftDefinitionByName(record.shiftName);
+        const grace = Math.max(asNumber(state.attendanceConfig && state.attendanceConfig.graceMinutes, DEFAULT_ATTENDANCE_CONFIG.graceMinutes), 0);
+        const earlyGrace = Math.max(asNumber(state.attendanceConfig && state.attendanceConfig.earlyExitGraceMinutes, DEFAULT_ATTENDANCE_CONFIG.earlyExitGraceMinutes), 0);
+        const scheduledMinutes = durationMinutes(shift.start, shift.end);
+        const actualMinutes = durationMinutes(record.clockIn, record.clockOut);
+        const lateMinutes = record.clockIn ? Math.max(timeToMinutes(record.clockIn) - timeToMinutes(shift.start) - grace, 0) : 0;
+        const earlyExitMinutes = record.clockOut ? Math.max(timeToMinutes(shift.end) - timeToMinutes(record.clockOut) - earlyGrace, 0) : 0;
+        const overtimeHours = Math.max(Number(((actualMinutes - scheduledMinutes) / 60).toFixed(2)), 0);
+        let status = record.status || 'Present';
+        if (status === 'Absent') {
+          return { lateMinutes: 0, earlyExitMinutes: 0, overtimeHours: 0, status: 'Absent' };
+        }
+        if (!record.clockIn && !record.clockOut) {
+          status = 'Absent';
+        } else if (lateMinutes > 0) {
+          status = 'Late';
+        } else if (earlyExitMinutes > 0) {
+          status = 'Early Exit';
+        } else if (overtimeHours > 0.25) {
+          status = 'Overtime';
+        } else {
+          status = 'Present';
+        }
+        return { lateMinutes, earlyExitMinutes, overtimeHours, status };
+      }
+
+      function normalizeAttendanceEntry(record) {
+        const normalized = normalizeAttendanceRecord(record);
+        return Object.assign(normalized, computeAttendanceFlags(normalized));
+      }
+
+      function candidateStageOptions() {
+        return ['Applied', 'Shortlisted', 'Interview', 'Hired', 'Rejected', 'Talent Pool'];
+      }
+
+      function openJobPosts() {
+        return state.jobPosts.filter((job) => String(job.status || '').toLowerCase() === 'open');
+      }
+
+      function getCandidatesByStage(stage) {
+        return state.candidates.filter((candidate) => candidate.stage === stage);
+      }
+
+      function getActiveLoanDeduction(employeeName) {
+        return state.loans
+          .filter((loan) => loan.employeeName === employeeName && ['Approved', 'Active'].includes(loan.status))
+          .reduce((sum, loan) => sum + Math.min(loan.emi, loan.balance), 0);
+      }
+
+      function computePayrollNet(run) {
+        return Number((
+          Math.max(asNumber(run.basicSalary, 0), 0) +
+          Math.max(asNumber(run.allowances, 0), 0) +
+          Math.max(asNumber(run.bonuses, 0), 0) +
+          Math.max(asNumber(run.overtimePay, 0), 0) -
+          Math.max(asNumber(run.deductions, 0), 0) -
+          Math.max(asNumber(run.tax, 0), 0) -
+          Math.max(asNumber(run.loanDeduction, 0), 0) -
+          Math.max(asNumber(run.leaveDeduction, 0), 0)
+        ).toFixed(2));
+      }
+
+      function applyHrSignature(record) {
+        record.hrSignature = state.manager.name;
+        record.hrSignedAt = new Date().toISOString();
+      }
+
+      function applyEmployeeSignature(record, employeeName) {
+        record.employeeSignature = employeeName || record.employeeName || record.fullName || 'Employee';
+        record.employeeSignedAt = new Date().toISOString();
+      }
+
+      function recurringEventDaysAway(dateValue) {
+        if (!dateValue) return Number.POSITIVE_INFINITY;
+        const month = Number(String(dateValue).slice(5, 7));
+        const day = Number(String(dateValue).slice(8, 10));
+        if (!month || !day) return Number.POSITIVE_INFINITY;
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        let target = new Date(today.getFullYear(), month - 1, day);
+        if (target < today) {
+          target = new Date(today.getFullYear() + 1, month - 1, day);
+        }
+        return Math.round((target - today) / 86400000);
+      }
+
+      function upcomingBirthdays() {
+        return state.employees
+          .filter((employee) => employee.birthDate)
+          .map((employee) => ({
+            employee,
+            daysAway: recurringEventDaysAway(employee.birthDate)
+          }))
+          .filter((item) => item.daysAway <= 30)
+          .sort((left, right) => left.daysAway - right.daysAway);
+      }
+
+      function upcomingAnniversaries() {
+        return state.employees
+          .filter((employee) => employee.joinedAt)
+          .map((employee) => ({
+            employee,
+            daysAway: recurringEventDaysAway(employee.joinedAt),
+            years: Math.max(new Date().getFullYear() - Number(String(employee.joinedAt).slice(0, 4)), 0)
+          }))
+          .filter((item) => item.daysAway <= 30)
+          .sort((left, right) => left.daysAway - right.daysAway);
+      }
+
+      function monthLabel(value) {
+        const [year, month] = String(value || monthKey(todayKey())).split('-').map(Number);
+        if (!year || !month) return String(value || monthKey(todayKey()));
+        return new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      }
+
+      function absencesThisMonth() {
+        const currentMonth = monthKey(todayKey());
+        return state.attendanceRecords.filter((record) => monthKey(record.date) === currentMonth && record.status === 'Absent');
+      }
+
+      function attritionCount() {
+        return state.finalSettlements.filter((item) => item.status === 'Completed' || item.status === 'Approved').length;
+      }
+
+      function turnoverRate() {
+        if (!state.employees.length) return 0;
+        return Math.round((attritionCount() / state.employees.length) * 100);
+      }
+
+      function absenteeismRate() {
+        const currentMonth = monthKey(todayKey());
+        const currentMonthRecords = state.attendanceRecords.filter((record) => monthKey(record.date) === currentMonth);
+        if (!currentMonthRecords.length) return 0;
+        const absentCount = currentMonthRecords.filter((record) => record.status === 'Absent').length;
+        return Math.round((absentCount / currentMonthRecords.length) * 100);
+      }
+
       function getTaskLabels() {
         const domTasks = Array.from(document.querySelectorAll('#employeeScreen .task-row')).map((row) => row.dataset.task);
         const customTasks = state.customResponsibilities.map((item) => item.name);
@@ -5468,6 +6570,7 @@ function doGet() {
         const name = String((employee && employee.name) || fallbackName).trim();
         return {
           id: String((employee && employee.id) || uniqueEmployeeId(name)),
+          employeeCode: String((employee && employee.employeeCode) || `EMP-${String(index + 1).padStart(3, '0')}`).trim(),
           name,
           email: String((employee && employee.email) || generateWorkEmail(name)).trim(),
           title: String((employee && employee.title) || 'Medical Billing Specialist').trim(),
@@ -5480,9 +6583,16 @@ function doGet() {
             ? [...new Set(employee.responsibilities)]
             : null,
           joinedAt: String((employee && employee.joinedAt) || todayKey()),
+          birthDate: String((employee && employee.birthDate) || '').trim(),
           status: String((employee && employee.status) || 'Active'),
           carryForwardDays: Math.min(Math.max(asNumber(employee && employee.carryForwardDays, 0), 0), carryForwardLimit()),
           salaryPerDay: Math.max(asNumber(employee && employee.salaryPerDay, 0), 0),
+          baseSalary: Math.max(asNumber(employee && employee.baseSalary, Math.max(asNumber(employee && employee.salaryPerDay, 0), 0) * 26), 0),
+          defaultAllowances: Math.max(asNumber(employee && employee.defaultAllowances, 0), 0),
+          defaultBonuses: Math.max(asNumber(employee && employee.defaultBonuses, 0), 0),
+          defaultDeductions: Math.max(asNumber(employee && employee.defaultDeductions, 0), 0),
+          defaultTaxPercent: Math.max(asNumber(employee && employee.defaultTaxPercent, 0), 0),
+          shiftName: String((employee && employee.shiftName) || 'Morning Shift').trim(),
           monthlyTarget: Math.max(asNumber(employee && employee.monthlyTarget, 120), 0),
           kpiLabel: String((employee && employee.kpiLabel) || 'Monthly Output').trim(),
           performanceRemark: String((employee && employee.performanceRemark) || '').trim(),
@@ -5592,6 +6702,194 @@ function doGet() {
         };
       }
 
+      function normalizeDisciplinaryAction(action) {
+        const employee = getEmployeeByName((action && action.employeeName) || '') || getEmployeeById(action && action.employeeId);
+        return {
+          id: String((action && action.id) || createId('discipline')),
+          employeeId: String((action && action.employeeId) || (employee ? employee.id : '')),
+          employeeName: String((action && action.employeeName) || (employee ? employee.name : 'Unknown Employee')).trim(),
+          employeeCode: String((action && action.employeeCode) || (employee ? employee.employeeCode : '')).trim(),
+          type: String((action && action.type) || 'Warning Letter').trim(),
+          severity: String((action && action.severity) || 'Medium').trim(),
+          issueDate: String((action && action.issueDate) || todayKey()).trim(),
+          dueDate: String((action && action.dueDate) || '').trim(),
+          reason: String((action && action.reason) || '').trim(),
+          actionTaken: String((action && action.actionTaken) || '').trim(),
+          improvementPlan: String((action && action.improvementPlan) || '').trim(),
+          suspensionDays: Math.max(asNumber(action && action.suspensionDays, 0), 0),
+          status: String((action && action.status) || 'Open').trim(),
+          hrSignature: String((action && action.hrSignature) || '').trim(),
+          hrSignedAt: String((action && action.hrSignedAt) || '').trim(),
+          employeeSignature: String((action && action.employeeSignature) || '').trim(),
+          employeeSignedAt: String((action && action.employeeSignedAt) || '').trim(),
+          createdAt: String((action && action.createdAt) || new Date().toISOString())
+        };
+      }
+
+      function normalizeJobPost(post) {
+        return {
+          id: String((post && post.id) || createId('job')).trim(),
+          title: String((post && post.title) || 'Open Role').trim(),
+          department: String((post && post.department) || 'Operations').trim(),
+          location: String((post && post.location) || 'Remote').trim(),
+          employmentType: String((post && post.employmentType) || 'Full Time').trim(),
+          openings: Math.max(asNumber(post && post.openings, 1), 1),
+          description: String((post && post.description) || '').trim(),
+          status: String((post && post.status) || 'Open').trim(),
+          closesOn: String((post && post.closesOn) || '').trim(),
+          createdAt: String((post && post.createdAt) || new Date().toISOString()).trim()
+        };
+      }
+
+      function normalizeCandidate(candidate) {
+        const job = state.jobPosts.find((item) => item.id === String(candidate && candidate.jobId || ''));
+        return {
+          id: String((candidate && candidate.id) || createId('candidate')).trim(),
+          jobId: String((candidate && candidate.jobId) || (job ? job.id : '')).trim(),
+          jobTitle: String((candidate && candidate.jobTitle) || (job ? job.title : 'General Application')).trim(),
+          fullName: String((candidate && candidate.fullName) || '').trim(),
+          email: String((candidate && candidate.email) || '').trim(),
+          phone: String((candidate && candidate.phone) || '').trim(),
+          source: String((candidate && candidate.source) || 'Careers Page').trim(),
+          stage: String((candidate && candidate.stage) || 'Applied').trim(),
+          expectedSalary: Math.max(asNumber(candidate && candidate.expectedSalary, 0), 0),
+          scorecard: Math.min(Math.max(asNumber(candidate && candidate.scorecard, 0), 0), 100),
+          interviewDate: String((candidate && candidate.interviewDate) || '').trim(),
+          interviewers: String((candidate && candidate.interviewers) || '').trim(),
+          hrNotes: String((candidate && candidate.hrNotes) || '').trim(),
+          feedback: String((candidate && candidate.feedback) || '').trim(),
+          offerStatus: String((candidate && candidate.offerStatus) || 'Draft').trim(),
+          offerSalary: Math.max(asNumber(candidate && candidate.offerSalary, 0), 0),
+          proposedStartDate: String((candidate && candidate.proposedStartDate) || '').trim(),
+          candidateSignature: String((candidate && candidate.candidateSignature) || '').trim(),
+          candidateSignedAt: String((candidate && candidate.candidateSignedAt) || '').trim(),
+          hrSignature: String((candidate && candidate.hrSignature) || '').trim(),
+          hrSignedAt: String((candidate && candidate.hrSignedAt) || '').trim(),
+          notificationEmail: String((candidate && candidate.notificationEmail) || '').trim(),
+          appliedAt: String((candidate && candidate.appliedAt) || new Date().toISOString()).trim(),
+          resume: candidate && candidate.resume ? normalizeAttachment(candidate.resume) : null,
+          coverLetter: String((candidate && candidate.coverLetter) || '').trim()
+        };
+      }
+
+      function normalizeShiftDefinition(shift, index) {
+        return {
+          id: String((shift && shift.id) || `shift_${index + 1}`).trim(),
+          name: String((shift && shift.name) || `Shift ${index + 1}`).trim(),
+          start: String((shift && shift.start) || '09:00').trim(),
+          end: String((shift && shift.end) || '18:00').trim(),
+          rotation: String((shift && shift.rotation) || 'Fixed').trim(),
+          weekend: String((shift && shift.weekend) || 'Sunday Off').trim()
+        };
+      }
+
+      function normalizeAttendanceConfig(config) {
+        const next = Object.assign({}, DEFAULT_ATTENDANCE_CONFIG, config && typeof config === 'object' ? config : {});
+        next.deviceName = String(next.deviceName || DEFAULT_ATTENDANCE_CONFIG.deviceName).trim();
+        next.deviceEndpoint = String(next.deviceEndpoint || '').trim();
+        next.deviceMode = String(next.deviceMode || DEFAULT_ATTENDANCE_CONFIG.deviceMode).trim();
+        next.bridgeUrl = String(next.bridgeUrl || '').trim().replace(/\/+$/, '');
+        next.bridgeApiKey = String(next.bridgeApiKey || '').trim();
+        next.timezone = String(next.timezone || DEFAULT_ATTENDANCE_CONFIG.timezone).trim() || DEFAULT_ATTENDANCE_CONFIG.timezone;
+        next.bridgeStatus = String(next.bridgeStatus || '').trim();
+        next.lastSyncSummary = String(next.lastSyncSummary || '').trim();
+        next.lastSyncAt = String(next.lastSyncAt || '').trim();
+        next.graceMinutes = Math.max(asNumber(next.graceMinutes, DEFAULT_ATTENDANCE_CONFIG.graceMinutes), 0);
+        next.earlyExitGraceMinutes = Math.max(asNumber(next.earlyExitGraceMinutes, DEFAULT_ATTENDANCE_CONFIG.earlyExitGraceMinutes), 0);
+        next.autoWarningThreshold = Math.max(asNumber(next.autoWarningThreshold, DEFAULT_ATTENDANCE_CONFIG.autoWarningThreshold), 1);
+        next.shifts = Array.isArray(next.shifts) && next.shifts.length
+          ? next.shifts.map(normalizeShiftDefinition)
+          : DEFAULT_ATTENDANCE_CONFIG.shifts.map(normalizeShiftDefinition);
+        return next;
+      }
+
+      function normalizeAttendanceRecord(record) {
+        const employee = getEmployeeByName((record && record.employeeName) || '') || getEmployeeById(record && record.employeeId);
+        return {
+          id: String((record && record.id) || createId('attendance')).trim(),
+          employeeId: String((record && record.employeeId) || (employee ? employee.id : '')).trim(),
+          employeeName: String((record && record.employeeName) || (employee ? employee.name : 'Unknown Employee')).trim(),
+          employeeCode: String((record && record.employeeCode) || (employee ? employee.employeeCode : '')).trim(),
+          date: String((record && record.date) || todayKey()).trim(),
+          shiftName: String((record && record.shiftName) || (employee ? employee.shiftName : 'Morning Shift')).trim(),
+          clockIn: String((record && record.clockIn) || '').trim(),
+          clockOut: String((record && record.clockOut) || '').trim(),
+          source: String((record && record.source) || 'Manual').trim(),
+          status: String((record && record.status) || 'Present').trim(),
+          remarks: String((record && record.remarks) || '').trim(),
+          overtimeHours: Math.max(asNumber(record && record.overtimeHours, 0), 0),
+          lateMinutes: Math.max(asNumber(record && record.lateMinutes, 0), 0),
+          earlyExitMinutes: Math.max(asNumber(record && record.earlyExitMinutes, 0), 0),
+          createdAt: String((record && record.createdAt) || new Date().toISOString()).trim()
+        };
+      }
+
+      function normalizePayrollRun(run) {
+        const employee = getEmployeeByName((run && run.employeeName) || '') || getEmployeeById(run && run.employeeId);
+        return {
+          id: String((run && run.id) || createId('payrun')).trim(),
+          employeeId: String((run && run.employeeId) || (employee ? employee.id : '')).trim(),
+          employeeName: String((run && run.employeeName) || (employee ? employee.name : 'Unknown Employee')).trim(),
+          month: String((run && run.month) || monthKey(todayKey())).trim(),
+          basicSalary: Math.max(asNumber(run && run.basicSalary, employee ? employee.baseSalary : 0), 0),
+          allowances: Math.max(asNumber(run && run.allowances, employee ? employee.defaultAllowances : 0), 0),
+          bonuses: Math.max(asNumber(run && run.bonuses, employee ? employee.defaultBonuses : 0), 0),
+          deductions: Math.max(asNumber(run && run.deductions, employee ? employee.defaultDeductions : 0), 0),
+          tax: Math.max(asNumber(run && run.tax, 0), 0),
+          loanDeduction: Math.max(asNumber(run && run.loanDeduction, 0), 0),
+          leaveDeduction: Math.max(asNumber(run && run.leaveDeduction, 0), 0),
+          overtimePay: Math.max(asNumber(run && run.overtimePay, 0), 0),
+          netPay: Math.max(asNumber(run && run.netPay, 0), 0),
+          notes: String((run && run.notes) || '').trim(),
+          status: String((run && run.status) || 'Generated').trim(),
+          hrSignature: String((run && run.hrSignature) || '').trim(),
+          hrSignedAt: String((run && run.hrSignedAt) || '').trim(),
+          employeeSignature: String((run && run.employeeSignature) || '').trim(),
+          employeeSignedAt: String((run && run.employeeSignedAt) || '').trim(),
+          emailedAt: String((run && run.emailedAt) || '').trim(),
+          generatedAt: String((run && run.generatedAt) || new Date().toISOString()).trim()
+        };
+      }
+
+      function normalizeLoan(loan) {
+        const employee = getEmployeeByName((loan && loan.employeeName) || '') || getEmployeeById(loan && loan.employeeId);
+        return {
+          id: String((loan && loan.id) || createId('loan')).trim(),
+          employeeId: String((loan && loan.employeeId) || (employee ? employee.id : '')).trim(),
+          employeeName: String((loan && loan.employeeName) || (employee ? employee.name : 'Unknown Employee')).trim(),
+          type: String((loan && loan.type) || 'Loan').trim(),
+          amount: Math.max(asNumber(loan && loan.amount, 0), 0),
+          emi: Math.max(asNumber(loan && loan.emi, 0), 0),
+          balance: Math.max(asNumber(loan && loan.balance, loan && loan.amount), 0),
+          reason: String((loan && loan.reason) || '').trim(),
+          status: String((loan && loan.status) || 'Pending').trim(),
+          requestedAt: String((loan && loan.requestedAt) || new Date().toISOString()).trim(),
+          approvedAt: String((loan && loan.approvedAt) || '').trim()
+        };
+      }
+
+      function normalizeFinalSettlement(settlement) {
+        const employee = getEmployeeByName((settlement && settlement.employeeName) || '') || getEmployeeById(settlement && settlement.employeeId);
+        return {
+          id: String((settlement && settlement.id) || createId('settlement')).trim(),
+          employeeId: String((settlement && settlement.employeeId) || (employee ? employee.id : '')).trim(),
+          employeeName: String((settlement && settlement.employeeName) || (employee ? employee.name : 'Unknown Employee')).trim(),
+          resignationDate: String((settlement && settlement.resignationDate) || todayKey()).trim(),
+          finalWorkingDate: String((settlement && settlement.finalWorkingDate) || todayKey()).trim(),
+          leaveEncashment: Math.max(asNumber(settlement && settlement.leaveEncashment, 0), 0),
+          pendingDeductions: Math.max(asNumber(settlement && settlement.pendingDeductions, 0), 0),
+          recoveryAmount: Math.max(asNumber(settlement && settlement.recoveryAmount, 0), 0),
+          netSettlement: Math.max(asNumber(settlement && settlement.netSettlement, 0), 0),
+          notes: String((settlement && settlement.notes) || '').trim(),
+          status: String((settlement && settlement.status) || 'Draft').trim(),
+          hrSignature: String((settlement && settlement.hrSignature) || '').trim(),
+          hrSignedAt: String((settlement && settlement.hrSignedAt) || '').trim(),
+          employeeSignature: String((settlement && settlement.employeeSignature) || '').trim(),
+          employeeSignedAt: String((settlement && settlement.employeeSignedAt) || '').trim(),
+          createdAt: String((settlement && settlement.createdAt) || new Date().toISOString()).trim()
+        };
+      }
+
       function loadState() {
         const storedEmployees = loadJSON('h360_employees', null);
         state.settings = normalizeCloudSettings(loadJSON('h360_settings', DEFAULT_SETTINGS));
@@ -5615,6 +6913,14 @@ function doGet() {
           .filter((request) => request.employeeName);
         state.announcements = loadJSON('h360_announcements', []).map(normalizeAnnouncement);
         state.auditLog = loadJSON('h360_audit_log', []).map(normalizeAuditEntry);
+        state.disciplinaryActions = loadJSON('h360_disciplinary_actions', []).map(normalizeDisciplinaryAction);
+        state.jobPosts = loadJSON('h360_job_posts', []).map(normalizeJobPost);
+        state.candidates = loadJSON('h360_candidates', []).map(normalizeCandidate);
+        state.attendanceConfig = normalizeAttendanceConfig(loadJSON('h360_attendance_config', DEFAULT_ATTENDANCE_CONFIG));
+        state.attendanceRecords = loadJSON('h360_attendance_records', []).map(normalizeAttendanceEntry);
+        state.payrollRuns = loadJSON('h360_payroll_runs', []).map(normalizePayrollRun);
+        state.loans = loadJSON('h360_loans', []).map(normalizeLoan);
+        state.finalSettlements = loadJSON('h360_final_settlements', []).map(normalizeFinalSettlement);
         localStorage.removeItem('h360_team_chat');
       }
 
@@ -5664,6 +6970,62 @@ function doGet() {
         localStorage.setItem('h360_audit_log', JSON.stringify(state.auditLog));
         if (!(options && options.skipCloud)) {
           queueSharedScopeSync('audit_log');
+        }
+      }
+
+      function persistDisciplinaryActions(options) {
+        localStorage.setItem('h360_disciplinary_actions', JSON.stringify(state.disciplinaryActions));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('disciplinary_actions');
+        }
+      }
+
+      function persistJobPosts(options) {
+        localStorage.setItem('h360_job_posts', JSON.stringify(state.jobPosts));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('job_posts');
+        }
+      }
+
+      function persistCandidates(options) {
+        localStorage.setItem('h360_candidates', JSON.stringify(state.candidates));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('candidates');
+        }
+      }
+
+      function persistAttendanceConfig(options) {
+        localStorage.setItem('h360_attendance_config', JSON.stringify(state.attendanceConfig));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('attendance_config');
+        }
+      }
+
+      function persistAttendanceRecords(options) {
+        localStorage.setItem('h360_attendance_records', JSON.stringify(state.attendanceRecords));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('attendance_records');
+        }
+      }
+
+      function persistPayrollRuns(options) {
+        localStorage.setItem('h360_payroll_runs', JSON.stringify(state.payrollRuns));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('payroll_runs');
+        }
+      }
+
+      function persistLoans(options) {
+        localStorage.setItem('h360_loans', JSON.stringify(state.loans));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('loans');
+        }
+      }
+
+      function persistFinalSettlements(options) {
+        localStorage.setItem('h360_final_settlements', JSON.stringify(state.finalSettlements));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('final_settlements');
         }
       }
 
@@ -6522,6 +7884,29 @@ function doGet() {
               });
             });
 
+          state.disciplinaryActions
+            .filter((action) => action.status !== 'Closed')
+            .slice(0, 2)
+            .forEach((action) => {
+              tasks.push({
+                title: `${action.employeeName} has an open ${action.type}`,
+                meta: `${action.severity} severity | issued ${formatShortDate(action.issueDate)} | signature status ${action.hrSignature && action.employeeSignature ? 'completed' : 'pending'}.`,
+                chip: 'Compliance',
+                tone: 'alert'
+              });
+            });
+
+          upcomingBirthdays().slice(0, 2).forEach((item) => {
+            tasks.push({
+              title: `${item.employee.name} birthday reminder`,
+              meta: item.daysAway === 0
+                ? 'Birthday is today. Consider sending a recognition note.'
+                : `Birthday arrives in ${item.daysAway} day(s).`,
+              chip: 'Celebration',
+              tone: 'neutral'
+            });
+          });
+
           if (!tasks.length) {
             taskList.innerHTML = '<div class="attachment-empty">No urgent HR actions right now. Leave approvals, profile gaps, and balance alerts will appear here automatically.</div>';
           } else {
@@ -6603,6 +7988,565 @@ function doGet() {
             `;
           }).join('');
         }
+      }
+
+      function renderSelectOptions(selectId, options, placeholder) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        const current = select.value;
+        select.innerHTML = [
+          `<option value="">${escapeHtml(placeholder || 'Select')}</option>`,
+          ...options.map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`)
+        ].join('');
+        if (options.includes(current)) {
+          select.value = current;
+        }
+      }
+
+      function renderEmployeeSelectOptions(selectIds, placeholder) {
+        const options = state.employees.map((employee) => employee.name);
+        selectIds.forEach((id) => renderSelectOptions(id, options, placeholder || 'Select employee'));
+      }
+
+      function openDocumentPreview(title, html) {
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('reportModal').classList.add('open');
+      }
+
+      function renderCareersPortal() {
+        const careerList = document.getElementById('publicCareerList');
+        const jobSelect = document.getElementById('careerApplicantJob');
+        const jobs = openJobPosts();
+        if (jobSelect) {
+          const current = jobSelect.value;
+          jobSelect.innerHTML = [
+            '<option value="">Select a role</option>',
+            ...jobs.map((job) => `<option value="${escapeHtml(job.id)}">${escapeHtml(job.title)} - ${escapeHtml(job.department)}</option>`)
+          ].join('');
+          if (jobs.some((job) => job.id === current)) jobSelect.value = current;
+        }
+        if (!careerList) return;
+        if (!jobs.length) {
+          careerList.innerHTML = '<div class="attachment-empty">No open roles published yet. Please check back later.</div>';
+          return;
+        }
+        careerList.innerHTML = jobs.map((job) => `
+          <div class="leave-balance-item">
+            <div>
+              <div class="custom-responsibility-name">${escapeHtml(job.title)}</div>
+              <div class="leave-balance-meta">${escapeHtml(job.department)} | ${escapeHtml(job.location)} | ${escapeHtml(job.employmentType)} | ${job.openings} opening(s)</div>
+              <div class="leave-reason">${escapeHtml(job.description || 'Role details will be shared during the recruitment process.')}</div>
+              <div class="leave-note">${job.closesOn ? `Closes on ${escapeHtml(formatShortDate(job.closesOn))}` : 'Open until filled'}</div>
+            </div>
+            <button class="btn-filter" type="button" onclick="prefillCareerJob('${job.id}')"><i class="fas fa-paper-plane"></i> Apply</button>
+          </div>
+        `).join('');
+      }
+
+      function renderRecruitmentPanel() {
+        const openJobs = openJobPosts();
+        const applied = state.candidates.length;
+        const interviews = state.candidates.filter((candidate) => candidate.stage === 'Interview').length;
+        const hires = state.candidates.filter((candidate) => candidate.stage === 'Hired').length;
+        const openJobsNode = document.getElementById('recruitmentOpenJobs');
+        const appliedNode = document.getElementById('recruitmentAppliedCount');
+        const interviewsNode = document.getElementById('recruitmentInterviewCount');
+        const hiresNode = document.getElementById('recruitmentHireCount');
+        if (openJobsNode) openJobsNode.textContent = String(openJobs.length);
+        if (appliedNode) appliedNode.textContent = String(applied);
+        if (interviewsNode) interviewsNode.textContent = String(interviews);
+        if (hiresNode) hiresNode.textContent = String(hires);
+
+        const jobFilter = document.getElementById('candidateFilterJob');
+        if (jobFilter) {
+          const current = jobFilter.value;
+          jobFilter.innerHTML = [
+            '<option value="">All Jobs</option>',
+            ...state.jobPosts.map((job) => `<option value="${escapeHtml(job.id)}">${escapeHtml(job.title)}</option>`)
+          ].join('');
+          if (state.jobPosts.some((job) => job.id === current)) jobFilter.value = current;
+        }
+
+        const jobPostList = document.getElementById('jobPostAdminList');
+        if (jobPostList) {
+          if (!state.jobPosts.length) {
+            jobPostList.innerHTML = '<div class="attachment-empty">No vacancies posted yet.</div>';
+          } else {
+            jobPostList.innerHTML = [...state.jobPosts]
+              .sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt))
+              .map((job) => `
+                <div class="leave-balance-item">
+                  <div>
+                    <div class="custom-responsibility-name">${escapeHtml(job.title)}</div>
+                    <div class="leave-balance-meta">${escapeHtml(job.department)} | ${escapeHtml(job.location)} | ${escapeHtml(job.employmentType)} | ${job.openings} opening(s)</div>
+                    <div class="leave-reason">${escapeHtml(job.description || 'No description added.')}</div>
+                    <div class="leave-note">${job.closesOn ? `Closes ${escapeHtml(formatShortDate(job.closesOn))}` : 'Open until filled'}</div>
+                  </div>
+                  <div class="attachment-item-actions">
+                    <span class="metric-chip ${job.status === 'Open' ? 'success' : 'alert'}">${escapeHtml(job.status)}</span>
+                    <button class="btn-ghost" type="button" onclick="toggleJobPostStatus('${job.id}')"><i class="fas fa-toggle-on"></i> ${job.status === 'Open' ? 'Close' : 'Reopen'}</button>
+                  </div>
+                </div>
+              `).join('');
+          }
+        }
+
+        const stageFilter = (document.getElementById('candidateFilterStage') || {}).value || '';
+        const jobFilterValue = (document.getElementById('candidateFilterJob') || {}).value || '';
+        const candidateList = document.getElementById('candidatePipelineList');
+        if (!candidateList) return;
+        const candidates = [...state.candidates]
+          .filter((candidate) => !stageFilter || candidate.stage === stageFilter)
+          .filter((candidate) => !jobFilterValue || candidate.jobId === jobFilterValue)
+          .sort((left, right) => new Date(right.appliedAt) - new Date(left.appliedAt));
+        if (!candidates.length) {
+          candidateList.innerHTML = '<div class="attachment-empty">Candidates from the careers page will appear here.</div>';
+          return;
+        }
+        candidateList.innerHTML = candidates.map((candidate) => `
+          <div class="leave-request-card">
+            <div class="leave-card-person">
+              <div>
+                <div class="leave-card-title">${escapeHtml(candidate.fullName || 'Candidate')}</div>
+                <div class="leave-meta">${escapeHtml(candidate.jobTitle)} | ${escapeHtml(candidate.email || 'No email')} | ${escapeHtml(candidate.phone || 'No phone')}</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <span class="metric-chip ${candidate.stage === 'Hired' ? 'success' : candidate.stage === 'Rejected' ? 'alert' : ''}">${escapeHtml(candidate.stage)}</span>
+                <span class="metric-chip">${candidate.scorecard}%</span>
+              </div>
+            </div>
+            <div class="leave-note">Applied ${escapeHtml(formatTimestamp(candidate.appliedAt))} | Source: ${escapeHtml(candidate.source || 'Careers Page')} | Resume: ${escapeHtml(candidate.resume ? candidate.resume.name : 'Not uploaded')}</div>
+            ${candidate.coverLetter ? `<div class="leave-reason">${escapeHtml(candidate.coverLetter)}</div>` : ''}
+            <div class="employee-form-grid" style="margin-top:10px">
+              <div class="settings-item">
+                <div class="settings-label">Stage</div>
+                <select class="settings-value" id="candidateStage_${candidate.id}">
+                  ${candidateStageOptions().map((stage) => `<option value="${escapeHtml(stage)}" ${stage === candidate.stage ? 'selected' : ''}>${escapeHtml(stage)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="settings-item">
+                <div class="settings-label">Interview Date</div>
+                <input type="datetime-local" class="settings-value" id="candidateInterview_${candidate.id}" value="${escapeHtml(candidate.interviewDate || '')}" />
+              </div>
+              <div class="settings-item">
+                <div class="settings-label">Scorecard</div>
+                <input type="number" class="settings-value" id="candidateScore_${candidate.id}" min="0" max="100" value="${candidate.scorecard}" />
+              </div>
+              <div class="settings-item">
+                <div class="settings-label">Offer Salary</div>
+                <input type="number" class="settings-value" id="candidateOfferSalary_${candidate.id}" min="0" value="${candidate.offerSalary || 0}" />
+              </div>
+              <div class="settings-item">
+                <div class="settings-label">Start Date</div>
+                <input type="date" class="settings-value" id="candidateStartDate_${candidate.id}" value="${escapeHtml(candidate.proposedStartDate || '')}" />
+              </div>
+              <div class="settings-item">
+                <div class="settings-label">Interviewers</div>
+                <input type="text" class="settings-value" id="candidateInterviewers_${candidate.id}" value="${escapeHtml(candidate.interviewers || '')}" placeholder="Panel members" />
+              </div>
+            </div>
+            <div class="settings-item" style="margin-top:10px">
+              <div class="settings-label">HR Notes</div>
+              <textarea class="notes-textarea compact-textarea" id="candidateNotes_${candidate.id}" placeholder="Shortlist comments, hiring manager note, or talent pool details.">${escapeHtml(candidate.hrNotes || '')}</textarea>
+            </div>
+            <div class="settings-item" style="margin-top:10px">
+              <div class="settings-label">Interview Feedback</div>
+              <textarea class="notes-textarea compact-textarea" id="candidateFeedback_${candidate.id}" placeholder="Interview feedback form content.">${escapeHtml(candidate.feedback || '')}</textarea>
+            </div>
+            <div class="leave-note">Offer status: ${escapeHtml(candidate.offerStatus)} | HR signed: ${candidate.hrSignature ? escapeHtml(candidate.hrSignature) : 'Pending'} | Candidate signed: ${candidate.candidateSignature ? escapeHtml(candidate.candidateSignature) : 'Pending'}</div>
+            <div class="leave-card-actions" style="margin-top:12px">
+              <button class="btn-filter" type="button" onclick="saveCandidateProfile('${candidate.id}')"><i class="fas fa-save"></i> Save ATS Update</button>
+              <button class="btn-filter" type="button" style="background:#0f766e" onclick="sendCandidateEmail('${candidate.id}')"><i class="fas fa-envelope"></i> Email</button>
+              <button class="btn-ghost" type="button" onclick="previewCandidateOffer('${candidate.id}')"><i class="fas fa-file-signature"></i> Offer</button>
+              <button class="btn-ghost" type="button" onclick="signCandidateOffer('${candidate.id}', 'hr')"><i class="fas fa-signature"></i> HR Sign</button>
+              <button class="btn-ghost" type="button" onclick="signCandidateOffer('${candidate.id}', 'candidate')"><i class="fas fa-user-pen"></i> Candidate Sign</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function renderAttendancePanel() {
+        state.attendanceConfig = normalizeAttendanceConfig(state.attendanceConfig || DEFAULT_ATTENDANCE_CONFIG);
+        renderEmployeeSelectOptions(['attendanceEmployee'], 'Select employee');
+        renderSelectOptions('attendanceShiftName', shiftOptions(), 'Select shift');
+        const attendanceDateNode = document.getElementById('attendanceDate');
+        if (attendanceDateNode && !attendanceDateNode.value) attendanceDateNode.value = todayKey();
+
+        const configFields = {
+          attendanceDeviceName: state.attendanceConfig.deviceName || '',
+          attendanceDeviceEndpoint: state.attendanceConfig.deviceEndpoint || '',
+          attendanceDeviceMode: state.attendanceConfig.deviceMode || '',
+          attendanceBridgeUrl: state.attendanceConfig.bridgeUrl || '',
+          attendanceBridgeApiKey: state.attendanceConfig.bridgeApiKey || '',
+          attendanceTimezone: state.attendanceConfig.timezone || DEFAULT_ATTENDANCE_CONFIG.timezone,
+          attendanceGraceMinutes: String(state.attendanceConfig.graceMinutes || 0),
+          attendanceEarlyExitGrace: String(state.attendanceConfig.earlyExitGraceMinutes || 0),
+          attendanceAutoWarningThreshold: String(state.attendanceConfig.autoWarningThreshold || 1),
+          attendanceWeekendPolicy: state.attendanceConfig.weekendPolicy || '',
+          attendancePenaltyRule: state.attendanceConfig.penaltyRule || ''
+        };
+        Object.entries(configFields).forEach(([id, value]) => {
+          const node = document.getElementById(id);
+          if (node && document.activeElement !== node) node.value = value;
+        });
+        const syncNote = document.getElementById('attendanceSyncNote');
+        if (syncNote) {
+          const noteParts = [];
+          if (state.attendanceConfig.lastSyncAt) {
+            noteParts.push(`Last ZKTeco sync: ${formatTimestamp(state.attendanceConfig.lastSyncAt)}`);
+          }
+          if (state.attendanceConfig.bridgeStatus) {
+            noteParts.push(`Bridge status: ${state.attendanceConfig.bridgeStatus}`);
+          }
+          if (state.attendanceConfig.lastSyncSummary) {
+            noteParts.push(state.attendanceConfig.lastSyncSummary);
+          }
+          syncNote.textContent = noteParts.length ? noteParts.join(' | ') : 'Device sync has not been run yet.';
+        }
+        const bridgeHint = document.getElementById('attendanceBridgeHint');
+        if (bridgeHint) {
+          const bridgeUrl = attendanceBridgeBaseUrl();
+          bridgeHint.innerHTML = bridgeUrl
+            ? `Device PUSH URL: <strong>${escapeHtml(`${bridgeUrl}/iclock/cdata`)}</strong><br>Manual sync API: <strong>${escapeHtml(`${bridgeUrl}/api/zkteco/sync`)}</strong>`
+            : 'Deploy the Node bridge first, then point the device PUSH / ADMS host to that bridge.';
+        }
+
+        const todayRecords = state.attendanceRecords.filter((record) => record.date === todayKey());
+        const presentCount = todayRecords.filter((record) => record.status !== 'Absent').length;
+        const lateCount = todayRecords.filter((record) => record.status === 'Late').length;
+        const absentCount = todayRecords.filter((record) => record.status === 'Absent').length;
+        const overtimeTotal = todayRecords.reduce((sum, record) => sum + Number(record.overtimeHours || 0), 0);
+        const presentNode = document.getElementById('attendancePresentToday');
+        const lateNode = document.getElementById('attendanceLateToday');
+        const absentNode = document.getElementById('attendanceAbsentToday');
+        const overtimeNode = document.getElementById('attendanceOvertimeToday');
+        if (presentNode) presentNode.textContent = String(presentCount);
+        if (lateNode) lateNode.textContent = String(lateCount);
+        if (absentNode) absentNode.textContent = String(absentCount);
+        if (overtimeNode) overtimeNode.textContent = String(Number(overtimeTotal.toFixed(1)));
+
+        const shiftList = document.getElementById('shiftDefinitionList');
+        if (shiftList) {
+          shiftList.innerHTML = shiftDefinitions().map((shift) => `
+            <div class="leave-balance-item">
+              <div>
+                <div class="custom-responsibility-name">${escapeHtml(shift.name)}</div>
+                <div class="leave-balance-meta">${escapeHtml(shift.start)} to ${escapeHtml(shift.end)} | ${escapeHtml(shift.rotation)} | ${escapeHtml(shift.weekend)}</div>
+              </div>
+              <button class="btn-ghost" type="button" onclick="removeShiftDefinition('${shift.id}')"><i class="fas fa-trash-alt"></i> Remove</button>
+            </div>
+          `).join('');
+        }
+
+        const attendanceList = document.getElementById('attendanceRecordList');
+        if (!attendanceList) return;
+        const currentMonth = monthKey(todayKey());
+        const threshold = Math.max(asNumber(state.attendanceConfig.autoWarningThreshold, 3), 1);
+        const monthlyLateCounts = {};
+        state.attendanceRecords.forEach((record) => {
+          if (monthKey(record.date) !== currentMonth || record.status !== 'Late') return;
+          monthlyLateCounts[record.employeeName] = (monthlyLateCounts[record.employeeName] || 0) + 1;
+        });
+        const records = [...state.attendanceRecords].sort((left, right) => new Date(`${right.date}T00:00:00`) - new Date(`${left.date}T00:00:00`)).slice(0, 20);
+        if (!records.length) {
+          attendanceList.innerHTML = '<div class="attachment-empty">Attendance records will appear here.</div>';
+          return;
+        }
+        attendanceList.innerHTML = records.map((record) => `
+          <div class="leave-balance-item">
+            <div>
+              <div class="custom-responsibility-name">${escapeHtml(record.employeeName)}</div>
+              <div class="leave-balance-meta">${escapeHtml(formatShortDate(record.date))} | ${escapeHtml(record.shiftName)} | ${escapeHtml(record.clockIn || '-')} to ${escapeHtml(record.clockOut || '-')} | ${escapeHtml(record.source)}</div>
+              <div class="leave-note">Late: ${record.lateMinutes} min | Early exit: ${record.earlyExitMinutes} min | Overtime: ${record.overtimeHours} hr${record.remarks ? ` | ${escapeHtml(record.remarks)}` : ''}</div>
+              ${monthlyLateCounts[record.employeeName] >= threshold ? `<div class="leave-note">Auto warning threshold reached this month: ${monthlyLateCounts[record.employeeName]} late record(s).</div>` : ''}
+            </div>
+            <span class="metric-chip ${record.status === 'Absent' || record.status === 'Late' ? 'alert' : record.status === 'Overtime' ? 'success' : ''}">${escapeHtml(record.status)}</span>
+          </div>
+        `).join('');
+      }
+
+      function renderPayrollPanel() {
+        renderEmployeeSelectOptions(['payrollEmployee', 'loanEmployee', 'settlementEmployee'], 'Select employee');
+        const payrollMonthNode = document.getElementById('payrollMonth');
+        if (payrollMonthNode && !payrollMonthNode.value) payrollMonthNode.value = monthKey(todayKey());
+        const payrollEmployeeNode = document.getElementById('payrollEmployee');
+        const selectedEmployee = getEmployeeByName(payrollEmployeeNode && payrollEmployeeNode.value) || state.employees[0] || null;
+        const payrollFieldDefaults = selectedEmployee ? {
+          payrollBasicSalary: String(selectedEmployee.baseSalary || 0),
+          payrollAllowances: String(selectedEmployee.defaultAllowances || 0),
+          payrollBonuses: String(selectedEmployee.defaultBonuses || 0),
+          payrollDeductions: String(selectedEmployee.defaultDeductions || 0),
+          payrollTax: String(selectedEmployee.defaultTaxPercent || 0)
+        } : {};
+        Object.entries(payrollFieldDefaults).forEach(([id, value]) => {
+          const node = document.getElementById(id);
+          if (node && !node.value) node.value = value;
+        });
+        const currentMonth = monthKey(todayKey());
+        const monthTotal = state.payrollRuns
+          .filter((run) => run.month === currentMonth)
+          .reduce((sum, run) => sum + Number(run.netPay || 0), 0);
+        const activeLoans = state.loans.filter((loan) => ['Approved', 'Active'].includes(loan.status)).length;
+        const settlements = state.finalSettlements.filter((item) => item.status !== 'Completed').length;
+        const payslips = state.payrollRuns.filter((run) => run.month === currentMonth).length;
+        const totalNode = document.getElementById('payrollMonthTotal');
+        const loanNode = document.getElementById('payrollLoanCount');
+        const settlementNode = document.getElementById('payrollSettlementPending');
+        const payslipNode = document.getElementById('payrollPayslipCount');
+        if (totalNode) totalNode.textContent = String(Number(monthTotal.toFixed(0)));
+        if (loanNode) loanNode.textContent = String(activeLoans);
+        if (settlementNode) settlementNode.textContent = String(settlements);
+        if (payslipNode) payslipNode.textContent = String(payslips);
+
+        const payList = document.getElementById('payrollRunList');
+        if (payList) {
+          const runs = [...state.payrollRuns].sort((left, right) => new Date(right.generatedAt) - new Date(left.generatedAt)).slice(0, 12);
+          payList.innerHTML = runs.length ? runs.map((run) => `
+            <div class="leave-request-card">
+              <div class="leave-card-person">
+                <div>
+                  <div class="leave-card-title">${escapeHtml(run.employeeName)}</div>
+                  <div class="leave-meta">${escapeHtml(monthLabel(run.month))} | Net Pay ${escapeHtml(String(run.netPay))} | Status ${escapeHtml(run.status)}</div>
+                </div>
+                <span class="metric-chip ${run.hrSignature && run.employeeSignature ? 'success' : ''}">${run.hrSignature && run.employeeSignature ? 'Signed' : 'Pending Signatures'}</span>
+              </div>
+              <div class="leave-note">Basic ${run.basicSalary} | Allowances ${run.allowances} | Bonuses ${run.bonuses} | Deductions ${run.deductions} | Tax ${run.tax} | Loan ${run.loanDeduction} | Leave ${run.leaveDeduction} | Overtime ${run.overtimePay}</div>
+              ${run.notes ? `<div class="leave-reason">${escapeHtml(run.notes)}</div>` : ''}
+              <div class="leave-card-actions" style="margin-top:12px">
+                <button class="btn-filter" type="button" onclick="previewPayslip('${run.id}')"><i class="fas fa-eye"></i> Preview</button>
+                <button class="btn-filter" type="button" style="background:#1d4ed8" onclick="downloadPayslipPdf('${run.id}')"><i class="fas fa-file-pdf"></i> PDF</button>
+                <button class="btn-filter" type="button" style="background:#0f766e" onclick="emailPayslip('${run.id}')"><i class="fas fa-envelope"></i> Email</button>
+                <button class="btn-ghost" type="button" onclick="signPayrollRecord('${run.id}', 'hr')"><i class="fas fa-signature"></i> HR Sign</button>
+                <button class="btn-ghost" type="button" onclick="signPayrollRecord('${run.id}', 'employee')"><i class="fas fa-user-pen"></i> Employee Sign</button>
+              </div>
+            </div>
+          `).join('') : '<div class="attachment-empty">Generated payslips will appear here.</div>';
+        }
+
+        const loanList = document.getElementById('loanRequestList');
+        if (loanList) {
+          const loans = [...state.loans].sort((left, right) => new Date(right.requestedAt) - new Date(left.requestedAt)).slice(0, 12);
+          loanList.innerHTML = loans.length ? loans.map((loan) => `
+            <div class="leave-balance-item">
+              <div>
+                <div class="custom-responsibility-name">${escapeHtml(loan.employeeName)}</div>
+                <div class="leave-balance-meta">${escapeHtml(loan.type)} | Amount ${loan.amount} | EMI ${loan.emi} | Balance ${loan.balance}</div>
+                <div class="leave-note">${escapeHtml(loan.reason || 'No note provided.')}</div>
+              </div>
+              <div class="attachment-item-actions">
+                <span class="metric-chip ${loan.status === 'Approved' || loan.status === 'Active' ? 'success' : loan.status === 'Pending' ? '' : 'alert'}">${escapeHtml(loan.status)}</span>
+                <button class="btn-ghost" type="button" onclick="toggleLoanStatus('${loan.id}')"><i class="fas fa-repeat"></i> Update</button>
+              </div>
+            </div>
+          `).join('') : '<div class="attachment-empty">No loan or advance records yet.</div>';
+        }
+
+        const settlementList = document.getElementById('finalSettlementList');
+        if (settlementList) {
+          const items = [...state.finalSettlements].sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt)).slice(0, 12);
+          settlementList.innerHTML = items.length ? items.map((item) => `
+            <div class="leave-request-card">
+              <div class="leave-card-person">
+                <div>
+                  <div class="leave-card-title">${escapeHtml(item.employeeName)}</div>
+                  <div class="leave-meta">Resigned ${escapeHtml(formatShortDate(item.resignationDate))} | Final day ${escapeHtml(formatShortDate(item.finalWorkingDate))}</div>
+                </div>
+                <span class="metric-chip ${item.status === 'Completed' ? 'success' : ''}">${escapeHtml(item.status)}</span>
+              </div>
+              <div class="leave-note">Leave encashment ${item.leaveEncashment} | Pending deductions ${item.pendingDeductions} | Recovery ${item.recoveryAmount} | Net settlement ${item.netSettlement}</div>
+              ${item.notes ? `<div class="leave-reason">${escapeHtml(item.notes)}</div>` : ''}
+              <div class="leave-card-actions" style="margin-top:12px">
+                <button class="btn-filter" type="button" onclick="previewFinalSettlement('${item.id}')"><i class="fas fa-eye"></i> Preview</button>
+                <button class="btn-ghost" type="button" onclick="signFinalSettlement('${item.id}', 'hr')"><i class="fas fa-signature"></i> HR Sign</button>
+                <button class="btn-ghost" type="button" onclick="signFinalSettlement('${item.id}', 'employee')"><i class="fas fa-user-pen"></i> Employee Sign</button>
+                <button class="btn-ghost" type="button" onclick="completeFinalSettlement('${item.id}')"><i class="fas fa-check"></i> Complete</button>
+              </div>
+            </div>
+          `).join('') : '<div class="attachment-empty">No final settlement records yet.</div>';
+        }
+      }
+
+      function renderCompliancePanel() {
+        renderEmployeeSelectOptions(['disciplineEmployee'], 'Select employee');
+        const openCount = state.disciplinaryActions.filter((item) => item.status !== 'Closed').length;
+        const pipCount = state.disciplinaryActions.filter((item) => item.type === 'PIP' && item.status !== 'Closed').length;
+        const suspensionCount = state.disciplinaryActions.filter((item) => item.type === 'Suspension').length;
+        const signaturesPending = state.disciplinaryActions.filter((item) => !item.hrSignature || !item.employeeSignature).length;
+        const openNode = document.getElementById('disciplineOpenCount');
+        const pipNode = document.getElementById('disciplinePipCount');
+        const suspensionNode = document.getElementById('disciplineSuspensionCount');
+        const signatureNode = document.getElementById('disciplineSignaturePending');
+        if (openNode) openNode.textContent = String(openCount);
+        if (pipNode) pipNode.textContent = String(pipCount);
+        if (suspensionNode) suspensionNode.textContent = String(suspensionCount);
+        if (signatureNode) signatureNode.textContent = String(signaturesPending);
+
+        const container = document.getElementById('disciplinaryActionList');
+        if (!container) return;
+        const actions = [...state.disciplinaryActions].sort((left, right) => new Date(right.issueDate) - new Date(left.issueDate));
+        container.innerHTML = actions.length ? actions.map((action) => `
+          <div class="leave-request-card">
+            <div class="leave-card-person">
+              <div>
+                <div class="leave-card-title">${escapeHtml(action.employeeName)}</div>
+                <div class="leave-meta">${escapeHtml(action.type)} | ${escapeHtml(action.severity)} | Issued ${escapeHtml(formatShortDate(action.issueDate))}</div>
+              </div>
+              <span class="metric-chip ${action.status === 'Closed' ? 'success' : action.type === 'Suspension' ? 'alert' : ''}">${escapeHtml(action.status)}</span>
+            </div>
+            <div class="leave-reason">${escapeHtml(action.reason || 'No violation note provided.')}</div>
+            ${action.actionTaken ? `<div class="leave-note">Action: ${escapeHtml(action.actionTaken)}</div>` : ''}
+            ${action.improvementPlan ? `<div class="leave-note">PIP: ${escapeHtml(action.improvementPlan)}</div>` : ''}
+            <div class="leave-note">HR signed: ${action.hrSignature ? `${escapeHtml(action.hrSignature)} on ${escapeHtml(formatTimestamp(action.hrSignedAt))}` : 'Pending'} | Employee signed: ${action.employeeSignature ? `${escapeHtml(action.employeeSignature)} on ${escapeHtml(formatTimestamp(action.employeeSignedAt))}` : 'Pending'}</div>
+            <div class="leave-card-actions" style="margin-top:12px">
+              <button class="btn-filter" type="button" onclick="previewDisciplinaryAction('${action.id}')"><i class="fas fa-eye"></i> Preview</button>
+              <button class="btn-ghost" type="button" onclick="signDisciplinaryAction('${action.id}', 'hr')"><i class="fas fa-signature"></i> HR Sign</button>
+              <button class="btn-ghost" type="button" onclick="signDisciplinaryAction('${action.id}', 'employee')"><i class="fas fa-user-pen"></i> Employee Sign</button>
+              <button class="btn-ghost" type="button" onclick="toggleDisciplinaryActionStatus('${action.id}')"><i class="fas fa-check"></i> ${action.status === 'Closed' ? 'Reopen' : 'Close'}</button>
+            </div>
+          </div>
+        `).join('') : '<div class="attachment-empty">No disciplinary actions recorded yet.</div>';
+      }
+
+      function renderAnalyticsPanel() {
+        const headcountNode = document.getElementById('analyticsHeadcount');
+        const turnoverNode = document.getElementById('analyticsTurnover');
+        const absenteeNode = document.getElementById('analyticsAbsenteeism');
+        const attritionNode = document.getElementById('analyticsAttrition');
+        if (headcountNode) headcountNode.textContent = String(state.employees.filter((employee) => employee.status !== 'Resigned').length);
+        if (turnoverNode) turnoverNode.textContent = `${turnoverRate()}%`;
+        if (absenteeNode) absenteeNode.textContent = `${absenteeismRate()}%`;
+        if (attritionNode) attritionNode.textContent = String(attritionCount());
+
+        const birthdayList = document.getElementById('birthdayAlertList');
+        if (birthdayList) {
+          const upcoming = upcomingBirthdays();
+          birthdayList.innerHTML = upcoming.length ? upcoming.map((item) => `
+            <div class="leave-balance-item">
+              <div>
+                <div class="custom-responsibility-name">${escapeHtml(item.employee.name)}</div>
+                <div class="leave-balance-meta">${escapeHtml(item.employee.department || 'Operations')} | ${escapeHtml(formatShortDate(item.employee.birthDate))}</div>
+              </div>
+              <span class="metric-chip ${item.daysAway <= 7 ? 'success' : ''}">${item.daysAway === 0 ? 'Today' : `${item.daysAway} day(s)`}</span>
+            </div>
+          `).join('') : '<div class="attachment-empty">No upcoming birthdays available yet.</div>';
+        }
+
+        const anniversaryList = document.getElementById('anniversaryAlertList');
+        if (anniversaryList) {
+          const upcoming = upcomingAnniversaries();
+          anniversaryList.innerHTML = upcoming.length ? upcoming.map((item) => `
+            <div class="leave-balance-item">
+              <div>
+                <div class="custom-responsibility-name">${escapeHtml(item.employee.name)}</div>
+                <div class="leave-balance-meta">${escapeHtml(item.employee.department || 'Operations')} | Joined ${escapeHtml(formatShortDate(item.employee.joinedAt))}</div>
+              </div>
+              <span class="metric-chip ${item.daysAway <= 7 ? 'success' : ''}">${item.daysAway === 0 ? `${item.years} year(s) today` : `${item.daysAway} day(s)`}</span>
+            </div>
+          `).join('') : '<div class="attachment-empty">No upcoming anniversaries available yet.</div>';
+        }
+
+        const insightBody = document.getElementById('analyticsInsightBody');
+        if (insightBody) {
+          const rows = [
+            ['Open jobs', openJobPosts().length, 'Vacancies visible on the public careers portal'],
+            ['Talent pool', getCandidatesByStage('Talent Pool').length, 'Candidates retained for future roles'],
+            ['Interviews', getCandidatesByStage('Interview').length, 'Candidates currently in interview stage'],
+            ['Loans active', state.loans.filter((loan) => ['Approved', 'Active'].includes(loan.status)).length, 'Employees with active EMI deductions'],
+            ['Disciplinary actions open', state.disciplinaryActions.filter((item) => item.status !== 'Closed').length, 'Compliance cases still in progress'],
+            ['Absences this month', absencesThisMonth().length, `Calculated from attendance records in ${monthLabel(monthKey(todayKey()))}`]
+          ];
+          insightBody.innerHTML = rows.map((row) => `
+            <tr>
+              <td>${escapeHtml(String(row[0]))}</td>
+              <td>${escapeHtml(String(row[1]))}</td>
+              <td>${escapeHtml(String(row[2]))}</td>
+            </tr>
+          `).join('');
+        }
+
+        if (typeof Chart === 'undefined') return;
+
+        const departmentTotals = departmentOptions().reduce((accumulator, department) => {
+          accumulator[department] = state.employees.filter((employee) => employee.department === department && employee.status !== 'Resigned').length;
+          return accumulator;
+        }, {});
+        destroyChart('analyticsHeadcountChart');
+        state.chartInstances.analyticsHeadcountChart = new Chart(document.getElementById('analyticsHeadcountChart'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(departmentTotals).length ? Object.keys(departmentTotals) : ['No Departments'],
+            datasets: [{
+              data: Object.keys(departmentTotals).length ? Object.values(departmentTotals) : [0],
+              backgroundColor: 'rgba(23,49,109,.78)',
+              borderRadius: 6,
+              borderSkipped: false
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        const attendanceSummary = { Present: 0, Late: 0, Overtime: 0, Absent: 0 };
+        state.attendanceRecords.filter((record) => monthKey(record.date) === monthKey(todayKey())).forEach((record) => {
+          if (record.status === 'Late') attendanceSummary.Late += 1;
+          else if (record.status === 'Overtime') attendanceSummary.Overtime += 1;
+          else if (record.status === 'Absent') attendanceSummary.Absent += 1;
+          else attendanceSummary.Present += 1;
+        });
+        destroyChart('analyticsAttendanceChart');
+        state.chartInstances.analyticsAttendanceChart = new Chart(document.getElementById('analyticsAttendanceChart'), {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(attendanceSummary),
+            datasets: [{
+              data: Object.values(attendanceSummary),
+              backgroundColor: ['#1f6f59', '#c39149', '#415da2', '#8f2d36'],
+              borderWidth: 2,
+              borderColor: '#fff'
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        const recruitmentSummary = candidateStageOptions().reduce((accumulator, stage) => {
+          accumulator[stage] = state.candidates.filter((candidate) => candidate.stage === stage).length;
+          return accumulator;
+        }, {});
+        destroyChart('analyticsRecruitmentChart');
+        state.chartInstances.analyticsRecruitmentChart = new Chart(document.getElementById('analyticsRecruitmentChart'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(recruitmentSummary),
+            datasets: [{
+              data: Object.values(recruitmentSummary),
+              backgroundColor: ['#17316d', '#415da2', '#c39149', '#1f6f59', '#8f2d36', '#176a73'],
+              borderRadius: 6,
+              borderSkipped: false
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        const attritionLabels = ['Final Settlements', 'Resigned Employees', 'Pending Settlements'];
+        const attritionValues = [
+          state.finalSettlements.length,
+          state.employees.filter((employee) => employee.status === 'Resigned').length,
+          state.finalSettlements.filter((item) => item.status !== 'Completed').length
+        ];
+        destroyChart('analyticsAttritionChart');
+        state.chartInstances.analyticsAttritionChart = new Chart(document.getElementById('analyticsAttritionChart'), {
+          type: 'bar',
+          data: {
+            labels: attritionLabels,
+            datasets: [{
+              data: attritionValues,
+              backgroundColor: ['#7a5a31', '#8f2d36', '#c39149'],
+              borderRadius: 6,
+              borderSkipped: false
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
       }
 
       function openDownload(dataUrl, name) {
@@ -7008,7 +8952,62 @@ on public.${sharedTableName}
 for update
 to anon
 using (true)
-with check (true);`;
+with check (true);
+
+create table if not exists public.zkteco_devices (
+  device_sn text primary key,
+  device_name text,
+  last_ip text,
+  push_mode text,
+  last_seen_at timestamptz,
+  last_path text,
+  last_table text,
+  last_payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.zkteco_attendance_logs (
+  id bigint generated by default as identity primary key,
+  event_hash text not null unique,
+  device_sn text not null,
+  employee_code text not null,
+  verify_type text,
+  io_mode text,
+  work_code text,
+  log_date date not null,
+  log_time_text text not null,
+  raw_line text not null,
+  raw_payload jsonb not null default '{}'::jsonb,
+  source text not null default 'push',
+  recorded_at timestamptz not null default now()
+);
+
+create index if not exists idx_zkteco_logs_employee_date
+on public.zkteco_attendance_logs(employee_code, log_date);
+
+create index if not exists idx_zkteco_logs_device_date
+on public.zkteco_attendance_logs(device_sn, log_date);
+
+create table if not exists public.zkteco_sync_runs (
+  id bigint generated by default as identity primary key,
+  device_sn text,
+  sync_source text not null default 'bridge',
+  sync_status text not null default 'ok',
+  imported_logs integer not null default 0,
+  rebuilt_records integer not null default 0,
+  message text,
+  request_meta jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+alter table public.zkteco_devices enable row level security;
+alter table public.zkteco_attendance_logs enable row level security;
+alter table public.zkteco_sync_runs enable row level security;
+
+revoke all on public.zkteco_devices from anon, authenticated;
+revoke all on public.zkteco_attendance_logs from anon, authenticated;
+revoke all on public.zkteco_sync_runs from anon, authenticated;`;
         }
 
         updateCloudStatusNote();
@@ -7350,6 +9349,12 @@ with check (true);`;
         renderEmployeeCards();
         renderAdminLeaveRequests();
         renderHrPanel();
+        renderRecruitmentPanel();
+        renderAttendancePanel();
+        renderPayrollPanel();
+        renderCompliancePanel();
+        renderAnalyticsPanel();
+        renderCareersPortal();
         renderSettingsPage();
         renderCustomResponsibilityList();
         renderCustomResponsibilitySection();
@@ -7934,6 +9939,11 @@ with check (true);`;
             reports: 'Activity Reports',
             hr: 'HR Command Center',
             leave: 'Leave Approvals',
+            recruitment: 'Recruitment and ATS',
+            attendance: 'Attendance and Shift Control',
+            payroll: 'Payroll and Settlements',
+            compliance: 'Corrective and Disciplinary Actions',
+            analytics: 'HR Analytics Dashboard',
             audit: 'Audit Log',
             settings: 'Settings'
           };
@@ -7947,6 +9957,11 @@ with check (true);`;
           }
           if (id === 'hr') renderHrPanel();
           if (id === 'leave') renderAdminLeaveRequests();
+          if (id === 'recruitment') renderRecruitmentPanel();
+          if (id === 'attendance') renderAttendancePanel();
+          if (id === 'payroll') renderPayrollPanel();
+          if (id === 'compliance') renderCompliancePanel();
+          if (id === 'analytics') renderAnalyticsPanel();
           if (id === 'audit') renderAuditLog();
           if (id === 'settings') renderSettingsPage();
         };
@@ -8301,6 +10316,763 @@ with check (true);`;
           showToast(`${format === 'excel' ? 'Excel' : 'CSV'} export created.`, 'success');
         };
 
+        window.openCareersPortal = () => {
+          renderCareersPortal();
+          document.getElementById('careersPortalModal').classList.add('open');
+        };
+
+        window.closeCareersPortal = () => {
+          document.getElementById('careersPortalModal').classList.remove('open');
+        };
+
+        window.prefillCareerJob = (jobId) => {
+          window.openCareersPortal();
+          const select = document.getElementById('careerApplicantJob');
+          if (select) select.value = jobId;
+        };
+
+        window.triggerCareerResumePicker = () => {
+          const input = document.getElementById('careerResumeInput');
+          if (input) input.click();
+        };
+
+        window.handleCareerResumeSelection = async (event) => {
+          const file = ((event.target && event.target.files) || [])[0];
+          if (!file) return;
+          if (file.size > MAX_EMPLOYEE_DOC_SIZE) {
+            showToast(`Keep the resume under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)}.`, 'error');
+            if (event.target) event.target.value = '';
+            return;
+          }
+          try {
+            state.currentCareerResume = {
+              id: createId('resume'),
+              name: file.name,
+              size: file.size,
+              type: file.type || 'application/octet-stream',
+              kind: 'Resume',
+              dataUrl: await readFileAsDataUrl(file)
+            };
+            const meta = document.getElementById('careerResumeMeta');
+            if (meta) meta.textContent = `${file.name} (${formatBytes(file.size)}) ready`;
+          } catch (error) {
+            showToast('Unable to read that resume file.', 'error');
+          } finally {
+            if (event.target) event.target.value = '';
+          }
+        };
+
+        window.submitCareerApplication = () => {
+          const fullName = document.getElementById('careerApplicantName').value.trim();
+          const email = document.getElementById('careerApplicantEmail').value.trim();
+          const phone = document.getElementById('careerApplicantPhone').value.trim();
+          const jobId = document.getElementById('careerApplicantJob').value.trim();
+          const expectedSalary = document.getElementById('careerExpectedSalary').value.trim();
+          const source = document.getElementById('careerApplicantSource').value.trim() || 'Careers Page';
+          const coverLetter = document.getElementById('careerCoverLetter').value.trim();
+          if (!fullName || !email || !jobId) {
+            showToast('Add your name, email, and selected role before submitting.', 'error');
+            return;
+          }
+          const job = state.jobPosts.find((item) => item.id === jobId);
+          if (!job || job.status !== 'Open') {
+            showToast('That role is no longer open. Please select another vacancy.', 'error');
+            return;
+          }
+          state.candidates.unshift(normalizeCandidate({
+            id: createId('candidate'),
+            jobId,
+            jobTitle: job.title,
+            fullName,
+            email,
+            phone,
+            source,
+            expectedSalary: asNumber(expectedSalary, 0),
+            coverLetter,
+            resume: state.currentCareerResume ? Object.assign({}, state.currentCareerResume) : null,
+            stage: 'Applied',
+            appliedAt: new Date().toISOString()
+          }));
+          persistCandidates();
+          renderRecruitmentPanel();
+          renderAnalyticsPanel();
+          logAudit('Candidate applied from careers page', {
+            scope: 'recruitment',
+            details: `${fullName} applied for ${job.title}`
+          });
+          ['careerApplicantName', 'careerApplicantEmail', 'careerApplicantPhone', 'careerExpectedSalary', 'careerCoverLetter'].forEach((id) => {
+            const node = document.getElementById(id);
+            if (node) node.value = '';
+          });
+          const jobSelect = document.getElementById('careerApplicantJob');
+          if (jobSelect) jobSelect.value = '';
+          const sourceNode = document.getElementById('careerApplicantSource');
+          if (sourceNode) sourceNode.value = 'Careers Page';
+          state.currentCareerResume = null;
+          const meta = document.getElementById('careerResumeMeta');
+          if (meta) meta.textContent = 'No resume uploaded yet.';
+          showToast('Application submitted successfully.', 'success');
+        };
+
+        window.publishJobPost = () => {
+          const title = document.getElementById('jobPostTitle').value.trim();
+          const department = document.getElementById('jobPostDepartment').value.trim() || 'Operations';
+          const location = document.getElementById('jobPostLocation').value.trim() || 'Remote';
+          const employmentType = document.getElementById('jobPostEmploymentType').value.trim() || 'Full Time';
+          const openings = document.getElementById('jobPostOpenings').value.trim();
+          const closesOn = document.getElementById('jobPostClosesOn').value;
+          const description = document.getElementById('jobPostDescription').value.trim();
+          if (!title || !description) {
+            showToast('Add a job title and description before publishing.', 'error');
+            return;
+          }
+          state.jobPosts.unshift(normalizeJobPost({
+            id: createId('job'),
+            title,
+            department,
+            location,
+            employmentType,
+            openings: asNumber(openings, 1),
+            description,
+            closesOn,
+            status: 'Open',
+            createdAt: new Date().toISOString()
+          }));
+          persistJobPosts();
+          renderRecruitmentPanel();
+          renderCareersPortal();
+          renderAnalyticsPanel();
+          logAudit('Job post published', {
+            scope: 'recruitment',
+            details: `${title} in ${department}`
+          });
+          ['jobPostTitle', 'jobPostDescription', 'jobPostClosesOn'].forEach((id) => {
+            const node = document.getElementById(id);
+            if (node) node.value = '';
+          });
+          document.getElementById('jobPostDepartment').value = 'Operations';
+          document.getElementById('jobPostLocation').value = 'Remote';
+          document.getElementById('jobPostEmploymentType').value = 'Full Time';
+          document.getElementById('jobPostOpenings').value = '1';
+          showToast('Job published to the careers page.', 'success');
+        };
+
+        window.toggleJobPostStatus = (jobId) => {
+          const job = state.jobPosts.find((item) => item.id === jobId);
+          if (!job) return;
+          job.status = job.status === 'Open' ? 'Closed' : 'Open';
+          persistJobPosts();
+          renderRecruitmentPanel();
+          renderCareersPortal();
+          renderAnalyticsPanel();
+          logAudit('Job post status updated', {
+            scope: 'recruitment',
+            details: `${job.title} is now ${job.status}`
+          });
+        };
+
+        window.saveCandidateProfile = (candidateId) => {
+          const candidate = state.candidates.find((item) => item.id === candidateId);
+          if (!candidate) return;
+          const stage = document.getElementById(`candidateStage_${candidateId}`).value.trim();
+          const interviewDate = document.getElementById(`candidateInterview_${candidateId}`).value;
+          const scorecard = document.getElementById(`candidateScore_${candidateId}`).value.trim();
+          const offerSalary = document.getElementById(`candidateOfferSalary_${candidateId}`).value.trim();
+          const startDate = document.getElementById(`candidateStartDate_${candidateId}`).value;
+          const interviewers = document.getElementById(`candidateInterviewers_${candidateId}`).value.trim();
+          const notes = document.getElementById(`candidateNotes_${candidateId}`).value.trim();
+          const feedback = document.getElementById(`candidateFeedback_${candidateId}`).value.trim();
+          candidate.stage = stage || candidate.stage;
+          candidate.interviewDate = interviewDate || '';
+          candidate.scorecard = Math.min(Math.max(asNumber(scorecard, candidate.scorecard), 0), 100);
+          candidate.offerSalary = Math.max(asNumber(offerSalary, candidate.offerSalary), 0);
+          candidate.proposedStartDate = startDate || '';
+          candidate.interviewers = interviewers;
+          candidate.hrNotes = notes;
+          candidate.feedback = feedback;
+          candidate.offerStatus = candidate.offerSalary > 0 ? (candidate.candidateSignature ? 'Signed' : 'Sent') : candidate.offerStatus;
+          persistCandidates();
+          renderRecruitmentPanel();
+          renderAnalyticsPanel();
+          logAudit('Candidate pipeline updated', {
+            scope: 'recruitment',
+            details: `${candidate.fullName} moved to ${candidate.stage}`
+          });
+          showToast('Candidate ATS record saved.', 'success');
+        };
+
+        window.sendCandidateEmail = (candidateId) => {
+          const candidate = state.candidates.find((item) => item.id === candidateId);
+          if (!candidate || !candidate.email) {
+            showToast('Candidate email is missing.', 'error');
+            return;
+          }
+          const subject = `HELP360MD recruitment update - ${candidate.jobTitle}`;
+          const body = [
+            `Hello ${candidate.fullName},`,
+            '',
+            `This is an update on your application for ${candidate.jobTitle}.`,
+            `Current stage: ${candidate.stage}`,
+            candidate.interviewDate ? `Interview: ${candidate.interviewDate}` : '',
+            candidate.hrNotes ? `Notes: ${candidate.hrNotes}` : '',
+            '',
+            'Regards,',
+            state.manager.name
+          ].filter(Boolean).join('\n');
+          window.location.href = `mailto:${encodeURIComponent(candidate.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+          candidate.notificationEmail = new Date().toISOString();
+          persistCandidates();
+          showToast('Candidate email draft opened.', 'success');
+        };
+
+        window.previewCandidateOffer = (candidateId) => {
+          const candidate = state.candidates.find((item) => item.id === candidateId);
+          if (!candidate) return;
+          openDocumentPreview(`Offer Preview - ${candidate.fullName}`, `
+            <div class="report-modal-section">
+              <div class="report-section-title">Candidate</div>
+              <div class="report-task-row"><span>Name</span><strong>${escapeHtml(candidate.fullName)}</strong></div>
+              <div class="report-task-row"><span>Role</span><strong>${escapeHtml(candidate.jobTitle)}</strong></div>
+              <div class="report-task-row"><span>Offer Salary</span><strong>${escapeHtml(String(candidate.offerSalary || candidate.expectedSalary || 0))}</strong></div>
+              <div class="report-task-row"><span>Proposed Start Date</span><strong>${escapeHtml(candidate.proposedStartDate || '-')}</strong></div>
+              <div class="report-task-row"><span>Status</span><strong>${escapeHtml(candidate.offerStatus || 'Draft')}</strong></div>
+            </div>
+            <div class="report-modal-section">
+              <div class="report-section-title">Signature Status</div>
+              <div class="report-task-row"><span>HR</span><strong>${candidate.hrSignature ? `${escapeHtml(candidate.hrSignature)} on ${escapeHtml(formatTimestamp(candidate.hrSignedAt))}` : 'Pending'}</strong></div>
+              <div class="report-task-row"><span>Candidate</span><strong>${candidate.candidateSignature ? `${escapeHtml(candidate.candidateSignature)} on ${escapeHtml(formatTimestamp(candidate.candidateSignedAt))}` : 'Pending'}</strong></div>
+            </div>
+          `);
+        };
+
+        window.signCandidateOffer = (candidateId, role) => {
+          const candidate = state.candidates.find((item) => item.id === candidateId);
+          if (!candidate) return;
+          if (role === 'hr') {
+            candidate.hrSignature = state.manager.name;
+            candidate.hrSignedAt = new Date().toISOString();
+          } else {
+            candidate.candidateSignature = candidate.fullName;
+            candidate.candidateSignedAt = new Date().toISOString();
+          }
+          candidate.offerStatus = candidate.hrSignature && candidate.candidateSignature ? 'Signed' : 'Sent';
+          persistCandidates();
+          renderRecruitmentPanel();
+          logAudit('Offer signature updated', {
+            scope: 'recruitment',
+            details: `${candidate.fullName} ${role} signature recorded`
+          });
+        };
+
+        window.saveAttendanceConfig = () => {
+          state.attendanceConfig = normalizeAttendanceConfig({
+            deviceName: document.getElementById('attendanceDeviceName').value.trim(),
+            deviceEndpoint: document.getElementById('attendanceDeviceEndpoint').value.trim(),
+            deviceMode: document.getElementById('attendanceDeviceMode').value.trim(),
+            bridgeUrl: document.getElementById('attendanceBridgeUrl').value.trim(),
+            bridgeApiKey: document.getElementById('attendanceBridgeApiKey').value.trim(),
+            timezone: document.getElementById('attendanceTimezone').value.trim(),
+            graceMinutes: document.getElementById('attendanceGraceMinutes').value.trim(),
+            earlyExitGraceMinutes: document.getElementById('attendanceEarlyExitGrace').value.trim(),
+            autoWarningThreshold: document.getElementById('attendanceAutoWarningThreshold').value.trim(),
+            weekendPolicy: document.getElementById('attendanceWeekendPolicy').value.trim(),
+            penaltyRule: document.getElementById('attendancePenaltyRule').value.trim(),
+            shifts: shiftDefinitions().map((shift) => Object.assign({}, shift)),
+            lastSyncAt: state.attendanceConfig.lastSyncAt || '',
+            bridgeStatus: state.attendanceConfig.bridgeStatus || '',
+            lastSyncSummary: state.attendanceConfig.lastSyncSummary || ''
+          });
+          persistAttendanceConfig();
+          renderAttendancePanel();
+          logAudit('Attendance policy updated', {
+            scope: 'attendance',
+            details: `${state.attendanceConfig.deviceName} | Grace ${state.attendanceConfig.graceMinutes} min`
+          });
+          showToast('Attendance policy saved.', 'success');
+        };
+
+        window.addShiftDefinition = () => {
+          const name = document.getElementById('shiftDefinitionName').value.trim();
+          const start = document.getElementById('shiftDefinitionStart').value;
+          const end = document.getElementById('shiftDefinitionEnd').value;
+          const rotation = document.getElementById('shiftDefinitionRotation').value.trim() || 'Fixed';
+          const weekend = document.getElementById('shiftDefinitionWeekend').value.trim() || 'Sunday Off';
+          if (!name || !start || !end) {
+            showToast('Add shift name, start, and end time first.', 'error');
+            return;
+          }
+          state.attendanceConfig.shifts.push(normalizeShiftDefinition({
+            id: createId('shift'),
+            name,
+            start,
+            end,
+            rotation,
+            weekend
+          }, state.attendanceConfig.shifts.length));
+          persistAttendanceConfig();
+          renderAttendancePanel();
+          ['shiftDefinitionName', 'shiftDefinitionStart', 'shiftDefinitionEnd', 'shiftDefinitionRotation', 'shiftDefinitionWeekend'].forEach((id) => {
+            const node = document.getElementById(id);
+            if (node) node.value = '';
+          });
+          showToast('Shift definition added.', 'success');
+        };
+
+        window.removeShiftDefinition = (shiftId) => {
+          state.attendanceConfig.shifts = shiftDefinitions().filter((shift) => shift.id !== shiftId);
+          persistAttendanceConfig();
+          renderAttendancePanel();
+        };
+
+        window.runAttendanceSync = async () => {
+          const bridgeUrl = attendanceBridgeBaseUrl();
+          if (bridgeUrl) {
+            const bridgeResult = await requestAttendanceBridgeSync();
+            if (!bridgeResult.ok) {
+              showToast(bridgeResult.reason || 'Unable to run the ZKTeco bridge sync.', 'error');
+              return;
+            }
+            const payload = bridgeResult.data || {};
+            state.attendanceConfig.lastSyncAt = String(payload.syncedAt || new Date().toISOString());
+            state.attendanceConfig.bridgeStatus = 'Connected';
+            state.attendanceConfig.lastSyncSummary = String(payload.message || 'Bridge sync completed.');
+            persistAttendanceConfig();
+            await refreshSharedStateFromDatabase({ silent: true });
+            renderAttendancePanel();
+            renderAnalyticsPanel();
+            logAudit('ZKTeco bridge sync executed', {
+              scope: 'attendance',
+              details: state.attendanceConfig.lastSyncSummary
+            });
+            showToast(state.attendanceConfig.lastSyncSummary || 'ZKTeco bridge sync completed.', 'success');
+            return;
+          }
+          state.attendanceConfig.lastSyncAt = new Date().toISOString();
+          state.attendanceConfig.bridgeStatus = 'Local placeholder';
+          const today = todayKey();
+          state.reports
+            .filter((report) => report.date === today && report.status === 'sent')
+            .forEach((report) => {
+              if (state.attendanceRecords.some((record) => record.employeeName === report.employee && record.date === today)) return;
+              const shift = getShiftDefinitionByName((getEmployeeByName(report.employee) || {}).shiftName || 'Morning Shift');
+              state.attendanceRecords.unshift(normalizeAttendanceEntry({
+                id: createId('attendance'),
+                employeeId: (getEmployeeByName(report.employee) || {}).id || '',
+                employeeName: report.employee,
+                employeeCode: (getEmployeeByName(report.employee) || {}).employeeCode || '',
+                date: today,
+                shiftName: shift.name,
+                clockIn: shift.start,
+                clockOut: shift.end,
+                source: 'ZKTeco Sync',
+                remarks: 'Auto-created from sync placeholder',
+                status: 'Present'
+              }));
+            });
+          state.attendanceConfig.lastSyncSummary = 'Bridge URL is not configured yet, so attendance was created from submitted daily activity reports instead.';
+          persistAttendanceConfig();
+          persistAttendanceRecords();
+          renderAttendancePanel();
+          renderAnalyticsPanel();
+          logAudit('ZKTeco attendance sync executed', {
+            scope: 'attendance',
+            details: `Sync time ${state.attendanceConfig.lastSyncAt}`
+          });
+          showToast('Bridge URL is not configured yet, so the local placeholder sync ran instead.', 'success');
+        };
+
+        window.recordAttendanceEntry = () => {
+          const employeeName = document.getElementById('attendanceEmployee').value.trim();
+          const date = document.getElementById('attendanceDate').value || todayKey();
+          const shiftName = document.getElementById('attendanceShiftName').value.trim() || 'Morning Shift';
+          const clockIn = document.getElementById('attendanceClockIn').value;
+          const clockOut = document.getElementById('attendanceClockOut').value;
+          const source = document.getElementById('attendanceSource').value.trim() || 'Manual';
+          const remarks = document.getElementById('attendanceRemarks').value.trim();
+          if (!employeeName) {
+            showToast('Select an employee first.', 'error');
+            return;
+          }
+          const employee = getEmployeeByName(employeeName);
+          const entry = normalizeAttendanceEntry({
+            id: createId('attendance'),
+            employeeId: employee ? employee.id : '',
+            employeeName,
+            employeeCode: employee ? employee.employeeCode : '',
+            date,
+            shiftName,
+            clockIn,
+            clockOut,
+            source,
+            remarks
+          });
+          state.attendanceRecords.unshift(entry);
+          persistAttendanceRecords();
+          renderAttendancePanel();
+          renderAnalyticsPanel();
+          logAudit('Attendance record saved', {
+            scope: 'attendance',
+            employeeName,
+            details: `${date} | ${entry.status} | ${shiftName}`
+          });
+          showToast('Attendance saved.', 'success');
+        };
+
+        window.generatePayslipRecord = () => {
+          const employeeName = document.getElementById('payrollEmployee').value.trim();
+          const month = document.getElementById('payrollMonth').value || monthKey(todayKey());
+          if (!employeeName) {
+            showToast('Select an employee first.', 'error');
+            return;
+          }
+          const employee = getEmployeeByName(employeeName);
+          const loanDeduction = getActiveLoanDeduction(employeeName);
+          const leaveDeductionValue = asNumber(document.getElementById('payrollLeaveDeduction').value.trim(), getEmployeePayrollImpact(employeeName, month).deduction);
+          const run = normalizePayrollRun({
+            id: createId('payrun'),
+            employeeId: employee ? employee.id : '',
+            employeeName,
+            month,
+            basicSalary: document.getElementById('payrollBasicSalary').value.trim(),
+            allowances: document.getElementById('payrollAllowances').value.trim(),
+            bonuses: document.getElementById('payrollBonuses').value.trim(),
+            deductions: document.getElementById('payrollDeductions').value.trim(),
+            tax: document.getElementById('payrollTax').value.trim(),
+            loanDeduction,
+            leaveDeduction: leaveDeductionValue,
+            overtimePay: document.getElementById('payrollOvertimePay').value.trim(),
+            notes: document.getElementById('payrollNotes').value.trim(),
+            status: 'Generated',
+            generatedAt: new Date().toISOString()
+          });
+          run.netPay = computePayrollNet(run);
+          state.payrollRuns.unshift(run);
+          persistPayrollRuns();
+          renderPayrollPanel();
+          renderAnalyticsPanel();
+          logAudit('Payslip generated', {
+            scope: 'payroll',
+            employeeName,
+            details: `${month} | Net ${run.netPay}`
+          });
+          showToast('Payslip generated successfully.', 'success');
+        };
+
+        window.previewPayslip = (runId) => {
+          const run = state.payrollRuns.find((item) => item.id === runId);
+          if (!run) return;
+          openDocumentPreview(`Payslip - ${run.employeeName}`, `
+            <div class="report-modal-section">
+              <div class="report-section-title">Salary Structure</div>
+              <div class="report-task-row"><span>Month</span><strong>${escapeHtml(monthLabel(run.month))}</strong></div>
+              <div class="report-task-row"><span>Basic Salary</span><strong>${run.basicSalary}</strong></div>
+              <div class="report-task-row"><span>Allowances</span><strong>${run.allowances}</strong></div>
+              <div class="report-task-row"><span>Bonuses</span><strong>${run.bonuses}</strong></div>
+              <div class="report-task-row"><span>Deductions</span><strong>${run.deductions}</strong></div>
+              <div class="report-task-row"><span>Tax</span><strong>${run.tax}</strong></div>
+              <div class="report-task-row"><span>Loan Deduction</span><strong>${run.loanDeduction}</strong></div>
+              <div class="report-task-row"><span>Leave Deduction</span><strong>${run.leaveDeduction}</strong></div>
+              <div class="report-task-row"><span>Overtime Pay</span><strong>${run.overtimePay}</strong></div>
+              <div class="report-task-row"><span>Net Pay</span><strong>${run.netPay}</strong></div>
+            </div>
+            ${run.notes ? `<div class="report-modal-section"><div class="report-section-title">Payroll Note</div><div>${escapeHtml(run.notes)}</div></div>` : ''}
+          `);
+        };
+
+        window.downloadPayslipPdf = (runId) => {
+          const run = state.payrollRuns.find((item) => item.id === runId);
+          if (!run) return;
+          const popup = window.open('', '_blank', 'width=920,height=760');
+          if (!popup) {
+            showToast('Allow popups to print the payslip PDF.', 'error');
+            return;
+          }
+          popup.document.write(`
+            <html><head><title>Payslip - ${escapeHtml(run.employeeName)}</title><style>
+              body{font-family:Arial,sans-serif;padding:24px;color:#111827}
+              h1{font-size:22px;margin-bottom:6px}
+              p{font-size:12px;color:#4b5563}
+              table{width:100%;border-collapse:collapse;margin-top:16px}
+              th,td{border:1px solid #d1d5db;padding:10px;font-size:12px;text-align:left}
+              th{background:#f3f4f6}
+            </style></head><body>
+            <h1>HELP360MD Payslip</h1>
+            <p>${escapeHtml(run.employeeName)} | ${escapeHtml(monthLabel(run.month))}</p>
+            <table>
+              <tr><th>Component</th><th>Amount</th></tr>
+              <tr><td>Basic Salary</td><td>${escapeHtml(String(run.basicSalary))}</td></tr>
+              <tr><td>Allowances</td><td>${escapeHtml(String(run.allowances))}</td></tr>
+              <tr><td>Bonuses</td><td>${escapeHtml(String(run.bonuses))}</td></tr>
+              <tr><td>Manual Deductions</td><td>${escapeHtml(String(run.deductions))}</td></tr>
+              <tr><td>Tax</td><td>${escapeHtml(String(run.tax))}</td></tr>
+              <tr><td>Loan Deduction</td><td>${escapeHtml(String(run.loanDeduction))}</td></tr>
+              <tr><td>Leave Deduction</td><td>${escapeHtml(String(run.leaveDeduction))}</td></tr>
+              <tr><td>Overtime Pay</td><td>${escapeHtml(String(run.overtimePay))}</td></tr>
+              <tr><th>Net Pay</th><th>${escapeHtml(String(run.netPay))}</th></tr>
+            </table>
+            ${run.notes ? `<p style="margin-top:14px"><strong>Note:</strong> ${escapeHtml(run.notes)}</p>` : ''}
+            </body></html>
+          `);
+          popup.document.close();
+          popup.focus();
+          popup.print();
+        };
+
+        window.emailPayslip = (runId) => {
+          const run = state.payrollRuns.find((item) => item.id === runId);
+          const employee = getEmployeeByName(run && run.employeeName);
+          if (!run || !employee || !employee.email) {
+            showToast('Employee email is missing for this payslip.', 'error');
+            return;
+          }
+          const subject = `HELP360MD Payslip - ${monthLabel(run.month)}`;
+          const body = [
+            `Hello ${run.employeeName},`,
+            '',
+            `Your payslip for ${monthLabel(run.month)} is ready.`,
+            `Net pay: ${run.netPay}`,
+            `Basic salary: ${run.basicSalary}`,
+            `Allowances: ${run.allowances}`,
+            `Bonuses: ${run.bonuses}`,
+            `Deductions: ${run.deductions}`,
+            `Tax: ${run.tax}`,
+            `Loan deduction: ${run.loanDeduction}`,
+            `Leave deduction: ${run.leaveDeduction}`,
+            `Overtime pay: ${run.overtimePay}`,
+            '',
+            'Regards,',
+            state.manager.name
+          ].join('\n');
+          window.location.href = `mailto:${encodeURIComponent(employee.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+          run.emailedAt = new Date().toISOString();
+          persistPayrollRuns();
+          showToast('Payslip email draft opened.', 'success');
+        };
+
+        window.signPayrollRecord = (runId, role) => {
+          const run = state.payrollRuns.find((item) => item.id === runId);
+          if (!run) return;
+          if (role === 'hr') applyHrSignature(run);
+          else applyEmployeeSignature(run, run.employeeName);
+          persistPayrollRuns();
+          renderPayrollPanel();
+          logAudit('Payslip signature updated', {
+            scope: 'payroll',
+            employeeName: run.employeeName,
+            details: `${role} signature added for ${run.month}`
+          });
+        };
+
+        window.submitLoanRequest = () => {
+          const employeeName = document.getElementById('loanEmployee').value.trim();
+          const type = document.getElementById('loanType').value.trim() || 'Loan';
+          const amount = document.getElementById('loanAmount').value.trim();
+          const emi = document.getElementById('loanEmi').value.trim();
+          const reason = document.getElementById('loanReason').value.trim();
+          if (!employeeName || !amount || !emi) {
+            showToast('Select employee, amount, and EMI first.', 'error');
+            return;
+          }
+          const employee = getEmployeeByName(employeeName);
+          state.loans.unshift(normalizeLoan({
+            id: createId('loan'),
+            employeeId: employee ? employee.id : '',
+            employeeName,
+            type,
+            amount,
+            emi,
+            balance: amount,
+            reason,
+            status: 'Pending',
+            requestedAt: new Date().toISOString()
+          }));
+          persistLoans();
+          renderPayrollPanel();
+          renderAnalyticsPanel();
+          logAudit('Loan or advance recorded', {
+            scope: 'payroll',
+            employeeName,
+            details: `${type} ${amount} with EMI ${emi}`
+          });
+          showToast('Loan / advance saved.', 'success');
+        };
+
+        window.toggleLoanStatus = (loanId) => {
+          const loan = state.loans.find((item) => item.id === loanId);
+          if (!loan) return;
+          if (loan.status === 'Pending') {
+            loan.status = 'Approved';
+            loan.approvedAt = new Date().toISOString();
+          } else if (loan.status === 'Approved') {
+            loan.status = 'Active';
+          } else if (loan.status === 'Active') {
+            loan.status = 'Closed';
+            loan.balance = 0;
+          } else {
+            loan.status = 'Pending';
+            loan.balance = loan.amount;
+          }
+          persistLoans();
+          renderPayrollPanel();
+        };
+
+        window.createFinalSettlement = () => {
+          const employeeName = document.getElementById('settlementEmployee').value.trim();
+          const resignationDate = document.getElementById('settlementResignationDate').value || todayKey();
+          const finalWorkingDate = document.getElementById('settlementFinalWorkingDate').value || resignationDate;
+          const leaveEncashment = asNumber(document.getElementById('settlementLeaveEncashment').value.trim(), 0);
+          const pendingDeductions = asNumber(document.getElementById('settlementPendingDeductions').value.trim(), 0);
+          const recoveryAmount = asNumber(document.getElementById('settlementRecoveryAmount').value.trim(), 0);
+          const notes = document.getElementById('settlementNotes').value.trim();
+          if (!employeeName) {
+            showToast('Select an employee first.', 'error');
+            return;
+          }
+          const employee = getEmployeeByName(employeeName);
+          const netSettlement = Math.max(Number((leaveEncashment - pendingDeductions - recoveryAmount).toFixed(2)), 0);
+          state.finalSettlements.unshift(normalizeFinalSettlement({
+            id: createId('settlement'),
+            employeeId: employee ? employee.id : '',
+            employeeName,
+            resignationDate,
+            finalWorkingDate,
+            leaveEncashment,
+            pendingDeductions,
+            recoveryAmount,
+            netSettlement,
+            notes,
+            status: 'Draft'
+          }));
+          if (employee) employee.status = 'Resigned';
+          persistFinalSettlements();
+          persistEmployees();
+          renderPayrollPanel();
+          renderAnalyticsPanel();
+          logAudit('Final settlement drafted', {
+            scope: 'payroll',
+            employeeName,
+            details: `Net settlement ${netSettlement}`
+          });
+          showToast('Final settlement saved.', 'success');
+        };
+
+        window.previewFinalSettlement = (settlementId) => {
+          const item = state.finalSettlements.find((entry) => entry.id === settlementId);
+          if (!item) return;
+          openDocumentPreview(`Final Settlement - ${item.employeeName}`, `
+            <div class="report-modal-section">
+              <div class="report-task-row"><span>Resignation Date</span><strong>${escapeHtml(formatShortDate(item.resignationDate))}</strong></div>
+              <div class="report-task-row"><span>Final Working Date</span><strong>${escapeHtml(formatShortDate(item.finalWorkingDate))}</strong></div>
+              <div class="report-task-row"><span>Leave Encashment</span><strong>${item.leaveEncashment}</strong></div>
+              <div class="report-task-row"><span>Pending Deductions</span><strong>${item.pendingDeductions}</strong></div>
+              <div class="report-task-row"><span>Recovery</span><strong>${item.recoveryAmount}</strong></div>
+              <div class="report-task-row"><span>Net Settlement</span><strong>${item.netSettlement}</strong></div>
+            </div>
+            ${item.notes ? `<div class="report-modal-section"><div>${escapeHtml(item.notes)}</div></div>` : ''}
+          `);
+        };
+
+        window.signFinalSettlement = (settlementId, role) => {
+          const item = state.finalSettlements.find((entry) => entry.id === settlementId);
+          if (!item) return;
+          if (role === 'hr') applyHrSignature(item);
+          else applyEmployeeSignature(item, item.employeeName);
+          persistFinalSettlements();
+          renderPayrollPanel();
+        };
+
+        window.completeFinalSettlement = (settlementId) => {
+          const item = state.finalSettlements.find((entry) => entry.id === settlementId);
+          if (!item) return;
+          item.status = item.status === 'Completed' ? 'Draft' : 'Completed';
+          persistFinalSettlements();
+          renderPayrollPanel();
+          renderAnalyticsPanel();
+        };
+
+        window.issueDisciplinaryAction = () => {
+          const employeeName = document.getElementById('disciplineEmployee').value.trim();
+          const type = document.getElementById('disciplineType').value.trim();
+          const severity = document.getElementById('disciplineSeverity').value.trim();
+          const issueDate = document.getElementById('disciplineIssueDate').value || todayKey();
+          const dueDate = document.getElementById('disciplineDueDate').value;
+          const suspensionDays = document.getElementById('disciplineSuspensionDays').value.trim();
+          const reason = document.getElementById('disciplineReason').value.trim();
+          const actionTaken = document.getElementById('disciplineActionTaken').value.trim();
+          const improvementPlan = document.getElementById('disciplineImprovementPlan').value.trim();
+          if (!employeeName || !reason || !actionTaken) {
+            showToast('Select employee and add the violation reason and action taken.', 'error');
+            return;
+          }
+          const employee = getEmployeeByName(employeeName);
+          state.disciplinaryActions.unshift(normalizeDisciplinaryAction({
+            id: createId('discipline'),
+            employeeId: employee ? employee.id : '',
+            employeeName,
+            employeeCode: employee ? employee.employeeCode : '',
+            type,
+            severity,
+            issueDate,
+            dueDate,
+            reason,
+            actionTaken,
+            improvementPlan,
+            suspensionDays,
+            status: 'Open',
+            createdAt: new Date().toISOString()
+          }));
+          persistDisciplinaryActions();
+          renderCompliancePanel();
+          renderAnalyticsPanel();
+          logAudit('Disciplinary action issued', {
+            scope: 'discipline',
+            employeeName,
+            details: `${type} | ${severity}`
+          });
+          showToast('Disciplinary action saved.', 'success');
+        };
+
+        window.previewDisciplinaryAction = (actionId) => {
+          const action = state.disciplinaryActions.find((item) => item.id === actionId);
+          if (!action) return;
+          openDocumentPreview(`Disciplinary Record - ${action.employeeName}`, `
+            <div class="report-modal-section">
+              <div class="report-task-row"><span>Action Type</span><strong>${escapeHtml(action.type)}</strong></div>
+              <div class="report-task-row"><span>Severity</span><strong>${escapeHtml(action.severity)}</strong></div>
+              <div class="report-task-row"><span>Issue Date</span><strong>${escapeHtml(formatShortDate(action.issueDate))}</strong></div>
+              <div class="report-task-row"><span>Review Date</span><strong>${escapeHtml(action.dueDate || '-')}</strong></div>
+              <div class="report-task-row"><span>Status</span><strong>${escapeHtml(action.status)}</strong></div>
+            </div>
+            <div class="report-modal-section">
+              <div class="report-section-title">Reason</div>
+              <div>${escapeHtml(action.reason)}</div>
+            </div>
+            <div class="report-modal-section">
+              <div class="report-section-title">Action Taken</div>
+              <div>${escapeHtml(action.actionTaken)}</div>
+            </div>
+            ${action.improvementPlan ? `<div class="report-modal-section"><div class="report-section-title">Improvement Plan</div><div>${escapeHtml(action.improvementPlan)}</div></div>` : ''}
+          `);
+        };
+
+        window.signDisciplinaryAction = (actionId, role) => {
+          const action = state.disciplinaryActions.find((item) => item.id === actionId);
+          if (!action) return;
+          if (role === 'hr') applyHrSignature(action);
+          else applyEmployeeSignature(action, action.employeeName);
+          persistDisciplinaryActions();
+          renderCompliancePanel();
+        };
+
+        window.toggleDisciplinaryActionStatus = (actionId) => {
+          const action = state.disciplinaryActions.find((item) => item.id === actionId);
+          if (!action) return;
+          action.status = action.status === 'Closed' ? 'Open' : 'Closed';
+          persistDisciplinaryActions();
+          renderCompliancePanel();
+          renderAnalyticsPanel();
+        };
+
         window.toggleChecklistSelection = (containerId, checked) => {
           document.querySelectorAll(`#${containerId} input[type="checkbox"]`).forEach((checkbox) => {
             checkbox.checked = checked;
@@ -8346,11 +11118,13 @@ with check (true);`;
 
         window.addEmployee = () => {
           const name = document.getElementById('newEmployeeName').value.trim();
+          const employeeCode = document.getElementById('newEmployeeCode').value.trim();
           const email = document.getElementById('newEmployeeEmail').value.trim();
           const title = document.getElementById('newEmployeeTitle').value.trim();
           const department = document.getElementById('newEmployeeDepartment').value.trim();
           const teamLead = document.getElementById('newEmployeeTeamLead').value.trim();
           const joiningDate = document.getElementById('newEmployeeJoiningDate').value || todayKey();
+          const birthDate = document.getElementById('newEmployeeBirthDate').value || '';
           const salaryPerDay = document.getElementById('newEmployeeSalaryPerDay').value.trim();
           const password = document.getElementById('newEmployeePassword').value.trim();
           const responsibilities = getSelectedChecklistTasks('newEmployeeTaskChecklist');
@@ -8370,6 +11144,7 @@ with check (true);`;
 
           const employee = normalizeEmployee({
             id: uniqueEmployeeId(name),
+            employeeCode: employeeCode || `EMP-${String(state.employees.length + 1).padStart(3, '0')}`,
             name,
             email: email || generateWorkEmail(name),
             title: title || 'Medical Billing Specialist',
@@ -8377,7 +11152,9 @@ with check (true);`;
             teamLead: teamLead || DEFAULT_MANAGER.name,
             responsibilities,
             joinedAt: joiningDate,
+            birthDate,
             salaryPerDay: asNumber(salaryPerDay, 0),
+            baseSalary: Math.max(asNumber(salaryPerDay, 0), 0) * 26,
             status: 'Active'
           }, state.employees.length);
 
@@ -8395,11 +11172,13 @@ with check (true);`;
             details: `${employee.department} | Team lead ${employee.teamLead}`
           });
           document.getElementById('newEmployeeName').value = '';
+          document.getElementById('newEmployeeCode').value = '';
           document.getElementById('newEmployeeEmail').value = '';
           document.getElementById('newEmployeeTitle').value = 'Medical Billing Specialist';
           document.getElementById('newEmployeeDepartment').value = 'Operations';
           document.getElementById('newEmployeeTeamLead').value = DEFAULT_MANAGER.name;
           document.getElementById('newEmployeeJoiningDate').value = '';
+          document.getElementById('newEmployeeBirthDate').value = '';
           document.getElementById('newEmployeeSalaryPerDay').value = '0';
           document.getElementById('newEmployeePassword').value = 'help360';
           renderTaskChecklist('newEmployeeTaskChecklist', getTaskLabels());
@@ -8412,13 +11191,17 @@ with check (true);`;
           state.currentEditingEmployeeId = employee.id;
           document.getElementById('employeeEditorTitle').textContent = `Employee Access - ${employee.name}`;
           document.getElementById('editEmployeeName').value = employee.name;
+          document.getElementById('editEmployeeCode').value = employee.employeeCode || '';
           document.getElementById('editEmployeeEmail').value = employee.email || '';
           document.getElementById('editEmployeeTitle').value = employee.title || '';
           document.getElementById('editEmployeeDepartment').value = employee.department || 'Operations';
           document.getElementById('editEmployeeTeamLead').value = employee.teamLead || DEFAULT_MANAGER.name;
           document.getElementById('editEmployeeJoiningDate').value = employee.joinedAt || todayKey();
+          document.getElementById('editEmployeeBirthDate').value = employee.birthDate || '';
           document.getElementById('editEmployeeCarryForward').value = String(employee.carryForwardDays || 0);
           document.getElementById('editEmployeeSalaryPerDay').value = String(employee.salaryPerDay || 0);
+          document.getElementById('editEmployeeStatus').value = employee.status || 'Active';
+          document.getElementById('editEmployeeShiftName').value = employee.shiftName || 'Morning Shift';
           document.getElementById('editEmployeeKpiLabel').value = employee.kpiLabel || 'Monthly Output';
           document.getElementById('editEmployeeMonthlyTarget').value = String(employee.monthlyTarget || 0);
           document.getElementById('editEmployeeEmergencyName').value = employee.emergencyContactName || '';
@@ -8439,13 +11222,17 @@ with check (true);`;
         window.saveEmployeeEdits = () => {
           const employee = getEmployeeById(state.currentEditingEmployeeId);
           if (!employee) return;
+          const employeeCode = document.getElementById('editEmployeeCode').value.trim();
           const email = document.getElementById('editEmployeeEmail').value.trim();
           const title = document.getElementById('editEmployeeTitle').value.trim();
           const department = document.getElementById('editEmployeeDepartment').value.trim();
           const teamLead = document.getElementById('editEmployeeTeamLead').value.trim();
           const joiningDate = document.getElementById('editEmployeeJoiningDate').value;
+          const birthDate = document.getElementById('editEmployeeBirthDate').value;
           const carryForward = document.getElementById('editEmployeeCarryForward').value.trim();
           const salaryPerDay = document.getElementById('editEmployeeSalaryPerDay').value.trim();
+          const status = document.getElementById('editEmployeeStatus').value.trim();
+          const shiftName = document.getElementById('editEmployeeShiftName').value.trim();
           const kpiLabel = document.getElementById('editEmployeeKpiLabel').value.trim();
           const monthlyTarget = document.getElementById('editEmployeeMonthlyTarget').value.trim();
           const emergencyName = document.getElementById('editEmployeeEmergencyName').value.trim();
@@ -8458,13 +11245,18 @@ with check (true);`;
             showToast('Assign at least one responsibility to this employee.', 'error');
             return;
           }
+          employee.employeeCode = employeeCode || employee.employeeCode || `EMP-${String(state.employees.indexOf(employee) + 1).padStart(3, '0')}`;
           employee.email = email || generateWorkEmail(employee.name);
           employee.title = title || 'Medical Billing Specialist';
           employee.department = department || 'Operations';
           employee.teamLead = teamLead || DEFAULT_MANAGER.name;
           employee.joinedAt = joiningDate || employee.joinedAt || todayKey();
+          employee.birthDate = birthDate || '';
           employee.carryForwardDays = Math.min(Math.max(asNumber(carryForward, 0), 0), carryForwardLimit());
           employee.salaryPerDay = Math.max(asNumber(salaryPerDay, 0), 0);
+          employee.baseSalary = Math.max(asNumber(salaryPerDay, 0), 0) * 26;
+          employee.status = status || 'Active';
+          employee.shiftName = shiftName || 'Morning Shift';
           employee.kpiLabel = kpiLabel || 'Monthly Output';
           employee.monthlyTarget = Math.max(asNumber(monthlyTarget, 0), 0);
           employee.emergencyContactName = emergencyName;
@@ -8605,6 +11397,9 @@ with check (true);`;
         document.getElementById('reportModal').addEventListener('click', function(event) {
           if (event.target === this) window.closeModal();
         });
+        document.getElementById('careersPortalModal').addEventListener('click', function(event) {
+          if (event.target === this) window.closeCareersPortal();
+        });
         document.getElementById('employeeEditorModal').addEventListener('click', function(event) {
           if (event.target === this) window.closeEmployeeEditor();
         });
@@ -8623,6 +11418,11 @@ with check (true);`;
             populateEmployeeSelects();
             renderEmployeeCards();
             renderHrPanel();
+            renderRecruitmentPanel();
+            renderAttendancePanel();
+            renderPayrollPanel();
+            renderCompliancePanel();
+            renderAnalyticsPanel();
             if (state.currentRole === 'employee' && state.currentUser) syncCurrentEmployeeContext();
           }
           if (event.key === 'h360_reports') {
@@ -8662,6 +11462,46 @@ with check (true);`;
             state.auditLog = loadJSON('h360_audit_log', []).map(normalizeAuditEntry);
             renderAuditLog();
           }
+          if (event.key === 'h360_disciplinary_actions') {
+            state.disciplinaryActions = loadJSON('h360_disciplinary_actions', []).map(normalizeDisciplinaryAction);
+            renderCompliancePanel();
+            renderAnalyticsPanel();
+          }
+          if (event.key === 'h360_job_posts') {
+            state.jobPosts = loadJSON('h360_job_posts', []).map(normalizeJobPost);
+            renderRecruitmentPanel();
+            renderCareersPortal();
+            renderAnalyticsPanel();
+          }
+          if (event.key === 'h360_candidates') {
+            state.candidates = loadJSON('h360_candidates', []).map(normalizeCandidate);
+            renderRecruitmentPanel();
+            renderAnalyticsPanel();
+          }
+          if (event.key === 'h360_attendance_config') {
+            state.attendanceConfig = normalizeAttendanceConfig(loadJSON('h360_attendance_config', DEFAULT_ATTENDANCE_CONFIG));
+            renderAttendancePanel();
+          }
+          if (event.key === 'h360_attendance_records') {
+            state.attendanceRecords = loadJSON('h360_attendance_records', []).map(normalizeAttendanceEntry);
+            renderAttendancePanel();
+            renderAnalyticsPanel();
+          }
+          if (event.key === 'h360_payroll_runs') {
+            state.payrollRuns = loadJSON('h360_payroll_runs', []).map(normalizePayrollRun);
+            renderPayrollPanel();
+            renderAnalyticsPanel();
+          }
+          if (event.key === 'h360_loans') {
+            state.loans = loadJSON('h360_loans', []).map(normalizeLoan);
+            renderPayrollPanel();
+            renderAnalyticsPanel();
+          }
+          if (event.key === 'h360_final_settlements') {
+            state.finalSettlements = loadJSON('h360_final_settlements', []).map(normalizeFinalSettlement);
+            renderPayrollPanel();
+            renderAnalyticsPanel();
+          }
           if (event.key === 'h360_manager_account') {
             state.manager = normalizeManagerAccount(loadJSON('h360_manager_account', DEFAULT_MANAGER));
             if (state.currentRole === 'admin') {
@@ -8685,6 +11525,7 @@ with check (true);`;
             renderEmployeeCards();
             renderWorkspaceSnapshot();
             renderHrPanel();
+            renderAnalyticsPanel();
             setupCloudReportSync();
             setupSharedCloudSync();
           }
@@ -8699,6 +11540,7 @@ with check (true);`;
         persistManager({ skipCloud: true });
         persistPasswords({ skipCloud: true });
         persistCustomResponsibilities({ skipCloud: true });
+        persistAttendanceConfig({ skipCloud: true });
         bindGlobalActions();
         refreshManagerChrome();
         populateEmployeeSelects();
@@ -8711,6 +11553,12 @@ with check (true);`;
         updateSummaryInternal();
         renderAdminLeaveRequests();
         renderHrPanel();
+        renderRecruitmentPanel();
+        renderAttendancePanel();
+        renderPayrollPanel();
+        renderCompliancePanel();
+        renderAnalyticsPanel();
+        renderCareersPortal();
         renderLeaveRequestPreview();
         setupCloudReportSync();
         setupSharedCloudSync();
