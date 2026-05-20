@@ -4300,8 +4300,8 @@ function doGet() {
         ccEmail: '',
         sheetURL: '',
         sheetID: '',
-        supabaseUrl: '',
-        supabaseAnonKey: '',
+        supabaseUrl: 'https://tfllzwrzfmzqpkcaihwa.supabase.co',
+        supabaseAnonKey: 'sb_publishable_CRADuuS744pyl7A1uT_LGA_KoGCdfGA',
         supabaseReportsTable: 'activity_reports',
         cloudRefreshSeconds: 45,
         leaveAllowance: 8,
@@ -4322,6 +4322,7 @@ function doGet() {
       const MAX_EMPLOYEE_DOCS = 6;
       const MAX_EMPLOYEE_DOC_SIZE = 350 * 1024;
       const ANNUAL_LEAVE_LIMIT = 8;
+      const SHARED_CLOUD_SCOPES = ['settings', 'manager_account', 'passwords', 'custom_responsibilities', 'employees', 'leave_requests', 'announcements', 'audit_log'];
 
       const state = {
         settings: null,
@@ -4345,6 +4346,9 @@ function doGet() {
         supabaseClient: null,
         supabaseConfigKey: '',
         cloudReportPollTimer: null,
+        cloudSharedPollTimer: null,
+        sharedScopeSyncTimers: {},
+        sharedScopePending: {},
         lastCloudSyncAt: '',
         cloudSyncError: ''
       };
@@ -4561,6 +4565,10 @@ function doGet() {
         return sanitizeTableName(state.settings && state.settings.supabaseReportsTable) || 'activity_reports';
       }
 
+      function sharedStateTable() {
+        return 'help360_shared_state';
+      }
+
       function cloudRefreshSeconds() {
         return Math.max(asNumber(state.settings && state.settings.cloudRefreshSeconds, 45), 15);
       }
@@ -4571,6 +4579,71 @@ function doGet() {
 
       function cloudSyncConfigured() {
         return Boolean(supabaseProjectUrl() && supabaseAnonKey() && supabaseReportsTable());
+      }
+
+      function normalizeHolidayEntry(holiday, index) {
+        return {
+          id: String((holiday && holiday.id) || `holiday_${index + 1}`),
+          name: String((holiday && holiday.name) || '').trim(),
+          date: String((holiday && holiday.date) || '').trim()
+        };
+      }
+
+      function normalizeCloudSettings(value) {
+        const settings = Object.assign({}, DEFAULT_SETTINGS, value && typeof value === 'object' ? value : {});
+        if (!String(settings.supabaseUrl || '').trim()) {
+          settings.supabaseUrl = DEFAULT_SETTINGS.supabaseUrl;
+        }
+        if (!String(settings.supabaseAnonKey || '').trim()) {
+          settings.supabaseAnonKey = DEFAULT_SETTINGS.supabaseAnonKey;
+        }
+        settings.supabaseReportsTable = sanitizeTableName(settings.supabaseReportsTable) || DEFAULT_SETTINGS.supabaseReportsTable;
+        settings.cloudRefreshSeconds = Math.max(asNumber(settings.cloudRefreshSeconds, DEFAULT_SETTINGS.cloudRefreshSeconds), 15);
+        settings.leaveAllowance = Math.max(asNumber(settings.leaveAllowance, DEFAULT_SETTINGS.leaveAllowance), 0);
+        settings.carryForwardLimit = Math.max(asNumber(settings.carryForwardLimit, DEFAULT_SETTINGS.carryForwardLimit), 0);
+        settings.leaveReasonCategories = Array.isArray(settings.leaveReasonCategories)
+          ? settings.leaveReasonCategories.map((item) => String(item || '').trim()).filter(Boolean)
+          : [];
+        if (!settings.leaveReasonCategories.length) {
+          settings.leaveReasonCategories = [...DEFAULT_SETTINGS.leaveReasonCategories];
+        }
+        settings.companyHolidays = Array.isArray(settings.companyHolidays)
+          ? settings.companyHolidays
+            .map((holiday, index) => normalizeHolidayEntry(holiday, index))
+            .filter((holiday) => holiday.name && holiday.date)
+          : [];
+        return settings;
+      }
+
+      function shareableSettingsSnapshot() {
+        const settings = normalizeCloudSettings(state.settings);
+        return {
+          managerEmail: settings.managerEmail,
+          ccEmail: settings.ccEmail,
+          sheetURL: settings.sheetURL,
+          sheetID: settings.sheetID,
+          supabaseUrl: settings.supabaseUrl,
+          supabaseAnonKey: settings.supabaseAnonKey,
+          supabaseReportsTable: settings.supabaseReportsTable,
+          cloudRefreshSeconds: settings.cloudRefreshSeconds,
+          leaveAllowance: settings.leaveAllowance,
+          carryForwardLimit: settings.carryForwardLimit,
+          leaveReasonCategories: [...settings.leaveReasonCategories],
+          companyHolidays: settings.companyHolidays.map((holiday) => Object.assign({}, holiday))
+        };
+      }
+
+      function normalizeManagerAccount(value) {
+        return Object.assign({}, DEFAULT_MANAGER, value && typeof value === 'object' ? value : {});
+      }
+
+      function normalizePasswordMap(value) {
+        const next = {};
+        const source = value && typeof value === 'object' ? value : {};
+        state.employees.forEach((employee) => {
+          next[employee.name] = String(source[employee.name] || state.passwords[employee.name] || DEFAULT_PASSWORDS[employee.name] || 'help360');
+        });
+        return next;
       }
 
       function getSupabaseClient() {
@@ -4678,7 +4751,7 @@ function doGet() {
         if (state.lastCloudSyncAt) {
           return { tone: 'success', text: `Cloud sync is active. Last shared refresh: ${formatTimestamp(state.lastCloudSyncAt)}.` };
         }
-        return { tone: 'success', text: 'Cloud sync is configured. The app will refresh shared reports automatically.' };
+        return { tone: 'success', text: 'Cloud sync is configured. The app will refresh reports plus shared HR data automatically.' };
       }
 
       function updateCloudStatusNote() {
@@ -4800,6 +4873,291 @@ function doGet() {
         state.cloudReportPollTimer = setInterval(() => {
           refreshCloudReportsFromDatabase({ silent: true });
         }, cloudRefreshSeconds() * 1000);
+      }
+
+      function buildSharedScopePayload(scope) {
+        if (scope === 'settings') {
+          return shareableSettingsSnapshot();
+        }
+        if (scope === 'manager_account') {
+          return clone(normalizeManagerAccount(state.manager));
+        }
+        if (scope === 'passwords') {
+          return clone(normalizePasswordMap(state.passwords));
+        }
+        if (scope === 'custom_responsibilities') {
+          return state.customResponsibilities
+            .map((item) => ({
+              name: String((item && item.name) || '').trim(),
+              category: String((item && item.category) || 'Other').trim() || 'Other'
+            }))
+            .filter((item) => item.name)
+            .map((item) => Object.assign({}, item));
+        }
+        if (scope === 'employees') {
+          return state.employees.map((employee, index) => clone(normalizeEmployee(employee, index)));
+        }
+        if (scope === 'leave_requests') {
+          return state.leaveRequests
+            .map((request) => clone(normalizeLeaveRequest(request)))
+            .filter((request) => request.employeeName);
+        }
+        if (scope === 'announcements') {
+          return sortedAnnouncements().map((announcement) => clone(normalizeAnnouncement(announcement)));
+        }
+        if (scope === 'audit_log') {
+          return state.auditLog.slice(0, 300).map((entry) => clone(normalizeAuditEntry(entry)));
+        }
+        return null;
+      }
+
+      function applySharedCloudPayload(scope, payload) {
+        if (scope === 'settings') {
+          state.settings = normalizeCloudSettings(payload);
+          return true;
+        }
+        if (scope === 'manager_account') {
+          state.manager = normalizeManagerAccount(payload);
+          if (state.currentRole === 'admin') {
+            state.currentUser = state.manager.name;
+          }
+          return true;
+        }
+        if (scope === 'passwords') {
+          state.passwords = normalizePasswordMap(payload);
+          return true;
+        }
+        if (scope === 'custom_responsibilities') {
+          state.customResponsibilities = Array.isArray(payload)
+            ? payload
+              .map((item) => ({
+                name: String((item && item.name) || '').trim(),
+                category: String((item && item.category) || 'Other').trim() || 'Other'
+              }))
+              .filter((item) => item.name)
+            : [];
+          return true;
+        }
+        if (scope === 'employees') {
+          state.employees = Array.isArray(payload)
+            ? payload.map((employee, index) => normalizeEmployee(employee, index))
+            : [];
+          return true;
+        }
+        if (scope === 'leave_requests') {
+          state.leaveRequests = Array.isArray(payload)
+            ? payload.map(normalizeLeaveRequest).filter((request) => request.employeeName)
+            : [];
+          return true;
+        }
+        if (scope === 'announcements') {
+          state.announcements = Array.isArray(payload) ? payload.map(normalizeAnnouncement) : [];
+          return true;
+        }
+        if (scope === 'audit_log') {
+          state.auditLog = Array.isArray(payload) ? payload.map(normalizeAuditEntry).slice(0, 300) : [];
+          return true;
+        }
+        return false;
+      }
+
+      function clearSharedCloudPolling() {
+        if (state.cloudSharedPollTimer) {
+          clearInterval(state.cloudSharedPollTimer);
+          state.cloudSharedPollTimer = null;
+        }
+      }
+
+      function clearSharedScopeSyncTimers() {
+        Object.values(state.sharedScopeSyncTimers || {}).forEach((timer) => clearTimeout(timer));
+        state.sharedScopeSyncTimers = {};
+        state.sharedScopePending = {};
+      }
+
+      function queueSharedScopeSync(scope) {
+        if (!SHARED_CLOUD_SCOPES.includes(scope)) return;
+        if (state.sharedScopeSyncTimers[scope]) {
+          clearTimeout(state.sharedScopeSyncTimers[scope]);
+        }
+        state.sharedScopePending[scope] = true;
+        if (!cloudSyncConfigured()) {
+          delete state.sharedScopeSyncTimers[scope];
+          delete state.sharedScopePending[scope];
+          updateCloudStatusNote();
+          return;
+        }
+        state.sharedScopeSyncTimers[scope] = setTimeout(() => {
+          delete state.sharedScopeSyncTimers[scope];
+          syncSharedScopeToDatabase(scope);
+        }, 350);
+      }
+
+      async function syncSharedScopeToDatabase(scope) {
+        if (!SHARED_CLOUD_SCOPES.includes(scope)) {
+          return { ok: false, reason: 'Unknown shared cloud scope.' };
+        }
+        state.sharedScopePending[scope] = true;
+        const client = getSupabaseClient();
+        if (!client) {
+          delete state.sharedScopePending[scope];
+          updateCloudStatusNote();
+          return { ok: false, reason: cloudSyncConfigured() ? 'Cloud client unavailable.' : 'Cloud sync not configured.' };
+        }
+        try {
+          const payload = buildSharedScopePayload(scope);
+          const { error } = await client
+            .from(sharedStateTable())
+            .upsert({
+              scope,
+              payload,
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'scope' })
+            .select('scope, updated_at');
+          if (error) throw error;
+          state.lastCloudSyncAt = new Date().toISOString();
+          state.cloudSyncError = '';
+          updateCloudStatusNote();
+          delete state.sharedScopePending[scope];
+          return { ok: true };
+        } catch (error) {
+          const message = error && error.message ? error.message : 'Shared cloud sync failed.';
+          state.cloudSyncError = message;
+          updateCloudStatusNote();
+          delete state.sharedScopePending[scope];
+          return { ok: false, reason: message };
+        }
+      }
+
+      function persistSharedStateLocally() {
+        persistSettings({ skipCloud: true });
+        persistManager({ skipCloud: true });
+        persistPasswords({ skipCloud: true });
+        persistEmployees({ skipCloud: true });
+        persistCustomResponsibilities({ skipCloud: true });
+        persistLeaveRequests({ skipCloud: true });
+        persistAnnouncements({ skipCloud: true });
+        persistAuditLog({ skipCloud: true });
+      }
+
+      function refreshSharedViews() {
+        refreshManagerChrome();
+        populateEmployeeSelects();
+        renderCustomResponsibilitySection();
+        renderCustomResponsibilityList();
+        renderTaskChecklist('newEmployeeTaskChecklist', getTaskLabels());
+        if (state.currentEditingEmployeeId) {
+          const editingEmployee = getEmployeeById(state.currentEditingEmployeeId);
+          if (editingEmployee) {
+            renderTaskChecklist('employeeTaskChecklist', editingEmployee.responsibilities);
+            renderEmployeeDocumentList(editingEmployee, 'employeeDocAdminList', true);
+          } else {
+            state.currentEditingEmployeeId = null;
+            document.getElementById('employeeEditorModal').classList.remove('open');
+          }
+        }
+        renderSettingsPage();
+        renderFilterOptions();
+        updateAdminStats();
+        renderAllReports();
+        renderHistoryTable();
+        renderEmployeeCards();
+        renderAdminLeaveRequests();
+        renderAnnouncementAdminList();
+        renderAuditLog();
+        renderHrPanel();
+        if (state.currentRole === 'employee' && state.currentUser) {
+          syncCurrentEmployeeContext();
+        }
+      }
+
+      async function seedMissingSharedCloudScopes(scopes) {
+        for (const scope of scopes) {
+          await syncSharedScopeToDatabase(scope);
+        }
+      }
+
+      async function refreshSharedStateFromDatabase(options) {
+        const config = Object.assign({ silent: false }, options || {});
+        const client = getSupabaseClient();
+        if (!client) {
+          updateCloudStatusNote();
+          return { ok: false, scopes: new Set() };
+        }
+        try {
+          const previousConfig = cloudConfigKey();
+          const previousRefreshSeconds = cloudRefreshSeconds();
+          const { data, error } = await client
+            .from(sharedStateTable())
+            .select('scope, payload, updated_at')
+            .in('scope', SHARED_CLOUD_SCOPES);
+          if (error) throw error;
+          const rowsByScope = new Map((data || []).map((row) => [String((row && row.scope) || '').trim(), row]));
+          const foundScopes = new Set();
+          SHARED_CLOUD_SCOPES.forEach((scope) => {
+            const row = rowsByScope.get(scope);
+            if (!row) return;
+            foundScopes.add(scope);
+            if (state.sharedScopePending[scope]) return;
+            applySharedCloudPayload(scope, row.payload);
+          });
+          ensureTaskAssignments({ skipCloud: true });
+          persistSharedStateLocally();
+          refreshSharedViews();
+          state.lastCloudSyncAt = new Date().toISOString();
+          state.cloudSyncError = '';
+          updateCloudStatusNote();
+          if (previousConfig !== cloudConfigKey() || previousRefreshSeconds !== cloudRefreshSeconds()) {
+            setTimeout(() => {
+              setupCloudReportSync();
+              setupSharedCloudSync();
+            }, 0);
+          }
+          if (!config.silent) {
+            showToast('Shared HR data refreshed from cloud.', 'success');
+          }
+          return { ok: true, scopes: foundScopes };
+        } catch (error) {
+          state.cloudSyncError = error && error.message ? error.message : 'Unable to refresh shared HR data.';
+          updateCloudStatusNote();
+          if (!config.silent) {
+            showToast(state.cloudSyncError, 'error');
+          }
+          return { ok: false, scopes: new Set() };
+        }
+      }
+
+      function setupSharedCloudSync() {
+        clearSharedCloudPolling();
+        if (!cloudSyncConfigured()) {
+          updateCloudStatusNote();
+          return;
+        }
+        updateCloudStatusNote();
+        refreshSharedStateFromDatabase({ silent: true }).then((result) => {
+          if (!result || !result.ok) return;
+          const missingScopes = SHARED_CLOUD_SCOPES.filter((scope) => !result.scopes.has(scope));
+          if (missingScopes.length) {
+            seedMissingSharedCloudScopes(missingScopes);
+          }
+        });
+        state.cloudSharedPollTimer = setInterval(() => {
+          refreshSharedStateFromDatabase({ silent: true });
+        }, cloudRefreshSeconds() * 1000);
+      }
+
+      async function refreshAllCloudData(options) {
+        const config = Object.assign({ silent: false }, options || {});
+        const sharedResult = await refreshSharedStateFromDatabase({ silent: true });
+        const reportsResult = await refreshCloudReportsFromDatabase({ silent: true });
+        const ok = Boolean((sharedResult && sharedResult.ok) || reportsResult);
+        if (!config.silent) {
+          if (ok) {
+            showToast('Shared cloud data refreshed.', 'success');
+          } else {
+            showToast(state.cloudSyncError || 'Unable to refresh cloud data.', 'error');
+          }
+        }
+        return ok;
       }
 
       function createAuditEntry(action, meta) {
@@ -5236,8 +5594,8 @@ function doGet() {
 
       function loadState() {
         const storedEmployees = loadJSON('h360_employees', null);
-        state.settings = Object.assign({}, DEFAULT_SETTINGS, loadJSON('h360_settings', DEFAULT_SETTINGS));
-        state.manager = Object.assign({}, DEFAULT_MANAGER, loadJSON('h360_manager_account', DEFAULT_MANAGER));
+        state.settings = normalizeCloudSettings(loadJSON('h360_settings', DEFAULT_SETTINGS));
+        state.manager = normalizeManagerAccount(loadJSON('h360_manager_account', DEFAULT_MANAGER));
         state.customResponsibilities = loadJSON('h360_custom_responsibilities', [])
           .map((item) => ({
             name: String((item && item.name) || '').trim(),
@@ -5249,11 +5607,7 @@ function doGet() {
           ? storedEmployees.map((employee, index) => normalizeEmployee(employee, index))
           : DEFAULT_EMPLOYEE_NAMES.map((name, index) => normalizeEmployee({ name }, index));
 
-        const storedPasswords = loadJSON('h360_passwords', {});
-        state.passwords = {};
-        state.employees.forEach((employee) => {
-          state.passwords[employee.name] = storedPasswords[employee.name] || DEFAULT_PASSWORDS[employee.name] || 'help360';
-        });
+        state.passwords = normalizePasswordMap(loadJSON('h360_passwords', {}));
 
         state.reports = loadJSON('h360_reports', []).map(normalizeReport);
         state.leaveRequests = loadJSON('h360_leave_requests', [])
@@ -5264,36 +5618,60 @@ function doGet() {
         localStorage.removeItem('h360_team_chat');
       }
 
-      function persistEmployees() {
+      function persistEmployees(options) {
         localStorage.setItem('h360_employees', JSON.stringify(state.employees));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('employees');
+        }
       }
 
-      function persistPasswords() {
+      function persistPasswords(options) {
         localStorage.setItem('h360_passwords', JSON.stringify(state.passwords));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('passwords');
+        }
       }
 
-      function persistManager() {
+      function persistManager(options) {
         localStorage.setItem('h360_manager_account', JSON.stringify(state.manager));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('manager_account');
+        }
       }
 
-      function persistCustomResponsibilities() {
+      function persistCustomResponsibilities(options) {
         localStorage.setItem('h360_custom_responsibilities', JSON.stringify(state.customResponsibilities));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('custom_responsibilities');
+        }
       }
 
-      function persistLeaveRequests() {
+      function persistLeaveRequests(options) {
         localStorage.setItem('h360_leave_requests', JSON.stringify(state.leaveRequests));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('leave_requests');
+        }
       }
 
-      function persistAnnouncements() {
+      function persistAnnouncements(options) {
         localStorage.setItem('h360_announcements', JSON.stringify(state.announcements));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('announcements');
+        }
       }
 
-      function persistAuditLog() {
+      function persistAuditLog(options) {
         localStorage.setItem('h360_audit_log', JSON.stringify(state.auditLog));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('audit_log');
+        }
       }
 
-      function persistSettings() {
+      function persistSettings(options) {
         localStorage.setItem('h360_settings', JSON.stringify(state.settings));
+        if (!(options && options.skipCloud)) {
+          queueSharedScopeSync('settings');
+        }
       }
 
       function stripAttachmentData(attachment) {
@@ -5327,7 +5705,8 @@ function doGet() {
         }
       }
 
-      function ensureTaskAssignments() {
+      function ensureTaskAssignments(options) {
+        const config = Object.assign({ skipCloud: false }, options || {});
         const allTasks = getTaskLabels();
         let changed = false;
         state.employees = state.employees.map((employee) => {
@@ -5355,7 +5734,7 @@ function doGet() {
           }
         });
         if (changed) {
-          persistEmployees();
+          persistEmployees({ skipCloud: config.skipCloud });
           persistPasswords();
         }
       }
@@ -6555,6 +6934,7 @@ function doGet() {
         const supabaseSqlNode = document.getElementById('supabaseSqlTemplate');
         if (supabaseSqlNode) {
           const tableName = supabaseReportsTable();
+          const sharedTableName = sharedStateTable();
           supabaseSqlNode.textContent = `create table if not exists public.${tableName} (
   id bigint generated by default as identity primary key,
   report_id text not null unique,
@@ -6584,16 +6964,50 @@ grant usage on schema public to anon;
 grant select, insert on public.${tableName} to anon;
 grant usage, select on sequence public.${tableName}_id_seq to anon;
 
+drop policy if exists "anon can read ${tableName}" on public.${tableName};
 create policy "anon can read ${tableName}"
 on public.${tableName}
 for select
 to anon
 using (true);
 
+drop policy if exists "anon can insert ${tableName}" on public.${tableName};
 create policy "anon can insert ${tableName}"
 on public.${tableName}
 for insert
 to anon
+with check (true);
+
+create table if not exists public.${sharedTableName} (
+  scope text primary key,
+  payload jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.${sharedTableName} enable row level security;
+
+grant select, insert, update on public.${sharedTableName} to anon;
+
+drop policy if exists "anon can read ${sharedTableName}" on public.${sharedTableName};
+create policy "anon can read ${sharedTableName}"
+on public.${sharedTableName}
+for select
+to anon
+using (true);
+
+drop policy if exists "anon can insert ${sharedTableName}" on public.${sharedTableName};
+create policy "anon can insert ${sharedTableName}"
+on public.${sharedTableName}
+for insert
+to anon
+with check (true);
+
+drop policy if exists "anon can update ${sharedTableName}" on public.${sharedTableName};
+create policy "anon can update ${sharedTableName}"
+on public.${sharedTableName}
+for update
+to anon
+using (true)
 with check (true);`;
         }
 
@@ -7608,16 +8022,17 @@ with check (true);`;
           state.settings.cloudRefreshSeconds = Math.max(asNumber(document.getElementById('settingCloudRefreshSeconds').value, cloudRefreshSeconds()), 15);
           persistSettings();
           setupCloudReportSync();
+          setupSharedCloudSync();
           renderSettingsPage();
           logAudit('General settings updated', {
             scope: 'settings',
-            details: `Email ${state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail} | Cloud ${cloudSyncConfigured() ? supabaseReportsTable() : 'off'}`
+            details: `Email ${state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail} | Cloud ${cloudSyncConfigured() ? `${supabaseReportsTable()} + ${sharedStateTable()}` : 'off'}`
           });
           showToast('Settings saved!', 'success');
         };
 
         window.refreshCloudReports = async () => {
-          await refreshCloudReportsFromDatabase();
+          await refreshAllCloudData();
         };
 
         window.saveManagerAccess = () => {
@@ -8198,11 +8613,13 @@ with check (true);`;
             saveDraft(true);
           }
           clearCloudReportPolling();
+          clearSharedCloudPolling();
+          clearSharedScopeSyncTimers();
         });
         window.addEventListener('storage', (event) => {
           if (event.key === 'h360_employees') {
             state.employees = loadJSON('h360_employees', []).map((employee, index) => normalizeEmployee(employee, index));
-            ensureTaskAssignments();
+            ensureTaskAssignments({ skipCloud: true });
             populateEmployeeSelects();
             renderEmployeeCards();
             renderHrPanel();
@@ -8231,12 +8648,33 @@ with check (true);`;
             renderAnnouncementAdminList();
             renderEmployeeAnnouncementsAndHolidays();
           }
+          if (event.key === 'h360_custom_responsibilities') {
+            state.customResponsibilities = loadJSON('h360_custom_responsibilities', [])
+              .map((item) => ({
+                name: String((item && item.name) || '').trim(),
+                category: String((item && item.category) || 'Other').trim() || 'Other'
+              }))
+              .filter((item) => item.name);
+            ensureTaskAssignments({ skipCloud: true });
+            refreshSharedViews();
+          }
           if (event.key === 'h360_audit_log') {
             state.auditLog = loadJSON('h360_audit_log', []).map(normalizeAuditEntry);
             renderAuditLog();
           }
+          if (event.key === 'h360_manager_account') {
+            state.manager = normalizeManagerAccount(loadJSON('h360_manager_account', DEFAULT_MANAGER));
+            if (state.currentRole === 'admin') {
+              state.currentUser = state.manager.name;
+            }
+            refreshSharedViews();
+          }
+          if (event.key === 'h360_passwords') {
+            state.passwords = normalizePasswordMap(loadJSON('h360_passwords', {}));
+            renderSettingsPage();
+          }
           if (event.key === 'h360_settings') {
-            state.settings = Object.assign({}, DEFAULT_SETTINGS, loadJSON('h360_settings', DEFAULT_SETTINGS));
+            state.settings = normalizeCloudSettings(loadJSON('h360_settings', DEFAULT_SETTINGS));
             renderSettingsPage();
             renderFilterOptions();
             renderEmployeeAnnouncementsAndHolidays();
@@ -8248,6 +8686,7 @@ with check (true);`;
             renderWorkspaceSnapshot();
             renderHrPanel();
             setupCloudReportSync();
+            setupSharedCloudSync();
           }
         });
       }
@@ -8255,10 +8694,11 @@ with check (true);`;
       function init() {
         loadState();
         initBrandLogos();
-        ensureTaskAssignments();
-        persistSettings();
-        persistManager();
-        persistCustomResponsibilities();
+        ensureTaskAssignments({ skipCloud: true });
+        persistSettings({ skipCloud: true });
+        persistManager({ skipCloud: true });
+        persistPasswords({ skipCloud: true });
+        persistCustomResponsibilities({ skipCloud: true });
         bindGlobalActions();
         refreshManagerChrome();
         populateEmployeeSelects();
@@ -8273,6 +8713,7 @@ with check (true);`;
         renderHrPanel();
         renderLeaveRequestPreview();
         setupCloudReportSync();
+        setupSharedCloudSync();
         const employeeTitle = document.querySelector('.emp-page-title');
         const employeeSubtitle = document.querySelector('.emp-page-subtitle');
         if (employeeTitle) employeeTitle.textContent = 'Daily Activity Workspace';
