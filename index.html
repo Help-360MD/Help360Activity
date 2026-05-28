@@ -6432,6 +6432,7 @@ function doGet() {
       const DOCUMENT_CENTER_ATTACHMENT_STORE = 'attachments';
       let documentCenterAttachmentDbPromise = null;
       const ANNUAL_LEAVE_LIMIT = 8;
+      const SHARED_SHEET_SYNC_INTERVAL_MS = 20000;
       const SHARED_CLOUD_SCOPES = [
         'settings',
         'manager_account',
@@ -6503,6 +6504,10 @@ function doGet() {
         supabaseConfigKey: '',
         cloudReportPollTimer: null,
         cloudSharedPollTimer: null,
+        sharedSheetPollTimer: null,
+        sharedSheetHydrated: false,
+        sharedSheetHydrationInProgress: false,
+        sharedSheetLastSnapshotSignature: '',
         sharedScopeSyncTimers: {},
         sharedScopePending: {},
         lastCloudSyncAt: '',
@@ -8158,8 +8163,239 @@ function doGet() {
         }
       }
 
+      function clearSharedSheetPolling() {
+        if (state.sharedSheetPollTimer) {
+          clearInterval(state.sharedSheetPollTimer);
+          state.sharedSheetPollTimer = null;
+        }
+      }
+
+      function sharedSheetSnapshotSignature(rows) {
+        return (Array.isArray(rows) ? rows : [])
+          .map((row) => {
+            const scope = String((row && row.scope) || '').trim();
+            const updatedAt = String((row && (row.updated_at || row.updatedAt)) || '').trim();
+            const payloadValue = row && row.payload !== undefined
+              ? row.payload
+              : row && row.payload_json !== undefined
+                ? row.payload_json
+                : null;
+            const payloadText = typeof payloadValue === 'string'
+              ? payloadValue
+              : JSON.stringify(payloadValue === undefined ? null : payloadValue);
+            return `${scope}::${updatedAt}::${payloadText}`;
+          })
+          .join('|');
+      }
+
+      function parseSharedSheetPayload(value) {
+        if (value === null || value === undefined || value === '') {
+          return null;
+        }
+        if (typeof value === 'object') {
+          return value;
+        }
+        try {
+          return JSON.parse(String(value));
+        } catch (error) {
+          return value;
+        }
+      }
+
+      async function fetchSharedSheetRows() {
+        const sheetUrl = sheetWebAppUrl();
+        if (!sheetUrl) {
+          return { ok: false, rows: [], reason: 'Google Sheets sync not configured.' };
+        }
+
+        const joiner = sheetUrl.includes('?') ? '&' : '?';
+        let lastError = '';
+
+        try {
+          const snapshotResponse = await fetch(`${sheetUrl}${joiner}action=snapshot&_=${Date.now()}`, {
+            method: 'GET',
+            cache: 'no-store'
+          });
+          const snapshotPayload = await snapshotResponse.json().catch(() => null);
+          if (snapshotResponse.ok && snapshotPayload && snapshotPayload.ok) {
+            if (snapshotPayload.snapshot && Array.isArray(snapshotPayload.snapshot.shared)) {
+              return { ok: true, rows: snapshotPayload.snapshot.shared, reason: '' };
+            }
+            if (Array.isArray(snapshotPayload.rows)) {
+              return { ok: true, rows: snapshotPayload.rows, reason: '' };
+            }
+          }
+        } catch (error) {
+          lastError = error && error.message ? error.message : 'Unable to read Google Sheets snapshot.';
+        }
+
+        const rows = [];
+        let scopeSuccess = false;
+        for (const scope of SHARED_CLOUD_SCOPES) {
+          try {
+            const scopeResponse = await fetch(`${sheetUrl}${joiner}action=scope&scope=${encodeURIComponent(scope)}&_=${Date.now()}`, {
+              method: 'GET',
+              cache: 'no-store'
+            });
+            const scopePayload = await scopeResponse.json().catch(() => null);
+            if (scopeResponse.ok && scopePayload && scopePayload.ok && scopePayload.row) {
+              rows.push(scopePayload.row);
+              scopeSuccess = true;
+            }
+          } catch (error) {
+            lastError = error && error.message ? error.message : lastError;
+          }
+        }
+
+        if (scopeSuccess || rows.length) {
+          return { ok: true, rows, reason: '' };
+        }
+
+        return { ok: false, rows: [], reason: lastError || 'Unable to read shared state from Google Sheets.' };
+      }
+
+      function applySharedSheetRows(rows) {
+        if (!Array.isArray(rows)) {
+          return false;
+        }
+
+        const nextSignature = sharedSheetSnapshotSignature(rows);
+        if (nextSignature === state.sharedSheetLastSnapshotSignature && state.sharedSheetHydrated) {
+          return false;
+        }
+
+        const preferredOrder = [
+          'settings',
+          'manager_account',
+          'manager_approver',
+          'custom_responsibilities',
+          'employees',
+          'leave_requests',
+          'announcements',
+          'audit_log',
+          'disciplinary_actions',
+          'job_posts',
+          'candidates',
+          'document_center',
+          'self_service_requests',
+          'timeline_events',
+          'notifications',
+          'attendance_config',
+          'attendance_records',
+          'payroll_runs',
+          'loans',
+          'final_settlements',
+          'passwords'
+        ];
+        const orderMap = new Map(preferredOrder.map((scope, index) => [scope, index]));
+        const orderedRows = rows.slice().sort((left, right) => {
+          const leftScope = String((left && left.scope) || '').trim();
+          const rightScope = String((right && right.scope) || '').trim();
+          const leftRank = orderMap.has(leftScope) ? orderMap.get(leftScope) : preferredOrder.length + 10;
+          const rightRank = orderMap.has(rightScope) ? orderMap.get(rightScope) : preferredOrder.length + 10;
+          return leftRank - rightRank;
+        });
+
+        orderedRows.forEach((row) => {
+          const scope = String((row && row.scope) || '').trim();
+          if (!scope) return;
+          if (state.sharedScopePending[scope]) return;
+          const payload = row && row.payload !== undefined ? row.payload : parseSharedSheetPayload(row && row.payload_json);
+          applySharedCloudPayload(scope, payload);
+        });
+
+        state.sharedSheetLastSnapshotSignature = nextSignature;
+        state.sharedSheetHydrated = true;
+        persistSharedStateLocally();
+        refreshSharedViews();
+        return true;
+      }
+
+      async function refreshSharedStateFromSheet(options) {
+        const config = Object.assign({ silent: false, seedIfMissing: true }, options || {});
+        if (!sheetSyncConfigured()) {
+          return { ok: false, changed: false, rows: [] };
+        }
+        if (state.sharedSheetHydrationInProgress) {
+          return { ok: true, changed: false, rows: [] };
+        }
+
+        state.sharedSheetHydrationInProgress = true;
+        try {
+          const rowsResult = await fetchSharedSheetRows();
+          if (rowsResult && rowsResult.ok && Array.isArray(rowsResult.rows) && rowsResult.rows.length) {
+            const changed = applySharedSheetRows(rowsResult.rows);
+            state.lastSheetSyncAt = new Date().toISOString();
+            state.sheetSyncError = '';
+            updateSheetStatusNote();
+            if (!config.silent && changed) {
+              showToast('Google Sheets data refreshed.', 'success');
+            }
+            return { ok: true, changed, rows: rowsResult.rows };
+          }
+
+          if (rowsResult && rowsResult.ok && config.seedIfMissing) {
+            const seedResult = await syncAllSharedScopesToSheet({ silent: true });
+            if (seedResult && seedResult.ok) {
+              const refetchResult = await fetchSharedSheetRows();
+              if (refetchResult && refetchResult.ok && Array.isArray(refetchResult.rows) && refetchResult.rows.length) {
+                const changed = applySharedSheetRows(refetchResult.rows);
+                state.lastSheetSyncAt = new Date().toISOString();
+                state.sheetSyncError = '';
+                updateSheetStatusNote();
+                if (!config.silent && changed) {
+                  showToast('Google Sheets data refreshed.', 'success');
+                }
+                return { ok: true, changed, rows: refetchResult.rows };
+              }
+            }
+          }
+
+          if (rowsResult && rowsResult.ok) {
+            state.sharedSheetHydrated = true;
+            state.lastSheetSyncAt = new Date().toISOString();
+            state.sheetSyncError = '';
+            updateSheetStatusNote();
+            return { ok: true, changed: false, rows: [] };
+          }
+
+          state.sheetSyncError = rowsResult && rowsResult.reason ? rowsResult.reason : 'Unable to read Google Sheets data.';
+          updateSheetStatusNote();
+          if (!config.silent) {
+            showToast(state.sheetSyncError, 'error');
+          }
+          return { ok: false, changed: false, rows: [] };
+        } catch (error) {
+          state.sheetSyncError = error && error.message ? error.message : 'Unable to refresh Google Sheets data.';
+          updateSheetStatusNote();
+          if (!config.silent) {
+            showToast(state.sheetSyncError, 'error');
+          }
+          return { ok: false, changed: false, rows: [] };
+        } finally {
+          state.sharedSheetHydrationInProgress = false;
+        }
+      }
+
+      function startSharedSheetAutoSync() {
+        clearSharedSheetPolling();
+        if (!sheetSyncConfigured()) {
+          updateSheetStatusNote();
+          return;
+        }
+        updateSheetStatusNote();
+        const runSync = () => {
+          refreshSharedStateFromSheet({ silent: true, seedIfMissing: false }).catch((error) => {
+            console.warn('Google Sheets auto-sync failed:', error);
+          });
+        };
+        runSync();
+        state.sharedSheetPollTimer = setInterval(runSync, SHARED_SHEET_SYNC_INTERVAL_MS);
+      }
+
       function setupSharedCloudSync() {
         clearSharedCloudPolling();
+        clearSharedSheetPolling();
         if (!liveSyncConfigured()) {
           updateCloudStatusNote();
           updateSheetStatusNote();
@@ -8175,30 +8411,39 @@ function doGet() {
                 seedMissingSharedCloudScopes(missingScopes);
               }
             }
-            if (sheetSyncConfigured()) {
-              syncAllSharedScopesToSheet({ silent: true });
-            }
           });
           state.cloudSharedPollTimer = setInterval(() => {
             refreshSharedStateFromDatabase({ silent: true });
           }, cloudRefreshSeconds() * 1000);
-        } else if (sheetSyncConfigured()) {
-          syncAllSharedScopesToSheet({ silent: true });
+        }
+        if (sheetSyncConfigured()) {
+          state.sharedSheetHydrated = false;
+          state.sharedSheetLastSnapshotSignature = '';
+          const runInitialSheetRefresh = () => {
+            refreshSharedStateFromSheet({ silent: true, seedIfMissing: true }).finally(() => {
+              startSharedSheetAutoSync();
+            });
+          };
+          const pendingSharedScopes = Object.keys(state.sharedScopePending || {}).filter((scope) => state.sharedScopePending[scope]);
+          if (pendingSharedScopes.length) {
+            setTimeout(runInitialSheetRefresh, 900);
+          } else {
+            runInitialSheetRefresh();
+          }
         }
       }
 
       async function refreshAllCloudData(options) {
         const config = Object.assign({ silent: false }, options || {});
-        const sharedResult = await refreshSharedStateFromDatabase({ silent: true });
+        const sharedResult = await refreshSharedStateFromSheet({ silent: true });
         const reportsResult = await refreshCloudReportsFromDatabase({ silent: true });
-        const sheetResult = await syncAllSharedScopesToSheet({ silent: true });
         const reportPushResult = await syncPendingReportsToCloud({ silent: true });
-        const ok = Boolean((sharedResult && sharedResult.ok) || reportsResult || (sheetResult && sheetResult.ok) || (reportPushResult && reportPushResult.ok));
+        const ok = Boolean((sharedResult && sharedResult.ok) || reportsResult || (reportPushResult && reportPushResult.ok));
         if (!config.silent) {
           if (ok) {
             showToast('Google Sheets mirror refreshed.', 'success');
           } else {
-            showToast(state.cloudSyncError || 'Unable to refresh Google Sheets data.', 'error');
+            showToast(state.sheetSyncError || state.cloudSyncError || 'Unable to refresh Google Sheets data.', 'error');
           }
         }
         return ok;
@@ -12395,6 +12640,16 @@ function doGet() {
         }
       }
 
+      function renderPendingDisciplinaryDocumentMeta() {
+        const metaNode = document.getElementById('disciplineDocumentMeta');
+        if (!metaNode) return;
+        if (!state.pendingDisciplinaryAttachment) {
+          metaNode.textContent = 'No corrective-action document attached yet.';
+          return;
+        }
+        metaNode.textContent = `${state.pendingDisciplinaryAttachment.name} | ${formatBytes(state.pendingDisciplinaryAttachment.size || 0)}`;
+      }
+
       function renderCompliancePanel() {
         renderEmployeeSelectOptions(['disciplineEmployee'], 'Select employee');
         renderPendingDisciplinaryDocumentMeta();
@@ -15706,7 +15961,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             state.attendanceConfig.bridgeStatus = 'Connected';
             state.attendanceConfig.lastSyncSummary = String(payload.message || 'Bridge sync completed.');
             persistAttendanceConfig();
-            await refreshSharedStateFromDatabase({ silent: true });
+            await refreshSharedStateFromSheet({ silent: true });
             renderAttendancePanel();
             renderAnalyticsPanel();
             logAudit('ZKTeco bridge sync executed', {
@@ -16246,16 +16501,6 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           renderPayrollPanel();
           renderAnalyticsPanel();
         };
-
-        function renderPendingDisciplinaryDocumentMeta() {
-          const metaNode = document.getElementById('disciplineDocumentMeta');
-          if (!metaNode) return;
-          if (!state.pendingDisciplinaryAttachment) {
-            metaNode.textContent = 'No corrective-action document attached yet.';
-            return;
-          }
-          metaNode.textContent = `${state.pendingDisciplinaryAttachment.name} | ${formatBytes(state.pendingDisciplinaryAttachment.size || 0)}`;
-        }
 
         window.triggerDisciplineDocPicker = () => {
           const input = document.getElementById('disciplineDocumentInput');
