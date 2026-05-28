@@ -372,6 +372,198 @@
         color: var(--gray-700);
       }
       .notes-textarea:focus { outline: none; border-color: var(--primary); }
+      .job-format-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 10px 12px;
+        margin: 10px 0 0;
+        border: 1px solid var(--gray-200);
+        border-bottom: 0;
+        border-radius: 14px 14px 0 0;
+        background: linear-gradient(180deg, #fbfdff 0%, #f7f9fc 100%);
+      }
+      .job-format-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .job-format-select {
+        height: 34px;
+        min-width: 120px;
+        border-radius: 10px;
+        border: 1px solid var(--gray-200);
+        background: white;
+        color: var(--gray-700);
+        padding: 0 10px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .job-format-select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(26, 86, 219, .12);
+      }
+      .job-format-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        justify-content: center;
+        min-height: 34px;
+        padding: 8px 11px;
+        border-radius: 10px;
+        border: 1px solid var(--gray-200);
+        background: var(--gray-50);
+        color: var(--gray-700);
+        font-size: 12px;
+        font-weight: 700;
+        transition: all .2s;
+        cursor: pointer;
+      }
+      .job-format-button:hover {
+        background: var(--primary-light);
+        border-color: rgba(26,86,219,.18);
+        color: var(--primary-dark);
+      }
+      .job-format-button.is-active {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+      }
+      .job-format-icon-button {
+        width: 34px;
+        min-width: 34px;
+        padding: 0;
+      }
+      .job-format-color-trigger {
+        position: relative;
+        overflow: hidden;
+      }
+      .job-format-color-trigger input[type="color"] {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .job-format-divider {
+        width: 1px;
+        height: 24px;
+        background: var(--gray-200);
+        margin: 0 2px;
+      }
+      .job-format-hint {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--gray-500);
+      }
+      .job-editor-shell {
+        border: 1px solid var(--gray-200);
+        border-radius: 0 0 14px 14px;
+        overflow: hidden;
+        background: white;
+        box-shadow: var(--shadow-sm);
+      }
+      .job-description-editor {
+        min-height: 220px;
+        padding: 14px 16px;
+        font-family: Calibri, Arial, sans-serif;
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--gray-800);
+        outline: none;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-y: auto;
+      }
+      .job-description-editor:empty::before {
+        content: attr(data-placeholder);
+        color: var(--gray-400);
+      }
+      .job-description-editor p,
+      .job-description-editor div {
+        margin: 0 0 10px;
+      }
+      .job-description-editor h1,
+      .job-description-editor h2,
+      .job-description-editor h3 {
+        margin: 0 0 10px;
+        line-height: 1.3;
+      }
+      .job-description-editor ul,
+      .job-description-editor ol {
+        margin: 0 0 10px;
+        padding-left: 20px;
+      }
+      .job-description-editor blockquote {
+        margin: 0 0 10px 0;
+        padding-left: 14px;
+        border-left: 3px solid var(--gray-200);
+        color: var(--gray-700);
+      }
+      .job-description-editor li {
+        margin-bottom: 6px;
+      }
+      .job-description-render {
+        display: grid;
+        gap: 8px;
+      }
+      .job-description-heading {
+        color: var(--dark);
+        font-weight: 800;
+        line-height: 1.35;
+      }
+      .job-description-heading.level-1 { font-size: 16px; }
+      .job-description-heading.level-2 { font-size: 14px; }
+      .job-description-heading.level-3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+      .job-description-list {
+        margin: 0;
+        padding-left: 18px;
+        display: grid;
+        gap: 6px;
+      }
+      .job-description-list li,
+      .job-description-paragraph {
+        font-size: 13px;
+        line-height: 1.7;
+        color: var(--gray-700);
+      }
+      .job-description-render p,
+      .job-description-render div {
+        margin: 0 0 8px;
+        line-height: 1.7;
+        color: var(--gray-700);
+      }
+      .job-description-render h1,
+      .job-description-render h2,
+      .job-description-render h3 {
+        margin: 0 0 8px;
+        line-height: 1.35;
+        color: var(--dark);
+        font-weight: 800;
+      }
+      .job-description-render h1 { font-size: 16px; }
+      .job-description-render h2 { font-size: 14px; }
+      .job-description-render h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+      .job-description-render ul,
+      .job-description-render ol {
+        margin: 0 0 8px 18px;
+        padding: 0;
+      }
+      .job-description-render blockquote {
+        margin: 0 0 8px;
+        padding-left: 14px;
+        border-left: 3px solid var(--gray-200);
+        color: var(--gray-700);
+      }
+      .job-description-render li {
+        margin-bottom: 6px;
+        line-height: 1.7;
+        color: var(--gray-700);
+      }
 
       .assignment-panel,
       .attachments-section,
@@ -3961,15 +4153,15 @@
                   <input type="checkbox" id="documentCenterRequiresSignature" checked />
                   <span>Requires employee signature</span>
                 </label>
-                <input type="file" id="documentCenterFileInput" class="hidden" accept=".pdf,.doc,.docx,image/*" onchange="handleDocumentCenterFile(event)" />
-                <button class="btn-filter" type="button" onclick="triggerDocumentCenterFilePicker()"><i class="fas fa-upload"></i> Upload File</button>
-                <button class="btn-settings-save" type="button" onclick="saveDocumentCenterRecord()"><i class="fas fa-folder-plus"></i> Save Document</button>
-              </div>
-              <div class="workspace-note" id="documentCenterFileMeta">No document file attached yet.</div>
-              <div class="leave-balance-list" id="documentCenterList">
-                <div class="attachment-empty">Documents saved in the center will appear here.</div>
-              </div>
+              <input type="file" id="documentCenterFileInput" class="hidden" accept=".pdf,.doc,.docx,image/*" onchange="handleDocumentCenterFile(event)" />
+              <button class="btn-filter" type="button" onclick="triggerDocumentCenterFilePicker()"><i class="fas fa-upload"></i> Upload File</button>
+              <button class="btn-settings-save" type="button" onclick="saveDocumentCenterRecord()"><i class="fas fa-folder-plus"></i> Save Document</button>
             </div>
+            <div class="workspace-note" id="documentCenterFileMeta">No document file attached yet. Recommended size: 3-5 MB. Max 5 MB. Final files should live in Google Drive for live sync.</div>
+            <div class="leave-balance-list" id="documentCenterList">
+              <div class="attachment-empty">Documents saved in the center will appear here.</div>
+            </div>
+          </div>
           </div>
 
           <div class="admin-panel" id="panel-search">
@@ -4067,7 +4259,75 @@
                 </div>
                 <div class="settings-item" style="margin-top:12px">
                   <div class="settings-label">Role Description</div>
-                  <textarea class="notes-textarea compact-textarea" id="jobPostDescription" placeholder="Add responsibilities, requirements, and role highlights."></textarea>
+                  <div class="job-format-toolbar">
+                    <div class="job-format-group">
+                      <select class="job-format-select" id="jobPostStyleSelect" onchange="applyJobDescriptionStyle(this.value); this.value='';">
+                        <option value="">Styles</option>
+                        <option value="p">Normal</option>
+                        <option value="h1">Heading 1</option>
+                        <option value="h2">Heading 2</option>
+                        <option value="h3">Heading 3</option>
+                      </select>
+                      <select class="job-format-select" id="jobPostFontFamily" onchange="applyJobDescriptionFontFamily(this.value)">
+                        <option value="Calibri, Arial, sans-serif">Calibri (Body)</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                        <option value="Tahoma, sans-serif">Tahoma</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                      </select>
+                      <select class="job-format-select" id="jobPostFontSize" onchange="applyJobDescriptionFontSize(this.value)">
+                        <option value="10px">10</option>
+                        <option value="11px">11</option>
+                        <option value="12px" selected>12</option>
+                        <option value="14px">14</option>
+                        <option value="16px">16</option>
+                        <option value="18px">18</option>
+                        <option value="24px">24</option>
+                      </select>
+                    </div>
+                    <span class="job-format-divider"></span>
+                    <div class="job-format-group">
+                      <button class="job-format-button job-format-icon-button" type="button" onclick="toggleJobEditorCommand('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                      <button class="job-format-button job-format-icon-button" type="button" onclick="toggleJobEditorCommand('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                      <button class="job-format-button job-format-icon-button" type="button" onclick="toggleJobEditorCommand('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                      <button class="job-format-button job-format-icon-button" type="button" onclick="toggleJobEditorCommand('strikeThrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                      <button class="job-format-button job-format-icon-button" type="button" onclick="toggleJobEditorCommand('subscript')" title="Subscript"><i class="fas fa-subscript"></i></button>
+                      <button class="job-format-button job-format-icon-button" type="button" onclick="toggleJobEditorCommand('superscript')" title="Superscript"><i class="fas fa-superscript"></i></button>
+                    </div>
+                    <span class="job-format-divider"></span>
+                    <div class="job-format-group">
+                      <button class="job-format-button" type="button" onclick="toggleJobEditorCommand('insertUnorderedList')"><i class="fas fa-list-ul"></i> Bullets</button>
+                      <button class="job-format-button" type="button" onclick="toggleJobEditorCommand('insertOrderedList')"><i class="fas fa-list-ol"></i> Numbered</button>
+                    </div>
+                    <span class="job-format-divider"></span>
+                    <div class="job-format-group">
+                      <button class="job-format-button job-format-icon-button" type="button" onclick="toggleJobEditorCommand('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
+                      <button class="job-format-button job-format-icon-button" type="button" onclick="toggleJobEditorCommand('justifyCenter')" title="Align Center"><i class="fas fa-align-center"></i></button>
+                      <button class="job-format-button job-format-icon-button" type="button" onclick="toggleJobEditorCommand('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
+                      <button class="job-format-button job-format-icon-button" type="button" onclick="toggleJobEditorCommand('justifyFull')" title="Justify"><i class="fas fa-align-justify"></i></button>
+                      <button class="job-format-button job-format-icon-button" type="button" onclick="toggleJobEditorCommand('outdent')" title="Outdent"><i class="fas fa-outdent"></i></button>
+                      <button class="job-format-button job-format-icon-button" type="button" onclick="toggleJobEditorCommand('indent')" title="Indent"><i class="fas fa-indent"></i></button>
+                    </div>
+                    <span class="job-format-divider"></span>
+                    <div class="job-format-group">
+                      <button class="job-format-button job-format-color-trigger" type="button" title="Text Color">
+                        <i class="fas fa-font"></i>
+                        <input type="color" id="jobPostTextColorPicker" value="#000000" onchange="applyJobDescriptionColor(this.value)" />
+                      </button>
+                      <button class="job-format-button job-format-color-trigger" type="button" title="Highlight Color">
+                        <i class="fas fa-highlighter"></i>
+                        <input type="color" id="jobPostHighlightColorPicker" value="#ffff00" onchange="applyJobDescriptionHighlight(this.value)" />
+                      </button>
+                      <button class="job-format-button" type="button" onclick="toggleJobEditorCommand('removeFormat')"><i class="fas fa-eraser"></i> Clear</button>
+                    </div>
+                    <span class="job-format-hint">Select text first, or choose a style to format the current paragraph. Paste from Word to keep formatting.</span>
+                  </div>
+                  <div class="job-editor-shell">
+                    <div class="job-description-editor" id="jobPostDescriptionEditor" contenteditable="true" spellcheck="true" data-placeholder="Add responsibilities, requirements, and role highlights."></div>
+                  </div>
+                  <textarea class="hidden" id="jobPostDescription"></textarea>
                 </div>
                 <button class="btn-settings-save" type="button" onclick="publishJobPost()"><i class="fas fa-plus"></i> Publish Job</button>
                 <div class="leave-balance-list" id="jobPostAdminList">
@@ -4722,13 +4982,14 @@
                 <div class="settings-item">
                   <div class="settings-label">Google Apps Script Web App URL</div>
                   <input type="url" class="settings-value" id="settingSheetURL" placeholder="https://script.google.com/macros/s/YOUR_ID/exec" />
-                  <div class="settings-hint">Deploy your Apps Script and paste the URL here. All reports will auto-sync.</div>
+                  <div class="settings-hint">Deploy your Apps Script and paste the URL here. Reports and shared HR data will auto-sync.</div>
                 </div>
                 <div class="settings-item">
                   <div class="settings-label">Spreadsheet ID (for reference)</div>
                   <input type="text" class="settings-value" id="settingSheetID" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" />
                 </div>
                 <button class="btn-settings-save" onclick="saveSettings()"><i class="fas fa-save"></i> Save Sheet Settings</button>
+                <div class="workspace-note" id="sheetStatusNote">Google Sheets sync is off until you add your Apps Script web app URL.</div>
                 <div style="margin-top:16px;padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0">
                   <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px"><i class="fas fa-info-circle"></i> Setup Instructions</div>
                   <div style="font-size:11px;color:#166534;line-height:1.7">
@@ -4741,28 +5002,48 @@
               </div>
 
               <div class="settings-card">
-                <h3><i class="fas fa-database" style="color:#0f766e"></i> Live Database Sync</h3>
+                <h3><i class="fab fa-google" style="color:#34a853"></i> Google Sheets Live Database</h3>
+                <div class="workspace-note" id="databaseStatusNote">Google Sheets is the live database for shared HR data.</div>
                 <div class="settings-item">
-                  <div class="settings-label">Supabase Project URL</div>
-                  <input type="url" class="settings-value" id="settingSupabaseUrl" placeholder="https://your-project.supabase.co" />
-                  <div class="settings-hint">Used to push submitted activity reports into a shared online database for HR.</div>
+                  <div class="settings-label">Document storage</div>
+                  <div class="settings-hint">Store the actual file in Google Drive, then save the Drive file ID / file URL in Google Sheets. Sheets should keep only metadata such as employee, title, category, expiry, and status.</div>
                 </div>
                 <div class="settings-item">
-                  <div class="settings-label">Supabase Publishable / Anon Key</div>
-                  <textarea class="notes-textarea compact-textarea" id="settingSupabaseAnonKey" placeholder="Paste the public anon key from Supabase here."></textarea>
+                  <div class="settings-label">Live sync model</div>
+                  <div class="settings-hint">Google Sheets remains the source of truth for reports, employee records, leave, compliance, and document references. Use Google Drive for binary files.</div>
                 </div>
-                <div class="employee-form-grid">
+                <button class="btn-settings-save" onclick="saveSettings()"><i class="fab fa-google"></i> Save Sheets Settings</button>
+                <div class="workspace-note" id="sheetStatusNote">Google Sheets sync is off until you add your Apps Script web app URL.</div>
+                <div style="margin-top:16px;padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0">
+                  <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px"><i class="fas fa-info-circle"></i> Setup Instructions</div>
+                  <div style="font-size:11px;color:#166534;line-height:1.7">
+                    1. Open Google Sheets &gt; Tools &gt; Apps Script<br>
+                    2. Paste the provided <strong>doPost()</strong> script<br>
+                    3. Deploy as Web App (Anyone can access)<br>
+                    4. Copy the URL and paste it above
+                  </div>
+                </div>
+                <div style="display:none">
                   <div class="settings-item">
-                    <div class="settings-label">Reports Table Name</div>
-                    <input type="text" class="settings-value" id="settingSupabaseReportsTable" placeholder="activity_reports" />
+                    <div class="settings-label">Supabase Project URL</div>
+                    <input type="url" class="settings-value" id="settingSupabaseUrl" placeholder="https://your-project.supabase.co" />
+                    <div class="settings-hint">Legacy field kept hidden for compatibility.</div>
                   </div>
                   <div class="settings-item">
-                    <div class="settings-label">Refresh Every (seconds)</div>
-                    <input type="number" class="settings-value" id="settingCloudRefreshSeconds" min="15" step="5" />
+                    <div class="settings-label">Supabase Publishable / Anon Key</div>
+                    <textarea class="notes-textarea compact-textarea" id="settingSupabaseAnonKey" placeholder="Paste the public anon key from Supabase here."></textarea>
+                  </div>
+                  <div class="employee-form-grid">
+                    <div class="settings-item">
+                      <div class="settings-label">Reports Table Name</div>
+                      <input type="text" class="settings-value" id="settingSupabaseReportsTable" placeholder="activity_reports" />
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-label">Refresh Every (seconds)</div>
+                      <input type="number" class="settings-value" id="settingCloudRefreshSeconds" min="15" step="5" />
+                    </div>
                   </div>
                 </div>
-                <div class="workspace-note" id="databaseStatusNote">Cloud sync is off until you add your Supabase project URL and anon key.</div>
-                <button class="btn-settings-save" onclick="saveSettings()"><i class="fas fa-cloud"></i> Save Database Settings</button>
               </div>
 
               <div class="settings-card">
@@ -4899,9 +5180,18 @@ function doGet() {
               </div>
 
               <div class="settings-card">
-                <h3><i class="fas fa-server" style="color:#0f766e"></i> Supabase SQL Template</h3>
-                <div style="font-size:11px;color:var(--gray-600);margin-bottom:10px">Run this in Supabase SQL Editor before using live sync:</div>
-                <pre id="supabaseSqlTemplate" style="background:#0f172a;color:#bbf7d0;padding:14px;border-radius:8px;font-size:10px;overflow-x:auto;line-height:1.6"></pre>
+                <h3><i class="fas fa-folder-tree" style="color:#0f766e"></i> Google Drive Document Storage</h3>
+                <div style="font-size:11px;color:var(--gray-600);margin-bottom:10px">Store document files in Google Drive and keep only metadata in Google Sheets.</div>
+                <div class="settings-item">
+                  <div class="settings-label">Recommended document fields</div>
+                  <div class="settings-hint">documentId, employeeName, title, category, issuedOn, expiresOn, fileName, fileUrl, driveFileId, mimeType, size, status, signature status.</div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-label">Recommended folder structure</div>
+                  <div class="settings-hint">One HR folder per company, then subfolders by employee or document category. Save the Drive file link in the sheet row for instant access.</div>
+                </div>
+                <div class="workspace-note">If you want, I can wire the upload endpoint next so the app sends the file to Google Drive through Apps Script instead of storing file bytes in the browser.</div>
+                <pre id="supabaseSqlTemplate" style="display:none"></pre>
               </div>
             </div>
           </div>
@@ -5187,7 +5477,7 @@ function doGet() {
     <div class="modal-overlay" id="candidateEditorModal">
       <div class="modal-box employee-editor-box">
         <div class="modal-header">
-          <span class="modal-title" id="candidateEditorTitle">Edit Application</span>
+          <span class="modal-title" id="candidateEditorTitle">Candidate Profile</span>
           <button class="modal-close" onclick="closeCandidateEditor()"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
@@ -6136,8 +6426,11 @@ function doGet() {
       const MAX_TOTAL_ATTACHMENT_BYTES = 1200 * 1024;
       const MAX_PROFILE_PHOTO_SIZE = 350 * 1024;
       const MAX_EMPLOYEE_DOCS = 6;
-      const MAX_EMPLOYEE_DOC_SIZE = 350 * 1024;
-      const MAX_DISCIPLINE_DOC_SIZE = 700 * 1024;
+      const MAX_EMPLOYEE_DOC_SIZE = 5 * 1024 * 1024;
+      const MAX_DISCIPLINE_DOC_SIZE = 5 * 1024 * 1024;
+      const DOCUMENT_CENTER_ATTACHMENT_DB = 'h360_document_center_attachments';
+      const DOCUMENT_CENTER_ATTACHMENT_STORE = 'attachments';
+      let documentCenterAttachmentDbPromise = null;
       const ANNUAL_LEAVE_LIMIT = 8;
       const SHARED_CLOUD_SCOPES = [
         'settings',
@@ -6185,6 +6478,7 @@ function doGet() {
         notificationReadMap: {},
         currentSelfServiceAttachment: null,
         currentDocumentCenterFile: null,
+        documentCenterAttachmentCache: {},
         attendanceConfig: null,
         attendanceRecords: [],
         payrollRuns: [],
@@ -6212,7 +6506,9 @@ function doGet() {
         sharedScopeSyncTimers: {},
         sharedScopePending: {},
         lastCloudSyncAt: '',
-        cloudSyncError: ''
+        lastSheetSyncAt: '',
+        cloudSyncError: '',
+        sheetSyncError: ''
       };
 
       function clone(value) {
@@ -6365,6 +6661,473 @@ function doGet() {
         return (attachments || []).reduce((sum, attachment) => sum + Number(attachment.size || 0), 0);
       }
 
+      function formatJobDescriptionInline(text) {
+        return escapeHtml(String(text || ''))
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      }
+
+      function renderJobDescriptionMarkup(value) {
+        const lines = String(value || '').split(/\r?\n/);
+        const parts = [];
+        let inList = false;
+        const closeList = () => {
+          if (inList) {
+            parts.push('</ul>');
+            inList = false;
+          }
+        };
+
+        lines.forEach((line) => {
+          const trimmed = line.trim();
+          if (!trimmed) {
+            closeList();
+            return;
+          }
+
+          const headingMatch = trimmed.match(/^(#{1,3})\s+(.*)$/);
+          if (headingMatch) {
+            closeList();
+            parts.push(`<div class="job-description-heading level-${headingMatch[1].length}">${formatJobDescriptionInline(headingMatch[2])}</div>`);
+            return;
+          }
+
+          const bulletMatch = trimmed.match(/^[-*]\s+(.*)$/);
+          if (bulletMatch) {
+            if (!inList) {
+              parts.push('<ul class="job-description-list">');
+              inList = true;
+            }
+            parts.push(`<li>${formatJobDescriptionInline(bulletMatch[1])}</li>`);
+            return;
+          }
+
+          closeList();
+          parts.push(`<div class="job-description-paragraph">${formatJobDescriptionInline(trimmed)}</div>`);
+        });
+
+        closeList();
+        return parts.length ? parts.join('') : '<div class="job-description-paragraph">No description added.</div>';
+      }
+
+      function plainJobDescriptionSummary(value) {
+        return String(value || '')
+          .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+          .replace(/^\s*[-*]\s+/gm, '• ')
+          .replace(/\*\*(.+?)\*\*/g, '$1')
+          .replace(/\*(.+?)\*/g, '$1')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      function formatJobDescriptionSelection(action) {
+        const textarea = document.getElementById('jobPostDescription');
+        if (!textarea) return;
+        const value = textarea.value || '';
+        const start = Number.isInteger(textarea.selectionStart) ? textarea.selectionStart : value.length;
+        const end = Number.isInteger(textarea.selectionEnd) ? textarea.selectionEnd : value.length;
+        const selected = value.slice(start, end);
+        let replacement = selected;
+
+        if (action === 'bold') {
+          replacement = selected ? `**${selected}**` : '**bold text**';
+        } else if (action === 'heading') {
+          if (selected) {
+            replacement = selected
+              .split('\n')
+              .map((line) => {
+                const trimmed = line.trim();
+                if (!trimmed) return '## Heading';
+                return /^#{1,3}\s+/.test(trimmed) ? trimmed : `## ${trimmed}`;
+              })
+              .join('\n');
+          } else {
+            replacement = '## Heading';
+          }
+        } else if (action === 'bullet') {
+          if (selected) {
+            replacement = selected
+              .split('\n')
+              .map((line) => {
+                const trimmed = line.trim();
+                if (!trimmed) return '- ';
+                return /^[-*]\s+/.test(trimmed) ? trimmed : `- ${trimmed}`;
+              })
+              .join('\n');
+          } else {
+            replacement = '- ';
+          }
+        }
+
+        textarea.value = `${value.slice(0, start)}${replacement}${value.slice(end)}`;
+        const cursor = start + replacement.length;
+        textarea.focus();
+        try {
+          textarea.setSelectionRange(cursor, cursor);
+        } catch (error) {
+          // Selection updates can fail on some browsers when the field is blurred.
+        }
+      }
+
+      const JOB_DESCRIPTION_FONT_SIZE_MAP = {
+        1: '10px',
+        2: '11px',
+        3: '12px',
+        4: '14px',
+        5: '18px',
+        6: '24px',
+        7: '32px'
+      };
+
+      let jobDescriptionSelectionRange = null;
+
+      function jobDescriptionEditorNode() {
+        return document.getElementById('jobPostDescriptionEditor');
+      }
+
+      function jobDescriptionFieldNode() {
+        return document.getElementById('jobPostDescription');
+      }
+
+      function sanitizeJobDescriptionFontFamily(value) {
+        const probe = document.createElement('span');
+        probe.style.fontFamily = '';
+        probe.style.fontFamily = String(value || '').trim();
+        return probe.style.fontFamily || '';
+      }
+
+      function sanitizeJobDescriptionColor(value) {
+        const probe = document.createElement('span');
+        probe.style.color = '';
+        probe.style.color = String(value || '').trim();
+        return probe.style.color || '';
+      }
+
+      function sanitizeJobDescriptionBackground(value) {
+        const probe = document.createElement('span');
+        probe.style.backgroundColor = '';
+        probe.style.backgroundColor = String(value || '').trim();
+        return probe.style.backgroundColor || '';
+      }
+
+      function sanitizeJobDescriptionFontSize(value) {
+        const size = String(value || '').trim().toLowerCase();
+        if (!size) return '';
+        if (/^\d+(\.\d+)?(px|pt|em|rem|%)$/.test(size)) return size;
+        if (/^\d+$/.test(size) && JOB_DESCRIPTION_FONT_SIZE_MAP[size]) return JOB_DESCRIPTION_FONT_SIZE_MAP[size];
+        return '';
+      }
+
+      function sanitizeJobDescriptionAlignment(value) {
+        const alignment = String(value || '').trim().toLowerCase();
+        return ['left', 'center', 'right', 'justify'].includes(alignment) ? alignment : '';
+      }
+
+      function sanitizeJobDescriptionInlineStyle(styleValue) {
+        const probe = document.createElement('span');
+        probe.style.cssText = String(styleValue || '');
+        const styles = [];
+        const fontFamily = sanitizeJobDescriptionFontFamily(probe.style.fontFamily);
+        if (fontFamily) styles.push(`font-family:${escapeHtml(fontFamily)}`);
+        const fontSize = sanitizeJobDescriptionFontSize(probe.style.fontSize);
+        if (fontSize) styles.push(`font-size:${escapeHtml(fontSize)}`);
+        const color = sanitizeJobDescriptionColor(probe.style.color);
+        if (color) styles.push(`color:${escapeHtml(color)}`);
+        const backgroundColor = sanitizeJobDescriptionBackground(probe.style.backgroundColor);
+        if (backgroundColor) styles.push(`background-color:${escapeHtml(backgroundColor)}`);
+        const textAlign = sanitizeJobDescriptionAlignment(probe.style.textAlign);
+        if (textAlign) styles.push(`text-align:${escapeHtml(textAlign)}`);
+        return styles.join('; ');
+      }
+
+      function escapeJobDescriptionInline(text) {
+        return escapeHtml(String(text || '')).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      }
+
+      function legacyJobDescriptionTextToHtml(value) {
+        const lines = String(value || '').split(/\r?\n/);
+        const parts = [];
+        let inList = false;
+        const closeList = () => {
+          if (inList) {
+            parts.push('</ul>');
+            inList = false;
+          }
+        };
+
+        lines.forEach((line) => {
+          const trimmed = line.trim();
+          if (!trimmed) {
+            closeList();
+            return;
+          }
+
+          const headingMatch = trimmed.match(/^(#{1,3})\s+(.*)$/);
+          if (headingMatch) {
+            closeList();
+            const level = headingMatch[1].length;
+            parts.push(`<h${level}>${escapeJobDescriptionInline(headingMatch[2])}</h${level}>`);
+            return;
+          }
+
+          const bulletMatch = trimmed.match(/^[-*]\s+(.*)$/);
+          if (bulletMatch) {
+            if (!inList) {
+              parts.push('<ul>');
+              inList = true;
+            }
+            parts.push(`<li>${escapeJobDescriptionInline(bulletMatch[1])}</li>`);
+            return;
+          }
+
+          closeList();
+          parts.push(`<p>${escapeJobDescriptionInline(trimmed)}</p>`);
+        });
+
+        closeList();
+        return parts.length ? parts.join('') : '<p>No description added.</p>';
+      }
+
+      function sanitizeJobDescriptionHtml(value) {
+        const template = document.createElement('template');
+        template.innerHTML = String(value || '');
+        const walk = (node) => {
+          if (!node) return '';
+          if (node.nodeType === Node.TEXT_NODE) {
+            return escapeHtml((node.textContent || '').replace(/\u200B/g, ''));
+          }
+          if (node.nodeType !== Node.ELEMENT_NODE) return '';
+
+          const tag = node.tagName.toLowerCase();
+          if (['script', 'style', 'iframe', 'object', 'embed'].includes(tag)) return '';
+          const children = Array.from(node.childNodes).map(walk).join('');
+          const nodeStyle = sanitizeJobDescriptionInlineStyle(node.getAttribute('style') || '');
+          const align = sanitizeJobDescriptionAlignment(node.getAttribute('align') || '');
+          const styleParts = [];
+          if (nodeStyle) styleParts.push(nodeStyle);
+          if (align && !/text-align:/.test(nodeStyle)) styleParts.push(`text-align:${escapeHtml(align)}`);
+          const styleAttr = styleParts.length ? ` style="${styleParts.join('; ')}"` : '';
+
+          if (tag === 'br') return '<br>';
+          if (['strong', 'b'].includes(tag)) return `<strong>${children}</strong>`;
+          if (['em', 'i'].includes(tag)) return `<em>${children}</em>`;
+          if (tag === 'u') return `<u>${children}</u>`;
+          if (['s', 'strike'].includes(tag)) return `<s>${children}</s>`;
+          if (tag === 'sub' || tag === 'sup') return `<${tag}>${children}</${tag}>`;
+          if (tag === 'ul' || tag === 'ol') return `<${tag}${styleAttr}>${children}</${tag}>`;
+          if (tag === 'li') return `<li${styleAttr}>${children}</li>`;
+          if (['p', 'div', 'span', 'h1', 'h2', 'h3', 'blockquote'].includes(tag)) return `<${tag}${styleAttr}>${children}</${tag}>`;
+          if (tag === 'font') {
+            const fontStyles = [];
+            const face = sanitizeJobDescriptionFontFamily(node.getAttribute('face') || '');
+            if (face) fontStyles.push(`font-family:${escapeHtml(face)}`);
+            const color = sanitizeJobDescriptionColor(node.getAttribute('color') || '');
+            if (color) fontStyles.push(`color:${escapeHtml(color)}`);
+            const size = sanitizeJobDescriptionFontSize(node.getAttribute('size') || '');
+            if (size) fontStyles.push(`font-size:${escapeHtml(size)}`);
+            const fontAttr = fontStyles.length ? ` style="${fontStyles.join('; ')}"` : '';
+            return `<span${fontAttr}>${children}</span>`;
+          }
+          return children;
+        };
+        return Array.from(template.content.childNodes).map(walk).join('').replace(/\u200B/g, '').trim();
+      }
+
+      function normalizeJobDescriptionSource(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        return /<\/?[a-z][\s\S]*>/i.test(raw) ? sanitizeJobDescriptionHtml(raw) : legacyJobDescriptionTextToHtml(raw);
+      }
+
+      function renderJobDescriptionMarkup(value) {
+        const normalized = normalizeJobDescriptionSource(value);
+        return normalized || '<p>No description added.</p>';
+      }
+
+      function plainJobDescriptionSummary(value) {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = renderJobDescriptionMarkup(value);
+        return (wrapper.textContent || wrapper.innerText || '').replace(/\s+/g, ' ').trim();
+      }
+
+      function saveJobDescriptionSelection() {
+        const editor = jobDescriptionEditorNode();
+        const selection = window.getSelection();
+        if (!editor || !selection || !selection.rangeCount || !editor.contains(selection.anchorNode)) return;
+        jobDescriptionSelectionRange = selection.getRangeAt(0).cloneRange();
+      }
+
+      function restoreJobDescriptionSelection() {
+        const editor = jobDescriptionEditorNode();
+        const selection = window.getSelection();
+        if (!editor || !selection || !jobDescriptionSelectionRange) return false;
+        editor.focus();
+        selection.removeAllRanges();
+        selection.addRange(jobDescriptionSelectionRange);
+        return true;
+      }
+
+      function syncJobDescriptionEditor() {
+        const editor = jobDescriptionEditorNode();
+        const field = jobDescriptionFieldNode();
+        if (!editor || !field) return;
+        field.value = editor.innerHTML;
+      }
+
+      function setJobDescriptionEditor(value) {
+        const editor = jobDescriptionEditorNode();
+        const field = jobDescriptionFieldNode();
+        if (!editor) return;
+        const html = normalizeJobDescriptionSource(value);
+        editor.innerHTML = html || '';
+        jobDescriptionSelectionRange = null;
+        if (field) field.value = html || '';
+      }
+
+      function getJobDescriptionEditorValue() {
+        const editor = jobDescriptionEditorNode();
+        if (!editor) return '';
+        const text = (editor.textContent || '').replace(/\u200B/g, '').trim();
+        if (!text) return '';
+        return normalizeJobDescriptionSource(editor.innerHTML);
+      }
+
+      function wrapJobDescriptionSelection(tagName, styleObject = {}, attributes = {}) {
+        const editor = jobDescriptionEditorNode();
+        if (!editor) return false;
+        if (!restoreJobDescriptionSelection()) {
+          editor.focus();
+        }
+        const selection = window.getSelection();
+        if (!selection) return false;
+        if (!selection.rangeCount) {
+          const fallbackRange = document.createRange();
+          fallbackRange.selectNodeContents(editor);
+          fallbackRange.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(fallbackRange);
+        }
+        const range = selection.getRangeAt(0);
+        if (!editor.contains(range.commonAncestorContainer)) return false;
+
+        const wrapper = document.createElement(tagName);
+        Object.entries(attributes).forEach(([key, val]) => {
+          if (val !== undefined && val !== null && String(val).trim() !== '') {
+            wrapper.setAttribute(key, String(val));
+          }
+        });
+        Object.entries(styleObject).forEach(([key, val]) => {
+          if (val !== undefined && val !== null && String(val).trim() !== '') {
+            wrapper.style[key] = val;
+          }
+        });
+
+        if (range.collapsed) {
+          wrapper.appendChild(document.createTextNode('\u200B'));
+          range.insertNode(wrapper);
+          const caret = document.createRange();
+          caret.setStart(wrapper.firstChild, 1);
+          caret.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(caret);
+        } else {
+          wrapper.appendChild(range.extractContents());
+          range.insertNode(wrapper);
+          const caret = document.createRange();
+          caret.selectNodeContents(wrapper);
+          selection.removeAllRanges();
+          selection.addRange(caret);
+        }
+
+        saveJobDescriptionSelection();
+        syncJobDescriptionEditor();
+        return true;
+      }
+
+      function toggleJobEditorCommand(command) {
+        const editor = jobDescriptionEditorNode();
+        if (!editor) return;
+        editor.focus();
+        restoreJobDescriptionSelection();
+        const selection = window.getSelection();
+        if (selection && !selection.rangeCount) {
+          const fallbackRange = document.createRange();
+          fallbackRange.selectNodeContents(editor);
+          fallbackRange.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(fallbackRange);
+        }
+        try {
+          document.execCommand(command, false, null);
+        } catch (error) {
+          console.error(`Unable to apply ${command}.`, error);
+        }
+        saveJobDescriptionSelection();
+        syncJobDescriptionEditor();
+      }
+
+      function applyJobDescriptionStyle(value) {
+        const editor = jobDescriptionEditorNode();
+        if (!editor || !value) return;
+        editor.focus();
+        restoreJobDescriptionSelection();
+        const selection = window.getSelection();
+        if (selection && !selection.rangeCount) {
+          const fallbackRange = document.createRange();
+          fallbackRange.selectNodeContents(editor);
+          fallbackRange.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(fallbackRange);
+        }
+        try {
+          document.execCommand('formatBlock', false, value.toUpperCase());
+        } catch (error) {
+          console.error('Unable to apply block style.', error);
+        }
+        saveJobDescriptionSelection();
+        syncJobDescriptionEditor();
+      }
+
+      function applyJobDescriptionFontFamily(value) {
+        const family = sanitizeJobDescriptionFontFamily(value);
+        if (!family) return;
+        wrapJobDescriptionSelection('span', { fontFamily: family });
+      }
+
+      function applyJobDescriptionFontSize(value) {
+        const size = sanitizeJobDescriptionFontSize(value);
+        if (!size) return;
+        wrapJobDescriptionSelection('span', { fontSize: size });
+      }
+
+      function applyJobDescriptionColor(value) {
+        const color = sanitizeJobDescriptionColor(value);
+        if (!color) return;
+        wrapJobDescriptionSelection('span', { color });
+      }
+
+      function applyJobDescriptionHighlight(value) {
+        const backgroundColor = sanitizeJobDescriptionBackground(value);
+        if (!backgroundColor) return;
+        wrapJobDescriptionSelection('span', { backgroundColor });
+      }
+
+      function formatJobDescriptionSelection(action) {
+        const actions = {
+          bold: () => toggleJobEditorCommand('bold'),
+          bullet: () => toggleJobEditorCommand('insertUnorderedList'),
+          heading: () => applyJobDescriptionStyle('h2')
+        };
+        if (actions[action]) actions[action]();
+      }
+
+      window.toggleJobEditorCommand = toggleJobEditorCommand;
+      window.applyJobDescriptionStyle = applyJobDescriptionStyle;
+      window.applyJobDescriptionFontFamily = applyJobDescriptionFontFamily;
+      window.applyJobDescriptionFontSize = applyJobDescriptionFontSize;
+      window.applyJobDescriptionColor = applyJobDescriptionColor;
+      window.applyJobDescriptionHighlight = applyJobDescriptionHighlight;
+      window.formatJobDescriptionSelection = formatJobDescriptionSelection;
+
       function readFileAsDataUrl(file) {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -6483,7 +7246,23 @@ function doGet() {
       }
 
       function cloudSyncConfigured() {
-        return Boolean(supabaseProjectUrl() && supabaseAnonKey() && supabaseReportsTable());
+        return false;
+      }
+
+      function sheetWebAppUrl() {
+        return String(state.settings && state.settings.sheetURL || '').trim();
+      }
+
+      function sheetSpreadsheetId() {
+        return String(state.settings && state.settings.sheetID || '').trim();
+      }
+
+      function sheetSyncConfigured() {
+        return Boolean(sheetWebAppUrl());
+      }
+
+      function liveSyncConfigured() {
+        return cloudSyncConfigured() || sheetSyncConfigured();
       }
 
       function normalizeHolidayEntry(holiday, index) {
@@ -6701,25 +7480,44 @@ function doGet() {
       }
 
       function cloudStatusMessage() {
-        if (!cloudSyncConfigured()) {
-          return { tone: '', text: 'Cloud sync is off until you add your Supabase project URL and anon key.' };
+        if (!sheetSyncConfigured()) {
+          return { tone: '', text: 'Google Sheets live database is off until you add your Apps Script web app URL.' };
         }
-        if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-          return { tone: 'alert', text: 'Supabase client library is not loaded yet. Refresh the page after saving database settings.' };
+        if (state.sheetSyncError) {
+          return { tone: 'alert', text: `Google Sheets live database needs attention: ${state.sheetSyncError}` };
         }
-        if (state.cloudSyncError) {
-          return { tone: 'alert', text: `Cloud sync needs attention: ${state.cloudSyncError}` };
+        if (state.lastSheetSyncAt) {
+          return { tone: 'success', text: `Google Sheets is the live database. Last sync: ${formatTimestamp(state.lastSheetSyncAt)}.` };
         }
-        if (state.lastCloudSyncAt) {
-          return { tone: 'success', text: `Cloud sync is active. Last shared refresh: ${formatTimestamp(state.lastCloudSyncAt)}.` };
-        }
-        return { tone: 'success', text: 'Cloud sync is configured. The app will refresh reports plus shared HR data automatically.' };
+        return { tone: 'success', text: 'Google Sheets is the live database. Shared HR data and document metadata will mirror automatically.' };
       }
 
       function updateCloudStatusNote() {
         const node = document.getElementById('databaseStatusNote');
         if (!node) return;
         const status = cloudStatusMessage();
+        node.textContent = status.text;
+        node.classList.remove('alert', 'success');
+        if (status.tone) node.classList.add(status.tone);
+      }
+
+      function sheetStatusMessage() {
+        if (!sheetSyncConfigured()) {
+          return { tone: '', text: 'Google Sheets sync is off until you add your Apps Script web app URL.' };
+        }
+        if (state.sheetSyncError) {
+          return { tone: 'alert', text: `Google Sheets sync needs attention: ${state.sheetSyncError}` };
+        }
+        if (state.lastSheetSyncAt) {
+          return { tone: 'success', text: `Google Sheets sync is active. Last update: ${formatTimestamp(state.lastSheetSyncAt)}.` };
+        }
+        return { tone: 'success', text: 'Google Sheets sync is configured. Shared HR data and reports will mirror to your sheet automatically.' };
+      }
+
+      function updateSheetStatusNote() {
+        const node = document.getElementById('sheetStatusNote');
+        if (!node) return;
+        const status = sheetStatusMessage();
         node.textContent = status.text;
         node.classList.remove('alert', 'success');
         if (status.tone) node.classList.add(status.tone);
@@ -6733,14 +7531,10 @@ function doGet() {
       }
 
       async function syncReportToDatabase(report) {
-        const client = getSupabaseClient();
-        if (!client) {
-          report.databaseSynced = false;
-          report.databaseSource = 'local';
-          report.databaseSyncError = cloudSyncConfigured() ? 'Cloud client unavailable.' : 'Cloud sync not configured.';
-          updateCloudStatusNote();
-          return { ok: false, reason: report.databaseSyncError };
+        if (!cloudSyncConfigured()) {
+          return { ok: true, skipped: true };
         }
+        const client = getSupabaseClient();
         try {
           const { data, error } = await client
             .from(supabaseReportsTable())
@@ -6782,6 +7576,9 @@ function doGet() {
 
       async function refreshCloudReportsFromDatabase(options) {
         const config = Object.assign({ silent: false }, options || {});
+        if (!cloudSyncConfigured()) {
+          return true;
+        }
         const client = getSupabaseClient();
         if (!client) {
           updateCloudStatusNote();
@@ -6837,6 +7634,41 @@ function doGet() {
         }, cloudRefreshSeconds() * 1000);
       }
 
+      async function syncPendingReportsToCloud(options) {
+        const config = Object.assign({ silent: true }, options || {});
+        const pendingReports = state.reports.filter((report) => !report.databaseSynced || !report.sheetSynced);
+        if (!pendingReports.length) {
+          return { ok: true, synced: 0 };
+        }
+        let synced = 0;
+        let failed = 0;
+        for (const report of pendingReports) {
+          let reportSynced = false;
+          if (sheetSyncConfigured() && !report.sheetSynced) {
+            report.sheetSynced = await syncReportToSheet(report);
+          }
+          if (cloudSyncConfigured() && !report.databaseSynced) {
+            const databaseResult = await syncReportToDatabase(report);
+            if (databaseResult && databaseResult.ok) {
+              report.databaseSynced = true;
+            }
+          }
+          reportSynced = Boolean(report.sheetSynced || report.databaseSynced);
+          if (reportSynced) {
+            synced += 1;
+          } else {
+            failed += 1;
+          }
+        }
+        persistReports();
+        if (!config.silent && synced && failed === 0) {
+          showToast(`Live sync refreshed for ${synced} stored report(s).`, 'success');
+        } else if (!config.silent && failed > 0) {
+          showToast(`Live sync updated ${synced} stored report(s), but ${failed} still need attention.`, 'error');
+        }
+        return { ok: failed === 0, synced, failed };
+      }
+
       function buildSharedScopePayload(scope) {
         if (scope === 'settings') {
           return shareableSettingsSnapshot();
@@ -6860,7 +7692,7 @@ function doGet() {
             .map((item) => Object.assign({}, item));
         }
         if (scope === 'employees') {
-          return state.employees.map((employee, index) => clone(normalizeEmployee(employee, index)));
+          return state.employees.map((employee, index) => employeeSharedSnapshot(employee, index));
         }
         if (scope === 'leave_requests') {
           return state.leaveRequests
@@ -6874,19 +7706,19 @@ function doGet() {
           return state.auditLog.slice(0, 300).map((entry) => clone(normalizeAuditEntry(entry)));
         }
         if (scope === 'disciplinary_actions') {
-          return state.disciplinaryActions.map((entry) => clone(normalizeDisciplinaryAction(entry)));
+          return state.disciplinaryActions.map((entry) => disciplinaryActionSharedSnapshot(entry));
         }
         if (scope === 'job_posts') {
           return state.jobPosts.map((entry) => clone(normalizeJobPost(entry)));
         }
         if (scope === 'candidates') {
-          return state.candidates.map((entry) => clone(normalizeCandidate(entry)));
+          return state.candidates.map((entry) => candidateSharedSnapshot(entry));
         }
         if (scope === 'document_center') {
-          return state.documentCenter.map((entry) => clone(normalizeDocumentRecord(entry)));
+          return documentCenterStorageSnapshot();
         }
         if (scope === 'self_service_requests') {
-          return state.selfServiceRequests.map((entry) => clone(normalizeSelfServiceRequest(entry)));
+          return state.selfServiceRequests.map((entry) => selfServiceRequestSharedSnapshot(entry));
         }
         if (scope === 'timeline_events') {
           return state.timelineEvents.map((entry) => clone(normalizeTimelineEvent(entry)));
@@ -6910,6 +7742,65 @@ function doGet() {
           return state.finalSettlements.map((entry) => clone(normalizeFinalSettlement(entry)));
         }
         return null;
+      }
+
+      function sanitizeCloudPayloadForSheet(value) {
+        if (Array.isArray(value)) {
+          return value.map((item) => sanitizeCloudPayloadForSheet(item));
+        }
+        if (!value || typeof value !== 'object') {
+          return value;
+        }
+        const next = {};
+        Object.entries(value).forEach(([key, item]) => {
+          if (key === 'dataUrl' || key === 'photoDataUrl') return;
+          next[key] = sanitizeCloudPayloadForSheet(item);
+        });
+        return next;
+      }
+
+      function buildGoogleSheetReportPayload(report) {
+        return {
+          action: 'upsert_report',
+          scope: 'reports',
+          sheetId: sheetSpreadsheetId(),
+          reportId: String(report.id),
+          employee: report.employee,
+          employeeEmail: report.employeeEmail || '',
+          employeeTitle: report.employeeTitle || '',
+          department: report.department || 'Operations',
+          date: report.date,
+          dateDisplay: report.dateDisplay || report.date,
+          time: report.time || nowTime(),
+          totalTasks: report.totalTasks,
+          totalCount: report.totalCount,
+          status: report.status,
+          notes: report.notes || '',
+          emailMethod: report.emailMethod || '',
+          sheetSynced: true,
+          attachmentCount: (report.attachments || []).length,
+          attachmentNames: (report.attachments || []).map((attachment) => attachment.name),
+          taskDetails: report.tasks || {},
+          assignedResponsibilities: report.assignedResponsibilities || [],
+          submittedAt: report.submittedAt || new Date().toISOString()
+        };
+      }
+
+      function buildGoogleSheetScopePayload(scope) {
+        const rawPayload = buildSharedScopePayload(scope);
+        const payload = sanitizeCloudPayloadForSheet(rawPayload);
+        return {
+          action: 'upsert_scope',
+          scope,
+          sheetId: sheetSpreadsheetId(),
+          payload,
+          recordCount: Array.isArray(rawPayload)
+            ? rawPayload.length
+            : rawPayload && typeof rawPayload === 'object'
+              ? Object.keys(rawPayload).length
+              : 0,
+          updatedAt: new Date().toISOString()
+        };
       }
 
       function applySharedCloudPayload(scope, payload) {
@@ -7036,15 +7927,21 @@ function doGet() {
           clearTimeout(state.sharedScopeSyncTimers[scope]);
         }
         state.sharedScopePending[scope] = true;
-        if (!cloudSyncConfigured()) {
+        if (!liveSyncConfigured()) {
           delete state.sharedScopeSyncTimers[scope];
           delete state.sharedScopePending[scope];
           updateCloudStatusNote();
+          updateSheetStatusNote();
           return;
         }
         state.sharedScopeSyncTimers[scope] = setTimeout(() => {
           delete state.sharedScopeSyncTimers[scope];
-          syncSharedScopeToDatabase(scope);
+          Promise.allSettled([
+            syncSharedScopeToDatabase(scope),
+            syncSharedScopeToSheet(scope)
+          ]).finally(() => {
+            delete state.sharedScopePending[scope];
+          });
         }, 350);
       }
 
@@ -7052,13 +7949,11 @@ function doGet() {
         if (!SHARED_CLOUD_SCOPES.includes(scope)) {
           return { ok: false, reason: 'Unknown shared cloud scope.' };
         }
+        if (!cloudSyncConfigured()) {
+          return { ok: true, skipped: true };
+        }
         state.sharedScopePending[scope] = true;
         const client = getSupabaseClient();
-        if (!client) {
-          delete state.sharedScopePending[scope];
-          updateCloudStatusNote();
-          return { ok: false, reason: cloudSyncConfigured() ? 'Cloud client unavailable.' : 'Cloud sync not configured.' };
-        }
         try {
           const payload = buildSharedScopePayload(scope);
           const { error } = await client
@@ -7082,6 +7977,60 @@ function doGet() {
           delete state.sharedScopePending[scope];
           return { ok: false, reason: message };
         }
+      }
+
+      async function syncSharedScopeToSheet(scope) {
+        if (!SHARED_CLOUD_SCOPES.includes(scope)) {
+          return { ok: false, reason: 'Unknown shared cloud scope.' };
+        }
+        const sheetUrl = sheetWebAppUrl();
+        if (!sheetUrl) {
+          return { ok: false, reason: 'Google Sheets sync not configured.' };
+        }
+        try {
+          const response = await fetch(sheetUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(buildGoogleSheetScopePayload(scope))
+          });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok || !payload || payload.ok === false) {
+            throw new Error(payload && payload.error ? payload.error : `Google Sheets sync failed with status ${response.status}.`);
+          }
+          state.lastSheetSyncAt = new Date().toISOString();
+          state.sheetSyncError = '';
+          updateSheetStatusNote();
+          return { ok: true };
+        } catch (error) {
+          const message = error && error.message ? error.message : 'Google Sheets sync failed.';
+          state.sheetSyncError = message;
+          updateSheetStatusNote();
+          return { ok: false, reason: message };
+        }
+      }
+
+      async function syncAllSharedScopesToSheet(options) {
+        const config = Object.assign({ silent: true }, options || {});
+        if (!sheetSyncConfigured()) {
+          updateSheetStatusNote();
+          return { ok: false, synced: 0 };
+        }
+        let synced = 0;
+        let failed = 0;
+        for (const scope of SHARED_CLOUD_SCOPES) {
+          const result = await syncSharedScopeToSheet(scope);
+          if (result && result.ok) {
+            synced += 1;
+          } else {
+            failed += 1;
+          }
+        }
+        if (!config.silent && failed === 0) {
+          showToast(`Google Sheets mirror refreshed for ${synced} scope(s).`, 'success');
+        } else if (!config.silent && failed > 0) {
+          showToast(`Google Sheets mirror updated ${synced} scope(s), but ${failed} still need attention.`, 'error');
+        }
+        return { ok: failed === 0, synced, failed };
       }
 
       function persistSharedStateLocally() {
@@ -7158,10 +8107,13 @@ function doGet() {
 
       async function refreshSharedStateFromDatabase(options) {
         const config = Object.assign({ silent: false }, options || {});
+        if (!cloudSyncConfigured()) {
+          return { ok: true, scopes: new Set() };
+        }
         const client = getSupabaseClient();
         if (!client) {
           updateCloudStatusNote();
-          return { ok: false, scopes: new Set() };
+          return { ok: true, scopes: new Set() };
         }
         try {
           const previousConfig = cloudConfigKey();
@@ -7208,33 +8160,45 @@ function doGet() {
 
       function setupSharedCloudSync() {
         clearSharedCloudPolling();
-        if (!cloudSyncConfigured()) {
+        if (!liveSyncConfigured()) {
           updateCloudStatusNote();
+          updateSheetStatusNote();
           return;
         }
         updateCloudStatusNote();
-        refreshSharedStateFromDatabase({ silent: true }).then((result) => {
-          if (!result || !result.ok) return;
-          const missingScopes = SHARED_CLOUD_SCOPES.filter((scope) => !result.scopes.has(scope));
-          if (missingScopes.length) {
-            seedMissingSharedCloudScopes(missingScopes);
-          }
-        });
-        state.cloudSharedPollTimer = setInterval(() => {
-          refreshSharedStateFromDatabase({ silent: true });
-        }, cloudRefreshSeconds() * 1000);
+        updateSheetStatusNote();
+        if (cloudSyncConfigured()) {
+          refreshSharedStateFromDatabase({ silent: true }).then((result) => {
+            if (result && result.ok) {
+              const missingScopes = SHARED_CLOUD_SCOPES.filter((scope) => !result.scopes.has(scope));
+              if (missingScopes.length) {
+                seedMissingSharedCloudScopes(missingScopes);
+              }
+            }
+            if (sheetSyncConfigured()) {
+              syncAllSharedScopesToSheet({ silent: true });
+            }
+          });
+          state.cloudSharedPollTimer = setInterval(() => {
+            refreshSharedStateFromDatabase({ silent: true });
+          }, cloudRefreshSeconds() * 1000);
+        } else if (sheetSyncConfigured()) {
+          syncAllSharedScopesToSheet({ silent: true });
+        }
       }
 
       async function refreshAllCloudData(options) {
         const config = Object.assign({ silent: false }, options || {});
         const sharedResult = await refreshSharedStateFromDatabase({ silent: true });
         const reportsResult = await refreshCloudReportsFromDatabase({ silent: true });
-        const ok = Boolean((sharedResult && sharedResult.ok) || reportsResult);
+        const sheetResult = await syncAllSharedScopesToSheet({ silent: true });
+        const reportPushResult = await syncPendingReportsToCloud({ silent: true });
+        const ok = Boolean((sharedResult && sharedResult.ok) || reportsResult || (sheetResult && sheetResult.ok) || (reportPushResult && reportPushResult.ok));
         if (!config.silent) {
           if (ok) {
-            showToast('Shared cloud data refreshed.', 'success');
+            showToast('Google Sheets mirror refreshed.', 'success');
           } else {
-            showToast(state.cloudSyncError || 'Unable to refresh cloud data.', 'error');
+            showToast(state.cloudSyncError || 'Unable to refresh Google Sheets data.', 'error');
           }
         }
         return ok;
@@ -7732,7 +8696,8 @@ function doGet() {
       }
 
       function openJobPosts() {
-        return state.jobPosts.filter((job) => String(job.status || '').toLowerCase() === 'open');
+        const jobPosts = Array.isArray(state.jobPosts) ? state.jobPosts : [];
+        return jobPosts.filter((job) => job && String(job.status || '').toLowerCase() === 'open');
       }
 
       function getCandidatesByStage(stage) {
@@ -8441,9 +9406,18 @@ function doGet() {
       }
 
       function persistDocumentCenter(options) {
-        localStorage.setItem('h360_document_center', JSON.stringify(state.documentCenter));
-        if (!(options && options.skipCloud)) {
-          queueSharedScopeSync('document_center');
+        try {
+          localStorage.setItem('h360_document_center', JSON.stringify(documentCenterStorageSnapshot()));
+          if (!(options && options.skipCloud)) {
+            queueSharedScopeSync('document_center');
+          }
+          return true;
+        } catch (error) {
+          if (!(options && options.skipCloud)) {
+            queueSharedScopeSync('document_center');
+          }
+          showToast('Document center saved, but browser storage is getting full. Older file bytes may need to be refreshed.', 'error');
+          return false;
         }
       }
 
@@ -8508,9 +9482,24 @@ function doGet() {
       }
 
       function persistSettings(options) {
-        localStorage.setItem('h360_settings', JSON.stringify(state.settings));
-        if (!(options && options.skipCloud)) {
-          queueSharedScopeSync('settings');
+        try {
+          localStorage.setItem('h360_settings', JSON.stringify(state.settings));
+          if (!(options && options.skipCloud)) {
+            queueSharedScopeSync('settings');
+          }
+          return true;
+        } catch (error) {
+          try {
+            persistDocumentCenter({ skipCloud: true });
+            localStorage.setItem('h360_settings', JSON.stringify(state.settings));
+            if (!(options && options.skipCloud)) {
+              queueSharedScopeSync('settings');
+            }
+            return true;
+          } catch (finalError) {
+            showToast('Unable to save settings because the browser storage is full. Clear old attachments and try again.', 'error');
+            return false;
+          }
         }
       }
 
@@ -8524,6 +9513,129 @@ function doGet() {
           dataUrl: null,
           storageOmitted: true
         };
+      }
+
+      function employeeSharedSnapshot(employee, index) {
+        const snapshot = clone(normalizeEmployee(employee, index));
+        if (Array.isArray(snapshot.documents)) {
+          snapshot.documents = snapshot.documents.map((doc) => stripAttachmentData(doc));
+        }
+        return snapshot;
+      }
+
+      function selfServiceRequestSharedSnapshot(request) {
+        const snapshot = clone(normalizeSelfServiceRequest(request));
+        if (snapshot.attachment) {
+          snapshot.attachment = stripAttachmentData(snapshot.attachment);
+        }
+        return snapshot;
+      }
+
+      function disciplinaryActionSharedSnapshot(action) {
+        const snapshot = clone(normalizeDisciplinaryAction(action));
+        if (snapshot.signatureDocument) {
+          snapshot.signatureDocument = stripAttachmentData(snapshot.signatureDocument);
+        }
+        return snapshot;
+      }
+
+      function candidateSharedSnapshot(candidate) {
+        const snapshot = clone(normalizeCandidate(candidate));
+        if (snapshot.resume) {
+          snapshot.resume = stripAttachmentData(snapshot.resume);
+        }
+        return snapshot;
+      }
+
+
+      function documentCenterAttachmentSnapshot(record) {
+        if (!record || !record.attachment) return record;
+        return Object.assign({}, record, {
+          attachment: Object.assign({}, record.attachment, {
+            dataUrl: null,
+            storageOmitted: true
+          })
+        });
+      }
+
+      function documentCenterStorageSnapshot() {
+        return state.documentCenter.map((record) => documentCenterAttachmentSnapshot(record));
+      }
+
+      function openDocumentCenterAttachmentDb() {
+        if (!window.indexedDB) return Promise.resolve(null);
+        if (documentCenterAttachmentDbPromise) return documentCenterAttachmentDbPromise;
+        documentCenterAttachmentDbPromise = new Promise((resolve) => {
+          try {
+            const request = window.indexedDB.open(DOCUMENT_CENTER_ATTACHMENT_DB, 1);
+            request.onupgradeneeded = () => {
+              const db = request.result;
+              if (!db.objectStoreNames.contains(DOCUMENT_CENTER_ATTACHMENT_STORE)) {
+                db.createObjectStore(DOCUMENT_CENTER_ATTACHMENT_STORE, { keyPath: 'recordId' });
+              }
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve(null);
+            request.onblocked = () => resolve(null);
+          } catch (error) {
+            resolve(null);
+          }
+        });
+        return documentCenterAttachmentDbPromise;
+      }
+
+      async function saveDocumentCenterAttachment(recordId, attachment) {
+        if (!recordId || !attachment || !attachment.dataUrl) return false;
+        const db = await openDocumentCenterAttachmentDb();
+        if (!db) return false;
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction(DOCUMENT_CENTER_ATTACHMENT_STORE, 'readwrite');
+            tx.objectStore(DOCUMENT_CENTER_ATTACHMENT_STORE).put({
+              recordId: String(recordId),
+              attachment: clone(attachment),
+              updatedAt: new Date().toISOString()
+            });
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => resolve(false);
+          } catch (error) {
+            resolve(false);
+          }
+        });
+      }
+
+      async function loadDocumentCenterAttachment(recordId) {
+        if (!recordId) return null;
+        const db = await openDocumentCenterAttachmentDb();
+        if (!db) return null;
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction(DOCUMENT_CENTER_ATTACHMENT_STORE, 'readonly');
+            const request = tx.objectStore(DOCUMENT_CENTER_ATTACHMENT_STORE).get(String(recordId));
+            request.onsuccess = () => resolve(request.result && request.result.attachment ? clone(request.result.attachment) : null);
+            request.onerror = () => resolve(null);
+            tx.onerror = () => resolve(null);
+          } catch (error) {
+            resolve(null);
+          }
+        });
+      }
+
+      async function migrateDocumentCenterAttachmentsToIndexedDb() {
+        const records = state.documentCenter.filter((record) => record && record.attachment && record.attachment.dataUrl);
+        if (!records.length) return false;
+        let migrated = 0;
+        for (const record of records) {
+          const saved = await saveDocumentCenterAttachment(record.id, record.attachment);
+          if (saved) migrated += 1;
+        }
+        return migrated > 0;
+      }
+
+      function documentAttachmentMeta(attachment) {
+        if (!attachment) return 'No file bytes attached';
+        const summary = `${attachment.name} | ${formatBytes(attachment.size || 0)}`;
+        return attachment.dataUrl ? summary : `${summary} | stored in browser attachment vault`;
       }
 
       function persistReports() {
@@ -9067,7 +10179,7 @@ function doGet() {
               <div class="leave-balance-meta">${escapeHtml(doc.kind || 'Document')} | ${escapeHtml(formatBytes(doc.size || 0))}${doc.storageOmitted ? ' | stored without file bytes' : ''}</div>
             </div>
             <div class="attachment-item-actions">
-              <button class="btn-ghost" type="button" onclick="downloadEmployeeDocument('${employee.id}', '${doc.id}')"><i class="fas fa-download"></i> View</button>
+              <button class="btn-ghost" type="button" onclick="downloadEmployeeDocument('${employee.id}', '${doc.id}')"><i class="fas fa-download"></i> Download</button>
               ${adminView ? `<button class="btn-ghost" type="button" onclick="removeEmployeeDocument('${employee.id}', '${doc.id}')"><i class="fas fa-trash-alt"></i> Remove</button>` : ''}
             </div>
           </div>
@@ -9515,9 +10627,9 @@ function doGet() {
               </div>
             </div>
             <div class="leave-reason">${escapeHtml(record.notes || 'No document notes added.')}</div>
-            <div class="leave-note">${record.expiresOn ? `Expiry ${escapeHtml(formatShortDate(record.expiresOn))}` : 'No expiry date'}${record.attachment ? ` | ${escapeHtml(record.attachment.name)}` : ' | No file bytes attached'}</div>
+            <div class="leave-note">${record.expiresOn ? `Expiry ${escapeHtml(formatShortDate(record.expiresOn))}` : 'No expiry date'}${record.attachment ? ` | ${escapeHtml(documentAttachmentMeta(record.attachment))}` : ' | No file bytes attached'}</div>
             <div class="leave-card-actions" style="margin-top:12px">
-              ${record.attachment ? `<button class="btn-filter" type="button" onclick="viewDocumentCenterRecord('${record.id}')"><i class="fas fa-file-lines"></i> View</button>` : '<span class="metric-chip">Meta only</span>'}
+              ${record.attachment ? `<button class="btn-filter" type="button" onclick="downloadDocumentCenterRecord('${record.id}')"><i class="fas fa-download"></i> Download</button>` : '<span class="metric-chip">Meta only</span>'}
               ${record.requiresEmployeeSignature && record.employeeSignature ? `<span class="metric-chip success">Signed ${escapeHtml(formatTimestamp(record.employeeSignedAt))}</span>` : ''}
             </div>
           </div>
@@ -9550,7 +10662,7 @@ function doGet() {
             </div>
             <div class="leave-reason">${escapeHtml(record.notes || 'No additional notes were added.')}</div>
             <div class="leave-card-actions" style="margin-top:12px">
-              ${record.attachment ? `<button class="btn-filter" type="button" onclick="viewDocumentCenterRecord('${record.id}')"><i class="fas fa-file-lines"></i> View Document</button>` : '<span class="metric-chip">No file bytes</span>'}
+              ${record.attachment ? `<button class="btn-filter" type="button" onclick="downloadDocumentCenterRecord('${record.id}')"><i class="fas fa-download"></i> Download</button>` : '<span class="metric-chip">No file bytes</span>'}
               ${record.requiresEmployeeSignature && !record.employeeSignature ? `<button class="btn-ghost" type="button" onclick="signDocumentCenterRecord('${record.id}')"><i class="fas fa-user-pen"></i> E-Sign</button>` : ''}
             </div>
           </div>
@@ -10303,7 +11415,7 @@ function doGet() {
                 category: 'Jobs',
                 title: job.title,
                 meta: `${job.department} | ${job.location}`,
-                body: job.description || 'Open role',
+                body: plainJobDescriptionSummary(job.description) || 'Open role',
                 panel: 'recruitment',
                 createdAt: job.createdAt
               });
@@ -10370,13 +11482,13 @@ function doGet() {
 
         if (['all', 'jobs'].includes(normalizedScope)) {
           state.jobPosts
-            .filter((job) => matches(job.title, job.department, job.location, job.description, job.status))
+            .filter((job) => matches(job.title, job.department, job.location, plainJobDescriptionSummary(job.description), job.status))
             .forEach((job) => {
               pushResult({
                 category: 'Job',
                 title: job.title,
                 meta: `${job.status} | ${job.department} | ${job.location}`,
-                body: job.description || 'No job summary added.',
+                body: plainJobDescriptionSummary(job.description) || 'No job summary added.',
                 panel: 'recruitment',
                 createdAt: job.createdAt
               });
@@ -10908,36 +12020,45 @@ function doGet() {
       }
 
       function renderCareersPortal() {
-        const careerList = document.getElementById('publicCareerList');
-        const jobSelect = document.getElementById('careerApplicantJob');
-        const jobs = openJobPosts();
-        if (jobSelect) {
-          const current = jobSelect.value;
-          jobSelect.innerHTML = [
-            '<option value="">Select a role</option>',
-            ...jobs.map((job) => `<option value="${escapeHtml(job.id)}">${escapeHtml(job.title)} - ${escapeHtml(job.department)}</option>`)
-          ].join('');
-          if (jobs.some((job) => job.id === current)) jobSelect.value = current;
-        }
-        if (!careerList) return;
-        if (!jobs.length) {
-          careerList.innerHTML = '<div class="attachment-empty">No open roles published yet. Please check back later.</div>';
-          return;
-        }
-        careerList.innerHTML = jobs.map((job) => `
-          <div class="leave-balance-item">
-            <div>
-              <div class="custom-responsibility-name">${escapeHtml(job.title)}</div>
-              <div class="leave-balance-meta">${escapeHtml(job.department)} | ${escapeHtml(job.location)} | ${escapeHtml(job.employmentType)} | ${job.openings} opening(s)</div>
-              <div class="leave-reason">${escapeHtml(job.description || 'Role details will be shared during the recruitment process.')}</div>
-              <div class="leave-note">${job.closesOn ? `Closes on ${escapeHtml(formatShortDate(job.closesOn))}` : 'Open until filled'}</div>
+        let careerList = null;
+        try {
+          careerList = document.getElementById('publicCareerList');
+          const jobSelect = document.getElementById('careerApplicantJob');
+          const jobs = openJobPosts();
+          if (jobSelect) {
+            const current = jobSelect.value;
+            jobSelect.innerHTML = [
+              '<option value="">Select a role</option>',
+              ...jobs.map((job) => `<option value="${escapeHtml(job.id)}">${escapeHtml(job.title)} - ${escapeHtml(job.department)}</option>`)
+            ].join('');
+            if (jobs.some((job) => job.id === current)) jobSelect.value = current;
+          }
+          if (!careerList) return;
+          if (!jobs.length) {
+            careerList.innerHTML = '<div class="attachment-empty">No open roles published yet. Please check back later.</div>';
+            return;
+          }
+          careerList.innerHTML = jobs.map((job) => `
+            <div class="leave-balance-item">
+              <div>
+                <div class="custom-responsibility-name">${escapeHtml(job.title)}</div>
+                <div class="leave-balance-meta">${escapeHtml(job.department)} | ${escapeHtml(job.location)} | ${escapeHtml(job.employmentType)} | ${job.openings} opening(s)</div>
+                <div class="leave-reason job-description-render">${renderJobDescriptionMarkup(job.description || 'Role details will be shared during the recruitment process.')}</div>
+                <div class="leave-note">${job.closesOn ? `Closes on ${escapeHtml(formatShortDate(job.closesOn))}` : 'Open until filled'}</div>
+              </div>
+              <button class="btn-filter" type="button" onclick="prefillCareerJob('${job.id}')"><i class="fas fa-paper-plane"></i> Apply</button>
             </div>
-            <button class="btn-filter" type="button" onclick="prefillCareerJob('${job.id}')"><i class="fas fa-paper-plane"></i> Apply</button>
-          </div>
-        `).join('');
+          `).join('');
+        } catch (error) {
+          console.error('Unable to render open jobs.', error);
+          if (careerList) {
+            careerList.innerHTML = '<div class="attachment-empty">Open jobs are temporarily unavailable. Please refresh the page.</div>';
+          }
+        }
       }
 
       function renderRecruitmentPanel() {
+        const jobPosts = Array.isArray(state.jobPosts) ? state.jobPosts.filter(Boolean) : [];
         const openJobs = openJobPosts();
         const applied = state.candidates.length;
         const interviews = state.candidates.filter((candidate) => candidate.stage === 'Interview').length;
@@ -10956,24 +12077,24 @@ function doGet() {
           const current = jobFilter.value;
           jobFilter.innerHTML = [
             '<option value="">All Jobs</option>',
-            ...state.jobPosts.map((job) => `<option value="${escapeHtml(job.id)}">${escapeHtml(job.title)}</option>`)
+            ...jobPosts.map((job) => `<option value="${escapeHtml(job.id)}">${escapeHtml(job.title)}</option>`)
           ].join('');
-          if (state.jobPosts.some((job) => job.id === current)) jobFilter.value = current;
+          if (jobPosts.some((job) => job.id === current)) jobFilter.value = current;
         }
 
         const jobPostList = document.getElementById('jobPostAdminList');
         if (jobPostList) {
-          if (!state.jobPosts.length) {
+          if (!jobPosts.length) {
             jobPostList.innerHTML = '<div class="attachment-empty">No vacancies posted yet.</div>';
           } else {
-            jobPostList.innerHTML = [...state.jobPosts]
+            jobPostList.innerHTML = [...jobPosts]
               .sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt))
               .map((job) => `
                 <div class="leave-balance-item">
                   <div>
                     <div class="custom-responsibility-name">${escapeHtml(job.title)}</div>
                     <div class="leave-balance-meta">${escapeHtml(job.department)} | ${escapeHtml(job.location)} | ${escapeHtml(job.employmentType)} | ${job.openings} opening(s)</div>
-                    <div class="leave-reason">${escapeHtml(job.description || 'No description added.')}</div>
+                    <div class="leave-reason job-description-render">${renderJobDescriptionMarkup(job.description || 'No description added.')}</div>
                     <div class="leave-note">${job.closesOn ? `Closes ${escapeHtml(formatShortDate(job.closesOn))}` : 'Open until filled'}</div>
                   </div>
                   <div class="attachment-item-actions">
@@ -11052,7 +12173,6 @@ function doGet() {
             <div class="leave-note">Offer status: ${escapeHtml(candidate.offerStatus)} | Onboarding: ${escapeHtml(candidate.onboardingStatus || 'Not Started')} | Workflow: ${escapeHtml(approvalFlowText('recruitment'))}</div>
             <div class="leave-note">HR signed: ${candidate.hrSignature ? escapeHtml(candidate.hrSignature) : 'Pending'} | Candidate signed: ${candidate.candidateSignature ? escapeHtml(candidate.candidateSignature) : 'Pending'}</div>
             <div class="leave-card-actions" style="margin-top:12px">
-              <button class="btn-filter" type="button" onclick="openCandidateEditor('${candidate.id}')"><i class="fas fa-pen-to-square"></i> Edit Application</button>
               <button class="btn-filter" type="button" style="background:#1d4ed8" onclick="viewCandidateResume('${candidate.id}')"><i class="fas fa-file-lines"></i> View CV</button>
               <button class="btn-filter" type="button" onclick="saveCandidateProfile('${candidate.id}')"><i class="fas fa-save"></i> Save ATS Update</button>
               <button class="btn-filter" type="button" style="background:#0f766e" onclick="sendCandidateEmail('${candidate.id}')"><i class="fas fa-envelope"></i> Email</button>
@@ -11611,30 +12731,28 @@ function doGet() {
       }
 
       async function syncReportToSheet(report) {
-        const sheetUrl = String(state.settings.sheetURL || '').trim();
+        const sheetUrl = sheetWebAppUrl();
         if (!sheetUrl) return false;
         try {
           const response = await fetch(sheetUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({
-              reportId: report.id,
-              date: report.date,
-              employee: report.employee,
-              employeeEmail: report.employeeEmail,
-              department: report.department,
-              totalTasks: report.totalTasks,
-              totalCount: report.totalCount,
-              status: report.status,
-              notes: report.notes,
-              emailMethod: report.emailMethod,
-              attachmentCount: report.attachments.length,
-              attachmentNames: report.attachments.map((attachment) => attachment.name).join(', '),
-              details: JSON.stringify(report.tasks || {})
-            })
+            body: JSON.stringify(buildGoogleSheetReportPayload(report))
           });
-          return response.ok;
+          const payload = await response.json().catch(() => null);
+          if (!response.ok || !payload || payload.ok === false) {
+            throw new Error(payload && payload.error ? payload.error : `Google Sheets sync failed with status ${response.status}.`);
+          }
+          report.sheetSynced = true;
+          state.lastSheetSyncAt = new Date().toISOString();
+          state.sheetSyncError = '';
+          updateSheetStatusNote();
+          return true;
         } catch (error) {
+          const message = error && error.message ? error.message : 'Google Sheets sync failed.';
+          report.sheetSynced = false;
+          state.sheetSyncError = message;
+          updateSheetStatusNote();
           return false;
         }
       }
@@ -11721,6 +12839,8 @@ function doGet() {
         document.getElementById('settingCCEmail').value = state.settings.ccEmail || '';
         document.getElementById('settingSheetURL').value = state.settings.sheetURL || '';
         document.getElementById('settingSheetID').value = state.settings.sheetID || '';
+        updateCloudStatusNote();
+        updateSheetStatusNote();
         const supabaseUrlNode = document.getElementById('settingSupabaseUrl');
         const supabaseKeyNode = document.getElementById('settingSupabaseAnonKey');
         const supabaseTableNode = document.getElementById('settingSupabaseReportsTable');
@@ -11781,30 +12901,180 @@ function doGet() {
         const templateNode = document.querySelector('#panel-settings .settings-card pre');
         if (templateNode) {
           templateNode.textContent = `function doPost(e) {
-  var sheet = SpreadsheetApp
-    .getActiveSpreadsheet()
-    .getActiveSheet();
-  var data = JSON.parse(e.postData.contents);
-  sheet.appendRow([
-    data.date,
-    data.employee,
-    data.employeeEmail,
-    data.totalTasks,
-    data.totalCount,
-    data.status,
-    data.emailMethod,
-    data.attachmentCount,
-    data.attachmentNames,
-    data.notes,
-    data.details,
-    new Date()
-  ]);
-  return ContentService
-    .createTextOutput("ok");
+  try {
+    var input = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    var spreadsheet = openTargetSpreadsheet_(input.sheetId);
+    if (!spreadsheet) {
+      throw new Error('Add a Spreadsheet ID or bind this script to a Google Sheet.');
+    }
+
+    if (input.action === 'upsert_report') {
+      upsertReport_(spreadsheet, input);
+      return jsonResponse_({
+        ok: true,
+        action: 'upsert_report',
+        reportId: String(input.reportId || '')
+      });
+    }
+
+    if (input.action === 'upsert_scope') {
+      upsertSharedScope_(spreadsheet, input);
+      return jsonResponse_({
+        ok: true,
+        action: 'upsert_scope',
+        scope: String(input.scope || '')
+      });
+    }
+
+    throw new Error('Unsupported action.');
+  } catch (error) {
+    return jsonResponse_({
+      ok: false,
+      error: String(error && error.message ? error.message : error)
+    });
+  }
 }
+
 function doGet() {
+  return jsonResponse_({
+    ok: true,
+    service: 'help360-google-sheets',
+    time: new Date().toISOString()
+  });
+}
+
+function openTargetSpreadsheet_(sheetId) {
+  if (sheetId) {
+    return SpreadsheetApp.openById(String(sheetId).trim());
+  }
+  return SpreadsheetApp.getActiveSpreadsheet();
+}
+
+function jsonResponse_(payload) {
   return ContentService
-    .createTextOutput("ok");
+    .createTextOutput(JSON.stringify(payload))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function ensureSheet_(spreadsheet, name, headers) {
+  var sheet = spreadsheet.getSheetByName(name);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(name);
+  }
+  if (headers && headers.length && sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function findRowByFirstColumn_(sheet, value) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return -1;
+  var values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  for (var i = 0; i < values.length; i += 1) {
+    if (String(values[i][0]) === String(value)) {
+      return i + 2;
+    }
+  }
+  return -1;
+}
+
+function upsertRow_(sheet, keyValue, rowValues) {
+  var existingRow = findRowByFirstColumn_(sheet, keyValue);
+  if (existingRow > 0) {
+    sheet.getRange(existingRow, 1, 1, rowValues.length).setValues([rowValues]);
+    return existingRow;
+  }
+  sheet.appendRow(rowValues);
+  return sheet.getLastRow();
+}
+
+function upsertReport_(spreadsheet, input) {
+  var headers = [
+    'report_id',
+    'employee',
+    'employee_email',
+    'employee_title',
+    'department',
+    'report_date',
+    'report_time',
+    'total_tasks',
+    'total_count',
+    'status',
+    'notes',
+    'email_method',
+    'sheet_synced',
+    'attachment_count',
+    'attachment_names',
+    'task_details_json',
+    'assigned_responsibilities_json',
+    'submitted_at',
+    'updated_at',
+    'payload_json'
+  ];
+  var sheet = ensureSheet_(spreadsheet, 'activity_reports', headers);
+  var attachmentNames = Array.isArray(input.attachmentNames) ? input.attachmentNames.join('; ') : String(input.attachmentNames || '');
+  var payload = {
+    reportId: String(input.reportId || ''),
+    employee: String(input.employee || ''),
+    employeeEmail: String(input.employeeEmail || ''),
+    employeeTitle: String(input.employeeTitle || ''),
+    department: String(input.department || ''),
+    date: String(input.date || ''),
+    time: String(input.time || ''),
+    totalTasks: Number(input.totalTasks || 0),
+    totalCount: Number(input.totalCount || 0),
+    status: String(input.status || 'sent'),
+    notes: String(input.notes || ''),
+    emailMethod: String(input.emailMethod || ''),
+    sheetSynced: Boolean(input.sheetSynced),
+    attachmentCount: Number(input.attachmentCount || 0),
+    attachmentNames: Array.isArray(input.attachmentNames) ? input.attachmentNames : [],
+    taskDetails: input.taskDetails || {},
+    assignedResponsibilities: input.assignedResponsibilities || [],
+    submittedAt: String(input.submittedAt || new Date().toISOString())
+  };
+  upsertRow_(sheet, payload.reportId, [
+    payload.reportId,
+    payload.employee,
+    payload.employeeEmail,
+    payload.employeeTitle,
+    payload.department,
+    payload.date,
+    payload.time,
+    payload.totalTasks,
+    payload.totalCount,
+    payload.status,
+    payload.notes,
+    payload.emailMethod,
+    String(payload.sheetSynced),
+    payload.attachmentCount,
+    attachmentNames,
+    JSON.stringify(payload.taskDetails),
+    JSON.stringify(payload.assignedResponsibilities),
+    payload.submittedAt,
+    new Date().toISOString(),
+    JSON.stringify(payload)
+  ]);
+}
+
+function upsertSharedScope_(spreadsheet, input) {
+  var headers = [
+    'scope',
+    'record_count',
+    'updated_at',
+    'payload_json'
+  ];
+  var sheet = ensureSheet_(spreadsheet, 'help360_shared_state', headers);
+  var scope = String(input.scope || '').trim();
+  var payload = input.payload || {};
+  upsertRow_(sheet, scope, [
+    scope,
+    Number(input.recordCount || 0),
+    String(input.updatedAt || new Date().toISOString()),
+    JSON.stringify(payload)
+  ]);
 }`;
         }
 
@@ -12331,7 +13601,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             </div>
             <div class="report-meta-card">
               <div class="report-meta-label">Delivery</div>
-              <div><strong>${report.databaseSynced ? 'Cloud synced' : report.sheetSynced ? 'Sheet synced' : 'Saved locally'}</strong></div>
+              <div><strong>${report.sheetSynced ? 'Google Sheets synced' : report.databaseSynced ? 'Legacy sync' : 'Saved locally'}</strong></div>
               <div class="table-secondary">${escapeHtml(reportDeliverySummary(report))}</div>
             </div>
           </div>
@@ -12421,7 +13691,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
                       <div class="attachment-icon"><i class="fas fa-file-alt"></i></div>
                       <div>
                         <div class="attachment-name">${escapeHtml(attachmentName)}</div>
-                        <div class="attachment-meta">Stored in shared cloud history without local file bytes</div>
+                        <div class="attachment-meta">Stored in Google Sheets history without local file bytes</div>
                       </div>
                     </div>
                   </div>
@@ -12615,7 +13885,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           const file = ((event.target && event.target.files) || [])[0];
           if (!file) return;
           if (file.size > MAX_EMPLOYEE_DOC_SIZE) {
-            showToast(`Keep the attachment under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)}.`, 'error');
+            showToast(`Keep the attachment under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)}. Recommended size: 3-5 MB.`, 'error');
             if (event.target) event.target.value = '';
             return;
           }
@@ -12712,7 +13982,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           request.reviewNote = noteInput.trim();
           request.reviewedAt = new Date().toISOString();
           if (status === 'Approved' && request.type === 'Document Upload' && request.attachment && !state.documentCenter.some((record) => record.employeeName === request.employeeName && record.title === request.title)) {
-            state.documentCenter.unshift(normalizeDocumentRecord({
+            const linkedDocument = normalizeDocumentRecord({
               id: createId('doc_center'),
               employeeId: request.employeeId,
               employeeName: request.employeeName,
@@ -12726,8 +13996,12 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
               hrSignature: currentActorName(),
               hrSignedAt: new Date().toISOString(),
               status: 'Active'
-            }));
+            });
+            state.documentCenter.unshift(linkedDocument);
             persistDocumentCenter();
+            if (linkedDocument.attachment && linkedDocument.attachment.dataUrl) {
+              saveDocumentCenterAttachment(linkedDocument.id, linkedDocument.attachment).catch(() => {});
+            }
           }
           persistSelfServiceRequests();
           addSystemNotification({
@@ -12761,7 +14035,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           const file = ((event.target && event.target.files) || [])[0];
           if (!file) return;
           if (file.size > MAX_EMPLOYEE_DOC_SIZE) {
-            showToast(`Keep the document under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)}.`, 'error');
+            showToast(`Keep the document under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)}. Recommended size: 3-5 MB.`, 'error');
             if (event.target) event.target.value = '';
             return;
           }
@@ -12782,7 +14056,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           }
         };
 
-        window.saveDocumentCenterRecord = () => {
+        window.saveDocumentCenterRecord = async () => {
           if (!isAdminRole()) return;
           const employeeName = document.getElementById('documentCenterEmployee').value.trim();
           const title = document.getElementById('documentCenterTitle').value.trim();
@@ -12795,6 +14069,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             return;
           }
           const employee = getEmployeeByName(employeeName);
+          const attachment = state.currentDocumentCenterFile ? clone(state.currentDocumentCenterFile) : null;
           const record = normalizeDocumentRecord({
             id: createId('doc_center'),
             employeeId: employee ? employee.id : '',
@@ -12806,13 +14081,19 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             expiresOn,
             requiresEmployeeSignature,
             priority: category === 'Warning' || (expiresOn && daysUntilDate(expiresOn) <= 7) ? 'High' : 'Medium',
-            attachment: state.currentDocumentCenterFile ? clone(state.currentDocumentCenterFile) : null,
+            attachment,
             hrSignature: state.currentRole === 'hr' ? currentActorName() : '',
             hrSignedAt: state.currentRole === 'hr' ? new Date().toISOString() : '',
             status: 'Active'
           });
           state.documentCenter.unshift(record);
           persistDocumentCenter();
+          if (attachment && attachment.dataUrl) {
+            const saved = await saveDocumentCenterAttachment(record.id, attachment);
+            if (!saved) {
+              showToast('Document saved, but browser attachment storage is limited. The file may only be available during this session.', 'error');
+            }
+          }
           if (requiresEmployeeSignature) {
             addSystemNotification({
               audience: `employee:${employeeName}`,
@@ -12848,16 +14129,26 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           showToast('Document saved in the center.', 'success');
         };
 
-        window.viewDocumentCenterRecord = (recordId) => {
+        window.downloadDocumentCenterRecord = async (recordId) => {
           const record = state.documentCenter.find((item) => item.id === recordId);
           if (!record || !record.attachment) {
             showToast('This document is stored without file bytes.', 'error');
             return;
           }
-          if (!openDownload(record.attachment.dataUrl, record.attachment.name)) {
+          let attachment = record.attachment;
+          if (!attachment.dataUrl) {
+            attachment = await loadDocumentCenterAttachment(record.id) || attachment;
+          }
+          if (!attachment || !attachment.dataUrl) {
+            showToast('This document is stored without file bytes.', 'error');
+            return;
+          }
+          if (!openDownload(attachment.dataUrl, attachment.name)) {
             showToast('This document is stored without file bytes.', 'error');
           }
         };
+
+        window.viewDocumentCenterRecord = (recordId) => window.downloadDocumentCenterRecord(recordId);
 
         window.signDocumentCenterRecord = (recordId) => {
           const record = state.documentCenter.find((item) => item.id === recordId);
@@ -13556,10 +14847,11 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           persistSettings();
           setupCloudReportSync();
           setupSharedCloudSync();
+          syncPendingReportsToCloud({ silent: true });
           renderSettingsPage();
           logAudit('General settings updated', {
             scope: 'settings',
-            details: `Email ${state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail} | Cloud ${cloudSyncConfigured() ? `${supabaseReportsTable()} + ${sharedStateTable()}` : 'off'}`
+            details: `Email ${state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail} | Sheets ${sheetSyncConfigured() ? 'on' : 'off'} | Documents in Google Drive`
           });
           showToast('Settings saved!', 'success');
         };
@@ -13878,12 +15170,19 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
         };
 
         window.openCareersPortal = () => {
-          renderCareersPortal();
-          document.getElementById('careersPortalModal').classList.add('open');
+          try {
+            renderCareersPortal();
+            const modal = document.getElementById('careersPortalModal');
+            if (modal) modal.classList.add('open');
+          } catch (error) {
+            console.error('Unable to open careers portal.', error);
+            showToast('Unable to open the careers portal right now.', 'error');
+          }
         };
 
         window.closeCareersPortal = () => {
-          document.getElementById('careersPortalModal').classList.remove('open');
+          const modal = document.getElementById('careersPortalModal');
+          if (modal) modal.classList.remove('open');
         };
 
         const syncCandidateResumeMeta = () => {
@@ -13911,7 +15210,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           const file = ((event.target && event.target.files) || [])[0];
           if (!file) return;
           if (file.size > MAX_EMPLOYEE_DOC_SIZE) {
-            showToast(`Keep the resume under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)}.`, 'error');
+            showToast(`Keep the resume under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)}. Recommended size: 3-5 MB.`, 'error');
             if (event.target) event.target.value = '';
             return;
           }
@@ -13992,7 +15291,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           const employmentType = document.getElementById('jobPostEmploymentType').value.trim() || 'Full Time';
           const openings = document.getElementById('jobPostOpenings').value.trim();
           const closesOn = document.getElementById('jobPostClosesOn').value;
-          const description = document.getElementById('jobPostDescription').value.trim();
+          const description = getJobDescriptionEditorValue();
           if (!title || !description) {
             showToast('Add a job title and description before publishing.', 'error');
             return;
@@ -14021,10 +15320,21 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             const node = document.getElementById(id);
             if (node) node.value = '';
           });
+          setJobDescriptionEditor('');
           document.getElementById('jobPostDepartment').value = 'Operations';
           document.getElementById('jobPostLocation').value = 'Remote';
           document.getElementById('jobPostEmploymentType').value = 'Full Time';
           document.getElementById('jobPostOpenings').value = '1';
+          const jobStyleSelect = document.getElementById('jobPostStyleSelect');
+          if (jobStyleSelect) jobStyleSelect.value = '';
+          const jobFontSelect = document.getElementById('jobPostFontFamily');
+          if (jobFontSelect) jobFontSelect.value = 'Calibri, Arial, sans-serif';
+          const fontSizeSelect = document.getElementById('jobPostFontSize');
+          if (fontSizeSelect) fontSizeSelect.value = '12px';
+          const textColorPicker = document.getElementById('jobPostTextColorPicker');
+          if (textColorPicker) textColorPicker.value = '#000000';
+          const highlightColorPicker = document.getElementById('jobPostHighlightColorPicker');
+          if (highlightColorPicker) highlightColorPicker.value = '#ffff00';
           showToast('Job published to the careers page.', 'success');
         };
 
@@ -14067,7 +15377,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           if (!candidate) return;
           state.currentEditingCandidateId = candidate.id;
           state.currentCandidateResume = candidate.resume ? clone(candidate.resume) : null;
-          document.getElementById('candidateEditorTitle').textContent = `Edit Application - ${candidate.fullName || 'Candidate'}`;
+          document.getElementById('candidateEditorTitle').textContent = `Candidate Profile - ${candidate.fullName || 'Candidate'}`;
           document.getElementById('editCandidateName').value = candidate.fullName || '';
           document.getElementById('editCandidateEmail').value = candidate.email || '';
           document.getElementById('editCandidatePhone').value = candidate.phone || '';
@@ -14116,7 +15426,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           const file = ((event.target && event.target.files) || [])[0];
           if (!file) return;
           if (file.size > MAX_EMPLOYEE_DOC_SIZE) {
-            showToast(`Keep the CV under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)}.`, 'error');
+            showToast(`Keep the CV under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)}. Recommended size: 3-5 MB.`, 'error');
             if (event.target) event.target.value = '';
             return;
           }
@@ -14963,7 +16273,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           const file = event.target && event.target.files && event.target.files[0];
           if (!file) return;
           if (file.size > MAX_DISCIPLINE_DOC_SIZE) {
-            showToast(`Keep the corrective-action document under ${formatBytes(MAX_DISCIPLINE_DOC_SIZE)}.`, 'error');
+            showToast(`Keep the corrective-action document under ${formatBytes(MAX_DISCIPLINE_DOC_SIZE)}. Recommended size: 3-5 MB.`, 'error');
             event.target.value = '';
             return;
           }
@@ -15026,7 +16336,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             createdAt: new Date().toISOString()
           }));
           if (state.pendingDisciplinaryAttachment) {
-            state.documentCenter.unshift(normalizeDocumentRecord({
+            const linkedDocument = normalizeDocumentRecord({
               id: createId('doc_center'),
               employeeId: employee ? employee.id : '',
               employeeName,
@@ -15039,10 +16349,14 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
               priority: severity,
               attachment: clone(state.pendingDisciplinaryAttachment),
               hrSignature: state.currentRole === 'hr' ? currentActorName() : '',
-              hrSignedAt: state.currentRole === 'hr' ? new Date().toISOString() : '',
+              hrSignedAt: new Date().toISOString(),
               status: 'Active'
-            }));
+            });
+            state.documentCenter.unshift(linkedDocument);
             persistDocumentCenter();
+            if (linkedDocument.attachment && linkedDocument.attachment.dataUrl) {
+              saveDocumentCenterAttachment(linkedDocument.id, linkedDocument.attachment).catch(() => {});
+            }
           }
           state.pendingDisciplinaryAttachment = null;
           renderPendingDisciplinaryDocumentMeta();
@@ -15425,7 +16739,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             return;
           }
           if (file.size > MAX_EMPLOYEE_DOC_SIZE) {
-            showToast(`Keep employee documents under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)} for reliable local storage.`, 'error');
+            showToast(`Keep employee documents under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)}. Recommended size: 3-5 MB.`, 'error');
             event.target.value = '';
             return;
           }
@@ -15530,6 +16844,51 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             if (id === 'globalSearchPanelInput') renderGlobalSearchResults();
           });
         });
+        const jobEditor = document.getElementById('jobPostDescriptionEditor');
+        if (jobEditor) {
+          const syncJobEditor = () => {
+            saveJobDescriptionSelection();
+            syncJobDescriptionEditor();
+          };
+          const jobToolbar = document.querySelector('.job-format-toolbar');
+          if (jobToolbar) {
+            const preserveJobSelection = (event) => {
+              const interactive = event.target && event.target.closest
+                ? event.target.closest('button, select, input[type="color"]')
+                : null;
+              if (!interactive) return;
+              saveJobDescriptionSelection();
+              if (interactive.tagName === 'BUTTON') {
+                event.preventDefault();
+              }
+            };
+            jobToolbar.addEventListener('pointerdown', preserveJobSelection);
+            jobToolbar.addEventListener('mousedown', preserveJobSelection);
+            jobToolbar.addEventListener('touchstart', preserveJobSelection, { passive: true });
+            jobToolbar.addEventListener('focusin', saveJobDescriptionSelection);
+          }
+          jobEditor.addEventListener('input', syncJobEditor);
+          jobEditor.addEventListener('keyup', saveJobDescriptionSelection);
+          jobEditor.addEventListener('mouseup', saveJobDescriptionSelection);
+          jobEditor.addEventListener('focus', saveJobDescriptionSelection);
+          jobEditor.addEventListener('blur', syncJobDescriptionEditor);
+          jobEditor.addEventListener('paste', (event) => {
+            event.preventDefault();
+            const clipboard = event.clipboardData || window.clipboardData;
+            const html = clipboard && clipboard.getData ? clipboard.getData('text/html') : '';
+            const text = clipboard && clipboard.getData ? clipboard.getData('text/plain') : '';
+            const content = html ? normalizeJobDescriptionSource(html) : legacyJobDescriptionTextToHtml(text);
+            const insertion = content || escapeHtml(String(text || '')).replace(/\n/g, '<br>');
+            try {
+              document.execCommand('insertHTML', false, insertion);
+            } catch (error) {
+              console.error('Unable to paste into the job editor.', error);
+            }
+            syncJobDescriptionEditor();
+            saveJobDescriptionSelection();
+          });
+          setJobDescriptionEditor(jobEditor.innerHTML || '');
+        }
         document.getElementById('reportModal').addEventListener('click', function(event) {
           if (event.target === this) window.closeModal();
         });
@@ -15721,6 +17080,8 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
       function init() {
         loadState();
         initBrandLogos();
+        persistDocumentCenter({ skipCloud: true });
+        migrateDocumentCenterAttachmentsToIndexedDb().catch(() => {});
         ensureTaskAssignments({ skipCloud: true });
         persistSettings({ skipCloud: true });
         persistManager({ skipCloud: true });
@@ -15754,6 +17115,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
         renderLeaveRequestPreview();
         setupCloudReportSync();
         setupSharedCloudSync();
+        syncPendingReportsToCloud({ silent: true });
         const employeeTitle = document.querySelector('.emp-page-title');
         const employeeSubtitle = document.querySelector('.emp-page-subtitle');
         if (employeeTitle) employeeTitle.textContent = 'Daily Activity Workspace';
