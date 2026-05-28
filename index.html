@@ -4978,23 +4978,23 @@
               </div>
 
               <div class="settings-card">
-                <h3><i class="fab fa-google" style="color:#34a853"></i> Google Sheets Integration</h3>
+                <h3><i class="fab fa-google" style="color:#34a853"></i> Google Sheets + Auth Backend</h3>
                 <div class="settings-item">
                   <div class="settings-label">Google Apps Script Web App URL</div>
                   <input type="url" class="settings-value" id="settingSheetURL" placeholder="https://script.google.com/macros/s/YOUR_ID/exec" />
-                  <div class="settings-hint">Deploy your Apps Script and paste the URL here. Reports and shared HR data will auto-sync.</div>
+                  <div class="settings-hint">Deploy your Apps Script and paste the URL here. The same URL now powers shared HR data, password/PIN auth, and session validation.</div>
                 </div>
                 <div class="settings-item">
                   <div class="settings-label">Spreadsheet ID (for reference)</div>
                   <input type="text" class="settings-value" id="settingSheetID" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" />
                 </div>
                 <button class="btn-settings-save" onclick="saveSettings()"><i class="fas fa-save"></i> Save Sheet Settings</button>
-                <div class="workspace-note" id="sheetStatusNote">Google Sheets sync is off until you add your Apps Script web app URL.</div>
+                <div class="workspace-note" id="sheetStatusNote">Google Sheets sync and auth are off until you add your Apps Script web app URL.</div>
                 <div style="margin-top:16px;padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0">
                   <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px"><i class="fas fa-info-circle"></i> Setup Instructions</div>
                   <div style="font-size:11px;color:#166534;line-height:1.7">
                     1. Open Google Sheets &gt; Tools &gt; Apps Script<br>
-                    2. Paste the provided <strong>doPost()</strong> script<br>
+                    2. Paste the provided <strong>doGet()</strong> / <strong>doPost()</strong> auth + sync script<br>
                     3. Deploy as Web App (Anyone can access)<br>
                     4. Copy the URL and paste it above
                   </div>
@@ -5013,12 +5013,12 @@
                   <div class="settings-hint">Google Sheets remains the source of truth for reports, employee records, leave, compliance, and document references. Use Google Drive for binary files.</div>
                 </div>
                 <button class="btn-settings-save" onclick="saveSettings()"><i class="fab fa-google"></i> Save Sheets Settings</button>
-                <div class="workspace-note" id="sheetStatusNote">Google Sheets sync is off until you add your Apps Script web app URL.</div>
+                <div class="workspace-note" id="sheetStatusNote">Google Sheets sync and auth are off until you add your Apps Script web app URL.</div>
                 <div style="margin-top:16px;padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0">
                   <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px"><i class="fas fa-info-circle"></i> Setup Instructions</div>
                   <div style="font-size:11px;color:#166534;line-height:1.7">
                     1. Open Google Sheets &gt; Tools &gt; Apps Script<br>
-                    2. Paste the provided <strong>doPost()</strong> script<br>
+                    2. Paste the provided <strong>doGet()</strong> / <strong>doPost()</strong> auth + sync script<br>
                     3. Deploy as Web App (Anyone can access)<br>
                     4. Copy the URL and paste it above
                   </div>
@@ -6500,6 +6500,13 @@ function doGet() {
         toastTimer: null,
         notificationPanelOpen: false,
         suspendAutoSave: false,
+        authSession: null,
+        authSessionValidationTimer: null,
+        authDirectorySyncTimer: null,
+        authDirectorySyncInFlight: false,
+        authDirectoryDirty: false,
+        authLastValidatedAt: '',
+        authSyncError: '',
         supabaseClient: null,
         supabaseConfigKey: '',
         cloudReportPollTimer: null,
@@ -7266,6 +7273,18 @@ function doGet() {
         return Boolean(sheetWebAppUrl());
       }
 
+      function authWebAppUrl() {
+        return sheetWebAppUrl();
+      }
+
+      function authConfigured() {
+        return Boolean(authWebAppUrl());
+      }
+
+      function authSessionStorageKey() {
+        return 'h360_auth_session';
+      }
+
       function liveSyncConfigured() {
         return cloudSyncConfigured() || sheetSyncConfigured();
       }
@@ -7486,15 +7505,15 @@ function doGet() {
 
       function cloudStatusMessage() {
         if (!sheetSyncConfigured()) {
-          return { tone: '', text: 'Google Sheets live database is off until you add your Apps Script web app URL.' };
+          return { tone: '', text: 'Google Sheets live database and auth backend are off until you add your Apps Script web app URL.' };
         }
         if (state.sheetSyncError) {
-          return { tone: 'alert', text: `Google Sheets live database needs attention: ${state.sheetSyncError}` };
+          return { tone: 'alert', text: `Google Sheets live database / auth backend needs attention: ${state.sheetSyncError}` };
         }
         if (state.lastSheetSyncAt) {
-          return { tone: 'success', text: `Google Sheets is the live database. Last sync: ${formatTimestamp(state.lastSheetSyncAt)}.` };
+          return { tone: 'success', text: `Google Sheets is the live database and auth backend. Last sync: ${formatTimestamp(state.lastSheetSyncAt)}.` };
         }
-        return { tone: 'success', text: 'Google Sheets is the live database. Shared HR data and document metadata will mirror automatically.' };
+        return { tone: 'success', text: 'Google Sheets is the live database and auth backend. Shared HR data, document metadata, and sessions will mirror automatically.' };
       }
 
       function updateCloudStatusNote() {
@@ -7508,15 +7527,15 @@ function doGet() {
 
       function sheetStatusMessage() {
         if (!sheetSyncConfigured()) {
-          return { tone: '', text: 'Google Sheets sync is off until you add your Apps Script web app URL.' };
+          return { tone: '', text: 'Google Sheets sync and auth are off until you add your Apps Script web app URL.' };
         }
         if (state.sheetSyncError) {
-          return { tone: 'alert', text: `Google Sheets sync needs attention: ${state.sheetSyncError}` };
+          return { tone: 'alert', text: `Google Sheets sync / auth needs attention: ${state.sheetSyncError}` };
         }
         if (state.lastSheetSyncAt) {
-          return { tone: 'success', text: `Google Sheets sync is active. Last update: ${formatTimestamp(state.lastSheetSyncAt)}.` };
+          return { tone: 'success', text: `Google Sheets sync and auth are active. Last update: ${formatTimestamp(state.lastSheetSyncAt)}.` };
         }
-        return { tone: 'success', text: 'Google Sheets sync is configured. Shared HR data and reports will mirror to your sheet automatically.' };
+        return { tone: 'success', text: 'Google Sheets sync and auth are configured. Shared HR data, reports, and sessions will mirror automatically.' };
       }
 
       function updateSheetStatusNote() {
@@ -8447,6 +8466,310 @@ function doGet() {
           }
         }
         return ok;
+      }
+
+      function stopAuthSessionValidation() {
+        if (state.authSessionValidationTimer) {
+          clearInterval(state.authSessionValidationTimer);
+          state.authSessionValidationTimer = null;
+        }
+      }
+
+      function authSessionToken() {
+        return String((state.authSession && state.authSession.sessionToken) || '').trim();
+      }
+
+      function persistAuthSession(session) {
+        const nextSession = session && typeof session === 'object' ? clone(session) : null;
+        state.authSession = nextSession;
+        if (nextSession && nextSession.sessionToken) {
+          localStorage.setItem(authSessionStorageKey(), JSON.stringify(nextSession));
+        } else {
+          localStorage.removeItem(authSessionStorageKey());
+        }
+      }
+
+      function clearAuthSession() {
+        stopAuthSessionValidation();
+        persistAuthSession(null);
+        state.currentUser = null;
+        state.currentRole = null;
+      }
+
+      function normalizeAuthRole(role) {
+        const value = String(role || '').trim().toLowerCase();
+        if (value === 'hr' || value === 'manager' || value === 'employee') {
+          return value;
+        }
+        if (value === 'admin') {
+          return 'hr';
+        }
+        return 'employee';
+      }
+
+      function buildAuthStaffDirectory() {
+        const staff = state.employees.map((employee) => {
+          const userId = String(employee.name || '').trim();
+          return {
+            userId,
+            fullName: String(employee.name || '').trim(),
+            role: 'employee',
+            status: String(employee.status || 'Active').toUpperCase() === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
+            defaultDepartment: String(employee.department || 'Operations').trim() || 'Operations',
+            allowedDepartments: [String(employee.department || 'Operations').trim() || 'Operations'].join('|'),
+            pin: String(state.passwords[employee.name] || DEFAULT_PASSWORDS[employee.name] || 'help360'),
+            forcePinReset: false,
+            lastLoginAt: '',
+            lastPinResetAt: '',
+            notes: `Synced employee directory record for ${String(employee.name || '').trim()}`
+          };
+        });
+
+        staff.push({
+          userId: String(state.manager.user || '').trim(),
+          fullName: String(state.manager.name || '').trim(),
+          role: 'hr',
+          status: 'ACTIVE',
+          defaultDepartment: 'HR',
+          allowedDepartments: 'HR',
+          pin: String(state.manager.pass || ''),
+          forcePinReset: false,
+          lastLoginAt: '',
+          lastPinResetAt: '',
+          notes: 'HR admin account'
+        });
+
+        staff.push({
+          userId: String(state.managerApprover.user || '').trim(),
+          fullName: String(state.managerApprover.name || '').trim(),
+          role: 'manager',
+          status: 'ACTIVE',
+          defaultDepartment: 'Management',
+          allowedDepartments: 'Management|HR',
+          pin: String(state.managerApprover.pass || ''),
+          forcePinReset: false,
+          lastLoginAt: '',
+          lastPinResetAt: '',
+          notes: 'Manager approval account'
+        });
+
+        return staff.filter((entry) => entry.userId && entry.fullName);
+      }
+
+      function queueAuthDirectorySync() {
+        if (!authConfigured()) return;
+        state.authDirectoryDirty = true;
+        if (state.authDirectorySyncTimer) {
+          clearTimeout(state.authDirectorySyncTimer);
+        }
+        state.authDirectorySyncTimer = setTimeout(() => {
+          state.authDirectorySyncTimer = null;
+          syncAuthStaffDirectory({ silent: true }).catch((error) => {
+            console.warn('Auth directory sync failed:', error);
+          });
+        }, 400);
+      }
+
+      async function syncAuthStaffDirectory(options) {
+        const config = Object.assign({ silent: true }, options || {});
+        if (!authConfigured()) {
+          return { ok: false, reason: 'Auth backend not configured.' };
+        }
+        if (state.authDirectorySyncInFlight) {
+          return { ok: true, skipped: true };
+        }
+        state.authDirectorySyncInFlight = true;
+        try {
+          const response = await fetch(authWebAppUrl(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+              action: 'upsert_staff_directory',
+              sheetId: sheetSpreadsheetId(),
+              staff: buildAuthStaffDirectory(),
+              updatedAt: new Date().toISOString()
+            })
+          });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok || !payload || payload.ok === false) {
+            throw new Error(payload && payload.error ? payload.error : `Auth sync failed with status ${response.status}.`);
+          }
+          state.authDirectoryDirty = false;
+          state.authSyncError = '';
+          return { ok: true, payload };
+        } catch (error) {
+          state.authSyncError = error && error.message ? error.message : 'Auth directory sync failed.';
+          if (!config.silent) {
+            showToast(state.authSyncError, 'error');
+          }
+          return { ok: false, reason: state.authSyncError };
+        } finally {
+          state.authDirectorySyncInFlight = false;
+        }
+      }
+
+      async function authRequest(action, payload, method) {
+        const url = authWebAppUrl();
+        if (!url) {
+          throw new Error('Auth backend not configured.');
+        }
+        const normalizedMethod = String(method || 'POST').toUpperCase();
+        const requestUrl = new URL(url);
+        const options = {
+          method: normalizedMethod,
+          headers: { 'Content-Type': 'text/plain' },
+          cache: 'no-store'
+        };
+        if (normalizedMethod === 'GET') {
+          requestUrl.searchParams.set('action', action);
+          Object.entries(payload || {}).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && String(value) !== '') {
+              requestUrl.searchParams.set(key, String(value));
+            }
+          });
+        } else {
+          options.body = JSON.stringify(Object.assign({ action }, payload || {}));
+        }
+        const response = await fetch(requestUrl.toString(), options);
+        const data = await response.json().catch(() => null);
+        if (!response.ok || !data || data.ok === false) {
+          throw new Error(data && data.error ? data.error : `Auth request failed with status ${response.status}.`);
+        }
+        return data;
+      }
+
+      async function authLogin(userId, pin, department) {
+        return authRequest('login', {
+          userId,
+          pin,
+          department
+        }, 'POST');
+      }
+
+      async function authValidateSession(sessionToken) {
+        if (!sessionToken) return { ok: false, error: 'Session token missing.' };
+        return authRequest('validate-session', {
+          sessionToken
+        }, 'GET');
+      }
+
+      async function authLogout(sessionToken) {
+        if (!sessionToken) return { ok: true };
+        return authRequest('logout', {
+          sessionToken
+        }, 'POST');
+      }
+
+      async function authRequestPinReset(userId, requestedFrom, notes) {
+        return authRequest('request-pin-reset', {
+          userId,
+          requestedFrom,
+          notes
+        }, 'POST');
+      }
+
+      async function authCompletePinReset(userId, currentPin, newPin, confirmPin, department) {
+        return authRequest('complete-pin-reset', {
+          userId,
+          currentPin,
+          newPin,
+          confirmPin,
+          department
+        }, 'POST');
+      }
+
+      async function restoreAuthSessionFromStorage() {
+        if (!authConfigured()) return false;
+        const raw = localStorage.getItem(authSessionStorageKey());
+        if (!raw) return false;
+
+        let stored = null;
+        try {
+          stored = JSON.parse(raw);
+        } catch (error) {
+          stored = raw ? { sessionToken: String(raw) } : null;
+        }
+
+        const token = String((stored && stored.sessionToken) || '').trim();
+        if (!token) {
+          clearAuthSession();
+          return false;
+        }
+
+        try {
+          const validation = await authValidateSession(token);
+          const session = validation && validation.session ? validation.session : null;
+          if (!session) {
+            clearAuthSession();
+            return false;
+          }
+          persistAuthSession(Object.assign({}, stored || {}, session, { sessionToken: token }));
+          state.currentUser = session.fullName || session.userId || null;
+          state.currentRole = normalizeAuthRole(session.role);
+          state.authLastValidatedAt = new Date().toISOString();
+          if (state.currentRole === 'employee') {
+            showScreen('employeeScreen');
+            syncCurrentEmployeeContext();
+          } else {
+            showScreen('adminScreen');
+            initAdminDashboard();
+          }
+          startAuthSessionValidation();
+          return true;
+        } catch (error) {
+          clearAuthSession();
+          return false;
+        }
+      }
+
+      function startAuthSessionValidation() {
+        stopAuthSessionValidation();
+        if (!authConfigured() || !authSessionToken()) {
+          return;
+        }
+        const runValidation = async () => {
+          const token = authSessionToken();
+          if (!token) return;
+          try {
+            const validation = await authValidateSession(token);
+            const session = validation && validation.session ? validation.session : null;
+            if (!session) {
+              showToast('Your session expired. Please sign in again.', 'error');
+              await logout();
+              return;
+            }
+            persistAuthSession(Object.assign({}, state.authSession || {}, session, { sessionToken: token }));
+            state.authLastValidatedAt = new Date().toISOString();
+          } catch (error) {
+            console.warn('Auth session validation failed:', error);
+          }
+        };
+        runValidation();
+        state.authSessionValidationTimer = setInterval(runValidation, 2 * 60 * 1000);
+      }
+
+      async function finishAuthenticatedLogin(session, roleHint) {
+        if (!session) {
+          throw new Error('Missing session response from auth backend.');
+        }
+        persistAuthSession(session);
+        state.currentUser = session.fullName || session.userId || null;
+        state.currentRole = normalizeAuthRole(session.role || roleHint);
+        state.authLastValidatedAt = new Date().toISOString();
+        if (state.currentRole === 'employee') {
+          state.historyVisible = false;
+          document.getElementById('historySection').style.display = 'none';
+          syncCurrentEmployeeContext();
+          loadDraft();
+          renderHistoryTable();
+          showScreen('employeeScreen');
+        } else {
+          document.getElementById('adminDateBadge').textContent = todayStr();
+          refreshManagerChrome();
+          initAdminDashboard();
+          showScreen('adminScreen');
+        }
+        startAuthSessionValidation();
       }
 
       async function requestAttendanceBridgeSync() {
@@ -9578,12 +9901,18 @@ function doGet() {
         if (!(options && options.skipCloud)) {
           queueSharedScopeSync('employees');
         }
+        if (!(options && options.skipCloud)) {
+          queueAuthDirectorySync();
+        }
       }
 
       function persistPasswords(options) {
         localStorage.setItem('h360_passwords', JSON.stringify(state.passwords));
         if (!(options && options.skipCloud)) {
           queueSharedScopeSync('passwords');
+        }
+        if (!(options && options.skipCloud)) {
+          queueAuthDirectorySync();
         }
       }
 
@@ -9592,12 +9921,18 @@ function doGet() {
         if (!(options && options.skipCloud)) {
           queueSharedScopeSync('manager_account');
         }
+        if (!(options && options.skipCloud)) {
+          queueAuthDirectorySync();
+        }
       }
 
       function persistManagerApprover(options) {
         localStorage.setItem('h360_manager_approver', JSON.stringify(state.managerApprover));
         if (!(options && options.skipCloud)) {
           queueSharedScopeSync('manager_approver');
+        }
+        if (!(options && options.skipCloud)) {
+          queueAuthDirectorySync();
         }
       }
 
@@ -13974,7 +14309,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           }
         };
 
-        window.employeeLogin = () => {
+        window.employeeLogin = async () => {
           const name = document.getElementById('empSelect').value.trim();
           const password = document.getElementById('empPassword').value.trim();
           const errorNode = document.getElementById('empLoginError');
@@ -13989,43 +14324,95 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             errorNode.style.display = 'block';
             return;
           }
-          if (state.passwords[name] !== password) {
-            errorNode.textContent = 'Incorrect password.';
-            errorNode.style.display = 'block';
+          if (!authConfigured()) {
+            if (state.passwords[name] !== password) {
+              errorNode.textContent = 'Incorrect password.';
+              errorNode.style.display = 'block';
+              return;
+            }
+            state.currentUser = name;
+            state.currentRole = 'employee';
+            state.historyVisible = false;
+            document.getElementById('historySection').style.display = 'none';
+            syncCurrentEmployeeContext();
+            loadDraft();
+            renderHistoryTable();
+            showScreen('employeeScreen');
             return;
           }
-          state.currentUser = name;
-          state.currentRole = 'employee';
-          state.historyVisible = false;
-          document.getElementById('historySection').style.display = 'none';
-          syncCurrentEmployeeContext();
-          loadDraft();
-          renderHistoryTable();
-          showScreen('employeeScreen');
+          const employee = getEmployeeByName(name) || { department: 'Operations' };
+          try {
+            const result = await authLogin(name, password, employee.department || 'Operations');
+            if (result && result.requiresPinReset) {
+              const newPin = window.prompt('Set your new PIN');
+              const confirmPin = window.prompt('Confirm your new PIN');
+              if (!newPin || !confirmPin) {
+                showToast('PIN reset cancelled.', 'info');
+                return;
+              }
+              const resetResult = await authCompletePinReset(name, password, newPin, confirmPin, employee.department || 'Operations');
+              await finishAuthenticatedLogin(resetResult.session || resetResult, 'employee');
+              showToast('PIN updated and login completed.', 'success');
+              return;
+            }
+            await finishAuthenticatedLogin(result.session || result, 'employee');
+          } catch (error) {
+            errorNode.textContent = error && error.message ? error.message : 'Incorrect password.';
+            errorNode.style.display = 'block';
+          }
         };
 
-        window.adminLogin = () => {
+        window.adminLogin = async () => {
           const role = selectedAdminRoleValue();
           const account = currentAdminAccount(role);
           const user = document.getElementById('adminUser').value.trim();
           const password = document.getElementById('adminPassword').value.trim();
           const errorNode = document.getElementById('adminLoginError');
           errorNode.style.display = 'none';
-          if (user !== account.user || password !== account.pass) {
+          if (!user || !password) {
             errorNode.style.display = 'block';
+            errorNode.textContent = 'Enter a username and password.';
             return;
           }
-          state.currentUser = account.name;
-          state.currentRole = role;
-          document.getElementById('adminDateBadge').textContent = todayStr();
-          showScreen('adminScreen');
-          initAdminDashboard();
+          try {
+            const result = await authLogin(user, password, role === 'manager' ? 'Management' : 'HR');
+            if (result && result.requiresPinReset) {
+              const newPin = window.prompt('Set your new PIN');
+              const confirmPin = window.prompt('Confirm your new PIN');
+              if (!newPin || !confirmPin) {
+                showToast('PIN reset cancelled.', 'info');
+                return;
+              }
+              const resetResult = await authCompletePinReset(user, password, newPin, confirmPin, role === 'manager' ? 'Management' : 'HR');
+              await finishAuthenticatedLogin(resetResult.session || resetResult, role);
+              showToast('PIN updated and login completed.', 'success');
+              return;
+            }
+            await finishAuthenticatedLogin(result.session || result, role);
+          } catch (error) {
+            if (user === account.user && password === account.pass) {
+              state.currentUser = account.name;
+              state.currentRole = role;
+              document.getElementById('adminDateBadge').textContent = todayStr();
+              showScreen('adminScreen');
+              initAdminDashboard();
+              return;
+            }
+            errorNode.style.display = 'block';
+            errorNode.textContent = error && error.message ? error.message : 'Invalid role-based credentials.';
+          }
         };
 
-        window.logout = () => {
+        window.logout = async () => {
+          const token = authSessionToken();
           if (state.currentRole === 'employee' && state.currentUser) {
             saveDraft(true);
           }
+          if (authConfigured() && token) {
+            authLogout(token).catch(() => {});
+          }
+          stopAuthSessionValidation();
+          clearAuthSession();
           state.currentUser = null;
           state.currentRole = null;
           state.currentAttachments = [];
@@ -15115,7 +15502,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           await refreshAllCloudData();
         };
 
-        window.saveManagerAccess = () => {
+        window.saveManagerAccess = async () => {
           const nameNode = document.getElementById('settingManagerName');
           const userNode = document.getElementById('settingAdminUser');
           const currentNode = document.getElementById('settingCurrentAdminPassword');
@@ -15149,6 +15536,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           state.manager.user = user;
           if (newPassword) state.manager.pass = newPassword;
           persistManager();
+          await syncAuthStaffDirectory({ silent: true }).catch(() => {});
           refreshManagerChrome();
           renderSettingsPage();
           logAudit('HR access updated', {
@@ -15158,7 +15546,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           showToast('HR access updated!', 'success');
         };
 
-        window.saveManagerApproverAccess = () => {
+        window.saveManagerApproverAccess = async () => {
           const nameNode = document.getElementById('settingApproverName');
           const userNode = document.getElementById('settingApproverUser');
           const currentNode = document.getElementById('settingCurrentApproverPassword');
@@ -15192,6 +15580,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           state.managerApprover.user = user;
           if (newPassword) state.managerApprover.pass = newPassword;
           persistManagerApprover();
+          await syncAuthStaffDirectory({ silent: true }).catch(() => {});
           refreshManagerChrome();
           renderSettingsPage();
           logAudit('Manager access updated', {
@@ -15201,7 +15590,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           showToast('Manager access updated!', 'success');
         };
 
-        window.savePasswords = () => {
+        window.savePasswords = async () => {
           state.employees.forEach((employee) => {
             const input = document.getElementById(`pw_${employee.id}`);
             if (input && input.value.trim()) {
@@ -15209,6 +15598,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             }
           });
           persistPasswords();
+          await syncAuthStaffDirectory({ silent: true }).catch(() => {});
           logAudit('Employee passwords updated', {
             scope: 'settings',
             details: 'One or more employee passwords were changed.'
@@ -16752,7 +17142,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           showToast(`${name} added to responsibilities.`, 'success');
         };
 
-        window.addEmployee = () => {
+        window.addEmployee = async () => {
           const name = document.getElementById('newEmployeeName').value.trim();
           const employeeCode = document.getElementById('newEmployeeCode').value.trim();
           const email = document.getElementById('newEmployeeEmail').value.trim();
@@ -16810,6 +17200,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           state.passwords[employee.name] = password || 'help360';
           persistEmployees();
           persistPasswords();
+          await syncAuthStaffDirectory({ silent: true }).catch(() => {});
           populateEmployeeSelects();
           renderEmployeeCards();
           renderHrPanel();
@@ -16886,7 +17277,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           document.getElementById('employeeEditorModal').classList.remove('open');
         };
 
-        window.saveEmployeeEdits = () => {
+        window.saveEmployeeEdits = async () => {
           const employee = getEmployeeById(state.currentEditingEmployeeId);
           if (!employee) return;
           const employeeCode = document.getElementById('editEmployeeCode').value.trim();
@@ -16950,6 +17341,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           if (password) state.passwords[employee.name] = password;
           persistEmployees();
           persistPasswords();
+          await syncAuthStaffDirectory({ silent: true }).catch(() => {});
           populateEmployeeSelects();
           renderEmployeeCards();
           renderHrPanel();
@@ -17322,8 +17714,9 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
         });
       }
 
-      function init() {
+      async function init() {
         loadState();
+        await restoreAuthSessionFromStorage();
         initBrandLogos();
         persistDocumentCenter({ skipCloud: true });
         migrateDocumentCenterAttachmentsToIndexedDb().catch(() => {});
@@ -17368,6 +17761,9 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
         document.title = 'HELP360MD - Workforce Activity Tracker';
         bindDomEvents();
         renderNotificationCenter();
+        if (!state.currentUser) {
+          showScreen('loginScreen');
+        }
       }
 
       document.addEventListener('DOMContentLoaded', init);
