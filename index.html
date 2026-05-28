@@ -4982,21 +4982,21 @@
                 <div class="settings-item">
                   <div class="settings-label">Google Apps Script Web App URL</div>
                   <input type="url" class="settings-value" id="settingSheetURL" placeholder="https://script.google.com/macros/s/YOUR_ID/exec" />
-                  <div class="settings-hint">Deploy your Apps Script and paste the URL here. The same URL now powers shared HR data, password/PIN auth, and session validation.</div>
+                  <div class="settings-hint">This app now uses one built-in backend URL by default. Override it only if you deploy a different Apps Script version. The same URL powers shared HR data, password/PIN auth, and session validation.</div>
                 </div>
                 <div class="settings-item">
                   <div class="settings-label">Spreadsheet ID (for reference)</div>
                   <input type="text" class="settings-value" id="settingSheetID" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" />
                 </div>
                 <button class="btn-settings-save" onclick="saveSettings()"><i class="fas fa-save"></i> Save Sheet Settings</button>
-                <div class="workspace-note" id="sheetStatusNote">Google Sheets sync and auth are off until you add your Apps Script web app URL.</div>
+                <div class="workspace-note" id="sheetStatusNote">Google Sheets sync and auth use the built-in Apps Script backend URL. Override it only if your deployment changes.</div>
                 <div style="margin-top:16px;padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0">
                   <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px"><i class="fas fa-info-circle"></i> Setup Instructions</div>
                   <div style="font-size:11px;color:#166534;line-height:1.7">
                     1. Open Google Sheets &gt; Tools &gt; Apps Script<br>
                     2. Paste the provided <strong>doGet()</strong> / <strong>doPost()</strong> auth + sync script<br>
                     3. Deploy as Web App (Anyone can access)<br>
-                    4. Copy the URL and paste it above
+                    4. If you change deployments later, replace the built-in URL once in the app code or override it here
                   </div>
                 </div>
               </div>
@@ -5013,7 +5013,7 @@
                   <div class="settings-hint">Google Sheets remains the source of truth for reports, employee records, leave, compliance, and document references. Use Google Drive for binary files.</div>
                 </div>
                 <button class="btn-settings-save" onclick="saveSettings()"><i class="fab fa-google"></i> Save Sheets Settings</button>
-                <div class="workspace-note" id="sheetStatusNote">Google Sheets sync and auth are off until you add your Apps Script web app URL.</div>
+                <div class="workspace-note" id="sheetStatusNote">Google Sheets sync and auth use the built-in Apps Script backend URL. Override it only if your deployment changes.</div>
                 <div style="margin-top:16px;padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0">
                   <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px"><i class="fas fa-info-circle"></i> Setup Instructions</div>
                   <div style="font-size:11px;color:#166534;line-height:1.7">
@@ -6210,7 +6210,7 @@ function doGet() {
     function renderSettingsPage(){
       if(settings.managerEmail) document.getElementById('settingManagerEmail').value = settings.managerEmail;
       if(settings.ccEmail)      document.getElementById('settingCCEmail').value = settings.ccEmail;
-      if(settings.sheetURL)     document.getElementById('settingSheetURL').value = settings.sheetURL;
+      document.getElementById('settingSheetURL').value = settings.sheetURL || DEFAULT_SHEET_WEB_APP_URL;
       if(settings.sheetID)      document.getElementById('settingSheetID').value = settings.sheetID;
 
       // Password list
@@ -6226,7 +6226,7 @@ function doGet() {
     function saveSettings(){
       settings.managerEmail = document.getElementById('settingManagerEmail').value.trim();
       settings.ccEmail      = document.getElementById('settingCCEmail').value.trim();
-      settings.sheetURL     = document.getElementById('settingSheetURL').value.trim();
+      settings.sheetURL     = document.getElementById('settingSheetURL').value.trim() || DEFAULT_SHEET_WEB_APP_URL;
       settings.sheetID      = document.getElementById('settingSheetID').value.trim();
       localStorage.setItem('h360_settings', JSON.stringify(settings));
       showToast('Settings saved!','success');
@@ -6353,11 +6353,12 @@ function doGet() {
         'Shahid Ali': 'help360',
         'Abdullah': 'help360'
       };
+      const DEFAULT_SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyYO0nH9_cshnjNOey9j2Px1O6lAhXcR4dSCccHiacT3R7AM5OsSyjl4Cxz3NIby9C2/exec';
       const DEFAULT_SETTINGS = {
         managerEmail: 'usama.mazar@help360.com',
         ccEmail: '',
-        sheetURL: '',
-        sheetID: '',
+        sheetURL: DEFAULT_SHEET_WEB_APP_URL,
+        sheetID: '1kxQwm_XkmXbSvTOowdFVwF9u5riwD2zNnpx2UnsekrQ',
         supabaseUrl: 'https://tfllzwrzfmzqpkcaihwa.supabase.co',
         supabaseAnonKey: 'sb_publishable_CRADuuS744pyl7A1uT_LGA_KoGCdfGA',
         supabaseReportsTable: 'activity_reports',
@@ -7262,7 +7263,11 @@ function doGet() {
       }
 
       function sheetWebAppUrl() {
-        return String(state.settings && state.settings.sheetURL || '').trim();
+        const configured = String(state.settings && state.settings.sheetURL || '').trim();
+        if (configured && configured !== DEFAULT_SHEET_WEB_APP_URL) {
+          return configured;
+        }
+        return String(DEFAULT_SHEET_WEB_APP_URL || '').trim();
       }
 
       function sheetSpreadsheetId() {
@@ -7270,7 +7275,8 @@ function doGet() {
       }
 
       function sheetSyncConfigured() {
-        return Boolean(sheetWebAppUrl());
+        const url = sheetWebAppUrl();
+        return Boolean(url && !url.includes('PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE'));
       }
 
       function authWebAppUrl() {
@@ -7278,7 +7284,8 @@ function doGet() {
       }
 
       function authConfigured() {
-        return Boolean(authWebAppUrl());
+        const url = authWebAppUrl();
+        return Boolean(url && !url.includes('PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE'));
       }
 
       function authSessionStorageKey() {
@@ -7505,7 +7512,7 @@ function doGet() {
 
       function cloudStatusMessage() {
         if (!sheetSyncConfigured()) {
-          return { tone: '', text: 'Google Sheets live database and auth backend are off until you add your Apps Script web app URL.' };
+          return { tone: '', text: 'Google Sheets live database and auth backend will use the built-in Apps Script URL once you replace the placeholder in the code.' };
         }
         if (state.sheetSyncError) {
           return { tone: 'alert', text: `Google Sheets live database / auth backend needs attention: ${state.sheetSyncError}` };
@@ -7527,7 +7534,7 @@ function doGet() {
 
       function sheetStatusMessage() {
         if (!sheetSyncConfigured()) {
-          return { tone: '', text: 'Google Sheets sync and auth are off until you add your Apps Script web app URL.' };
+          return { tone: '', text: 'Google Sheets sync and auth will use the built-in Apps Script URL once you replace the placeholder in the code.' };
         }
         if (state.sheetSyncError) {
           return { tone: 'alert', text: `Google Sheets sync / auth needs attention: ${state.sheetSyncError}` };
@@ -13427,7 +13434,7 @@ function doGet() {
       function renderSettingsPage() {
         document.getElementById('settingManagerEmail').value = state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail;
         document.getElementById('settingCCEmail').value = state.settings.ccEmail || '';
-        document.getElementById('settingSheetURL').value = state.settings.sheetURL || '';
+        document.getElementById('settingSheetURL').value = state.settings.sheetURL || DEFAULT_SHEET_WEB_APP_URL;
         document.getElementById('settingSheetID').value = state.settings.sheetID || '';
         updateCloudStatusNote();
         updateSheetStatusNote();
@@ -15478,10 +15485,10 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
         };
 
         window.saveSettings = () => {
-          state.settings.managerEmail = document.getElementById('settingManagerEmail').value.trim() || DEFAULT_SETTINGS.managerEmail;
-          state.settings.ccEmail = document.getElementById('settingCCEmail').value.trim();
-          state.settings.sheetURL = document.getElementById('settingSheetURL').value.trim();
-          state.settings.sheetID = document.getElementById('settingSheetID').value.trim();
+        state.settings.managerEmail = document.getElementById('settingManagerEmail').value.trim() || DEFAULT_SETTINGS.managerEmail;
+        state.settings.ccEmail = document.getElementById('settingCCEmail').value.trim();
+        state.settings.sheetURL = document.getElementById('settingSheetURL').value.trim() || DEFAULT_SHEET_WEB_APP_URL;
+        state.settings.sheetID = document.getElementById('settingSheetID').value.trim();
           state.settings.supabaseUrl = document.getElementById('settingSupabaseUrl').value.trim();
           state.settings.supabaseAnonKey = document.getElementById('settingSupabaseAnonKey').value.trim();
           state.settings.supabaseReportsTable = sanitizeTableName(document.getElementById('settingSupabaseReportsTable').value.trim()) || DEFAULT_SETTINGS.supabaseReportsTable;
