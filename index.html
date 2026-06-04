@@ -7457,9 +7457,14 @@ function doGet() {
           assigned_responsibilities: report.assignedResponsibilities || [],
           submitted_at: report.submittedAt || new Date().toISOString()
         };
+
       }
 
       function normalizeRemoteReportRow(row) {
+        const taskDetails = row && (row.taskDetails || row.task_details) ? (row.taskDetails || row.task_details) : {};
+        const assignedResponsibilities = row && (row.assignedResponsibilities || row.assigned_responsibilities)
+          ? (row.assignedResponsibilities || row.assigned_responsibilities)
+          : [];
         return normalizeReport({
           id: Number(row && row.report_id) || Number(row && row.id) || Date.now(),
           employee: String((row && row.employee) || 'Unknown Employee'),
@@ -7469,20 +7474,20 @@ function doGet() {
           date: String((row && row.report_date) || todayKey()),
           dateDisplay: String((row && row.report_date) || todayKey()),
           time: String((row && row.report_time) || ''),
-          tasks: row && typeof row.task_details === 'object' && row.task_details ? row.task_details : {},
+          tasks: taskDetails && typeof taskDetails === 'object' ? taskDetails : {},
           totalTasks: Number((row && row.total_tasks) || 0),
           totalCount: Number((row && row.total_count) || 0),
           notes: String((row && row.notes) || ''),
           status: String((row && row.status) || 'sent'),
           attachments: [],
-          attachmentNames: Array.isArray(row && row.attachment_names) ? row.attachment_names : [],
-          assignedResponsibilities: Array.isArray(row && row.assigned_responsibilities) ? row.assigned_responsibilities : [],
+          attachmentNames: Array.isArray(row && (row.attachment_names || row.attachmentNames)) ? (row.attachment_names || row.attachmentNames) : [],
+          assignedResponsibilities: Array.isArray(assignedResponsibilities) ? assignedResponsibilities : [],
           emailMethod: String((row && row.email_method) || 'mailto'),
           sheetSynced: Boolean(row && row.sheet_synced),
           databaseSynced: true,
           databaseSyncedAt: String((row && (row.submitted_at || row.created_at || row.updated_at)) || new Date().toISOString()),
           remoteRowId: String((row && row.id) || ''),
-          databaseSource: 'supabase',
+          databaseSource: 'apps_script',
           submittedAt: String((row && (row.submitted_at || row.created_at || row.updated_at)) || new Date().toISOString())
         });
       }
@@ -7605,24 +7610,63 @@ function doGet() {
         }
       }
 
+      async function fetchReportsFromSheetBackend() {
+        const sheetUrl = sheetWebAppUrl();
+        if (!sheetUrl) {
+          return { ok: false, rows: [], reason: 'Google Sheets sync not configured.' };
+        }
+
+        const joiner = sheetUrl.includes('?') ? '&' : '?';
+        let lastError = '';
+
+        try {
+          const reportsResponse = await fetch(`${sheetUrl}${joiner}action=reports&_=${Date.now()}`, {
+            method: 'GET',
+            cache: 'no-store'
+          });
+          const reportsPayload = await reportsResponse.json().catch(() => null);
+          if (reportsResponse.ok && reportsPayload && reportsPayload.ok) {
+            if (Array.isArray(reportsPayload.rows)) {
+              return { ok: true, rows: reportsPayload.rows, reason: '' };
+            }
+            if (reportsPayload.snapshot && Array.isArray(reportsPayload.snapshot.reports)) {
+              return { ok: true, rows: reportsPayload.snapshot.reports, reason: '' };
+            }
+          }
+        } catch (error) {
+          lastError = error && error.message ? error.message : 'Unable to read reports from Apps Script.';
+        }
+
+        try {
+          const snapshotResponse = await fetch(`${sheetUrl}${joiner}action=snapshot&_=${Date.now()}`, {
+            method: 'GET',
+            cache: 'no-store'
+          });
+          const snapshotPayload = await snapshotResponse.json().catch(() => null);
+          if (snapshotResponse.ok && snapshotPayload && snapshotPayload.ok) {
+            if (snapshotPayload.snapshot && Array.isArray(snapshotPayload.snapshot.reports)) {
+              return { ok: true, rows: snapshotPayload.snapshot.reports, reason: '' };
+            }
+          }
+        } catch (error) {
+          lastError = error && error.message ? error.message : lastError;
+        }
+
+        return { ok: false, rows: [], reason: lastError || 'Unable to read reports from Apps Script.' };
+      }
+
       async function refreshCloudReportsFromDatabase(options) {
         const config = Object.assign({ silent: false }, options || {});
-        if (!cloudSyncConfigured()) {
-          return true;
+        if (!sheetSyncConfigured()) {
+          return false;
         }
-        const client = getSupabaseClient();
-        if (!client) {
+        const rowsResult = await fetchReportsFromSheetBackend();
+        if (!rowsResult.ok) {
           updateCloudStatusNote();
           return false;
         }
         try {
-          const { data, error } = await client
-            .from(supabaseReportsTable())
-            .select('*')
-            .order('submitted_at', { ascending: false })
-            .limit(320);
-          if (error) throw error;
-          const remoteReports = (data || []).map(normalizeRemoteReportRow);
+          const remoteReports = (rowsResult.rows || []).map(normalizeRemoteReportRow);
           mergeRemoteReports(remoteReports);
           persistReports();
           state.lastCloudSyncAt = new Date().toISOString();
@@ -7641,7 +7685,7 @@ function doGet() {
           }
           return true;
         } catch (error) {
-          state.cloudSyncError = error && error.message ? error.message : 'Unable to refresh shared reports.';
+          state.cloudSyncError = error && error.message ? error.message : rowsResult.reason || 'Unable to refresh shared reports.';
           updateCloudStatusNote();
           if (!config.silent) {
             showToast(state.cloudSyncError, 'error');
@@ -7652,7 +7696,7 @@ function doGet() {
 
       function setupCloudReportSync() {
         clearCloudReportPolling();
-        if (!cloudSyncConfigured()) {
+        if (!sheetSyncConfigured()) {
           state.cloudSyncError = '';
           state.lastCloudSyncAt = '';
           updateCloudStatusNote();
@@ -13272,6 +13316,7 @@ function doGet() {
           status: status || 'sent',
           attachments: state.currentAttachments.map((attachment) => Object.assign({}, attachment)),
           assignedResponsibilities: employee ? [...employee.responsibilities] : [],
+           
           emailMethod: '',
           sheetSynced: false,
           databaseSynced: false,
@@ -13281,6 +13326,7 @@ function doGet() {
           remoteRowId: '',
           submittedAt
         };
+       
       }
 
       function buildEmailBody(report) {
@@ -15345,7 +15391,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           const databaseResult = await syncReportToDatabase(report);
           persistReports();
           setSendButtonState(false);
-          if (databaseResult && databaseResult.ok) {
+          if (report.sheetSynced) {
             await refreshCloudReportsFromDatabase({ silent: true });
           }
           clearStoredDraft(state.currentUser);
