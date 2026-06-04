@@ -7297,12 +7297,24 @@
         return false;
       }
 
+      function configuredAppsScriptUrl(candidate) {
+        const inputUrl = String(candidate || '').trim();
+        if (inputUrl && !inputUrl.includes('YOUR_ID')) {
+          return inputUrl;
+        }
+        const constantUrl = String(APPS_SCRIPT_URL || '').trim();
+        if (constantUrl && !constantUrl.includes('YOUR_ID')) {
+          return constantUrl;
+        }
+        return inputUrl || constantUrl;
+      }
+
       function sheetWebAppUrl() {
-        return String(APPS_SCRIPT_URL || '').trim();
+        return configuredAppsScriptUrl(state.settings && state.settings.sheetURL);
       }
 
       function sheetSpreadsheetId() {
-        return String(state.settings && state.settings.sheetID || '').trim();
+        return String((state.settings && state.settings.sheetID) || DEFAULT_SETTINGS.sheetID || '').trim();
       }
 
       function sheetSyncConfigured() {
@@ -13617,8 +13629,7 @@
       function renderSettingsPage() {
         document.getElementById('settingManagerEmail').value = state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail;
         document.getElementById('settingCCEmail').value = state.settings.ccEmail || '';
-        document.getElementById('settingSheetURL').value = APPS_SCRIPT_URL;
-        document.getElementById('settingSheetURL').readOnly = true;
+        document.getElementById('settingSheetURL').value = sheetWebAppUrl() || DEFAULT_SHEET_WEB_APP_URL;
         document.getElementById('settingSheetID').value = state.settings.sheetID || '';
         updateCloudStatusNote();
         updateSheetStatusNote();
@@ -15367,8 +15378,9 @@
         window.saveSettings = (button) => runButtonAction(button, 'Saving...', async () => {
           state.settings.managerEmail = document.getElementById('settingManagerEmail').value.trim() || DEFAULT_SETTINGS.managerEmail;
           state.settings.ccEmail = document.getElementById('settingCCEmail').value.trim();
-          state.settings.sheetURL = APPS_SCRIPT_URL;
-          state.settings.sheetID = document.getElementById('settingSheetID').value.trim();
+          const sheetUrlInput = document.getElementById('settingSheetURL').value.trim();
+          state.settings.sheetURL = sheetUrlInput || state.settings.sheetURL || APPS_SCRIPT_URL;
+          state.settings.sheetID = document.getElementById('settingSheetID').value.trim() || state.settings.sheetID || DEFAULT_SETTINGS.sheetID;
           state.settings.cloudRefreshSeconds = Math.max(asNumber(document.getElementById('settingCloudRefreshSeconds').value, cloudRefreshSeconds()), 15);
           persistSettings({ skipCloud: true });
           await syncSharedScopeToSheet('settings');

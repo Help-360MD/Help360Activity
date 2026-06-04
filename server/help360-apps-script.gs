@@ -104,6 +104,19 @@ const HELP360_SCOPE_ORDER = [
 function doGet(e) {
   try {
     const action = normalizeAction_(getParam_(e, 'action'));
+    if (!action || action === 'status' || action === 'health') {
+      const configuredSheetId = trimText_(getParam_(e, 'sheetId')) ||
+        trimText_(PropertiesService.getScriptProperties().getProperty('HELP360_SPREADSHEET_ID'));
+      return jsonResponse_({
+        ok: true,
+        service: 'help360-apps-script',
+        action: action || 'status',
+        time: nowIso_(),
+        spreadsheetConfigured: Boolean(configuredSheetId),
+        sheetIdProvided: Boolean(trimText_(getParam_(e, 'sheetId'))),
+        scriptPropertyConfigured: Boolean(trimText_(PropertiesService.getScriptProperties().getProperty('HELP360_SPREADSHEET_ID')))
+      });
+    }
     const spreadsheet = resolveSpreadsheet_(getParam_(e, 'sheetId'));
     if (action === 'snapshot') {
       return jsonResponse_(buildSnapshot_(spreadsheet));
