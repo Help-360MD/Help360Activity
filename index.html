@@ -6553,6 +6553,8 @@
         currentRole: null,
         historyVisible: false,
         currentAttachments: [],
+        activityFormActiveField: '',
+        activityFormTouched: false,
         currentEditingEmployeeId: null,
         currentEditingJobId: null,
         currentRenamingEmployeeId: null,
@@ -6588,6 +6590,109 @@
 
       function clone(value) {
         return JSON.parse(JSON.stringify(value));
+      }
+
+      const ACTIVITY_FORM_FIELD_SELECTOR = [
+        '#employeeScreen .activity-grid input',
+        '#employeeScreen .activity-grid textarea',
+        '#employeeScreen .activity-grid select',
+        '#employeeScreen .notes-section input',
+        '#employeeScreen .notes-section textarea',
+        '#employeeScreen .notes-section select',
+        '#employeeScreen .attachments-section input',
+        '#employeeScreen .attachments-section textarea',
+        '#employeeScreen .attachments-section select'
+      ].join(', ');
+
+      function isActivityFormField(node) {
+        return Boolean(node && node.matches && node.matches(ACTIVITY_FORM_FIELD_SELECTOR));
+      }
+
+      function activityFormFieldKey(node) {
+        if (!node) return '';
+        if (node.id) return node.id;
+        if (node.name) return node.name;
+        if (node.closest) {
+          const taskRow = node.closest('.task-row');
+          if (taskRow && taskRow.dataset && taskRow.dataset.task) {
+            return `task:${taskRow.dataset.task}`;
+          }
+          const section = node.closest('.notes-section, .attachments-section');
+          if (section && section.id) return section.id;
+        }
+        return node.type || node.className || 'field';
+      }
+
+      function resetActivityFormTracking() {
+        state.activityFormActiveField = '';
+        state.activityFormTouched = false;
+      }
+
+      function markActivityFormFocused(node) {
+        if (!isActivityFormField(node)) return;
+        state.activityFormActiveField = activityFormFieldKey(node);
+      }
+
+      function markActivityFormTouched(node) {
+        if (!isActivityFormField(node)) return;
+        state.activityFormActiveField = activityFormFieldKey(node);
+        state.activityFormTouched = true;
+      }
+
+      function isActivityFormSyncLocked() {
+        return state.currentRole === 'employee'
+          && state.currentUser
+          && (state.activityFormTouched || Boolean(state.activityFormActiveField));
+      }
+
+      function refreshActivityFormAfterUnlock() {
+        if (isActivityFormSyncLocked()) return;
+        renderCustomResponsibilitySection();
+        applyAssignedTaskState();
+        updateSummaryInternal();
+      }
+
+      function bindActivityFormFieldTracking() {
+        document.querySelectorAll(ACTIVITY_FORM_FIELD_SELECTOR).forEach((field) => {
+          if (field.dataset.activityFormTracked === 'true') return;
+          field.dataset.activityFormTracked = 'true';
+          field.addEventListener('focus', () => {
+            markActivityFormFocused(field);
+          });
+          field.addEventListener('blur', () => {
+            window.setTimeout(() => {
+              const activeField = document.activeElement;
+              if (isActivityFormField(activeField)) {
+                markActivityFormFocused(activeField);
+                return;
+              }
+              if (state.activityFormActiveField === activityFormFieldKey(field)) {
+                state.activityFormActiveField = '';
+              }
+              if (!state.activityFormTouched) {
+                refreshActivityFormAfterUnlock();
+              }
+            }, 0);
+          });
+          field.addEventListener('input', () => {
+            markActivityFormTouched(field);
+            if (field.classList.contains('count-input')) {
+              updateSummaryInternal();
+            }
+            if (field.type !== 'file') {
+              queueAutoSave();
+            }
+          });
+          field.addEventListener('change', () => {
+            markActivityFormTouched(field);
+            if (field.classList.contains('count-input')) {
+              updateSummaryInternal();
+            }
+            if (field.type !== 'file') {
+              queueAutoSave();
+            }
+          });
+        });
       }
 
       function isAdminRole(roleValue) {
@@ -10644,6 +10749,13 @@
           assignedOnlyToggle.disabled = true;
           assignedOnlyToggle.style.display = 'none';
         }
+        document.getElementById('assignedTaskSummary').textContent = assignedTasks.length
+          ? `${assignedTasks.length} responsibility tasks assigned by the people team.`
+          : 'No responsibilities are assigned yet.';
+        renderAssignedTaskChips(assignedTasks);
+        if (isActivityFormSyncLocked()) {
+          return;
+        }
         const showOnly = true;
         document.querySelectorAll('#employeeScreen .task-row').forEach((row) => {
           const isAssigned = taskSet.has(row.dataset.task);
@@ -10651,10 +10763,6 @@
           row.classList.toggle('unassigned-task', !isAssigned);
           row.style.display = showOnly && !isAssigned ? 'none' : 'flex';
         });
-        document.getElementById('assignedTaskSummary').textContent = assignedTasks.length
-          ? `${assignedTasks.length} responsibility tasks assigned by the people team.`
-          : 'No responsibilities are assigned yet.';
-        renderAssignedTaskChips(assignedTasks);
       }
 
       function syncCurrentEmployeeContext() {
@@ -10756,6 +10864,7 @@
         const section = document.getElementById('customResponsibilitySection');
         const body = document.getElementById('customResponsibilityBody');
         if (!section || !body) return;
+        if (isActivityFormSyncLocked()) return;
         if (!state.customResponsibilities.length) {
           section.style.display = 'none';
           body.innerHTML = '';
@@ -10773,6 +10882,7 @@
             </div>
           </div>
         `).join('');
+        bindActivityFormFieldTracking();
       }
 
       function renderCustomResponsibilityList() {
@@ -13396,6 +13506,7 @@
       function resetEmployeeForm(options) {
         const config = Object.assign({ removeDraft: false, resetSavedLabel: true }, options || {});
         state.suspendAutoSave = true;
+        resetActivityFormTracking();
         document.querySelectorAll('#employeeScreen .count-input').forEach((input) => {
           input.value = 0;
         });
@@ -13408,6 +13519,7 @@
         if (config.removeDraft && state.currentUser) clearStoredDraft(state.currentUser);
         if (config.resetSavedLabel) document.getElementById('lastSavedTime').textContent = '-';
         renderCurrentAttachments();
+        renderCustomResponsibilitySection();
         state.suspendAutoSave = false;
         applyAssignedTaskState();
         updateSummaryInternal();
@@ -14844,6 +14956,7 @@
           const input = button.closest('.task-input-group').querySelector('.count-input');
           const currentValue = parseInt(input.value, 10) || 0;
           input.value = Math.max(0, currentValue + delta);
+          markActivityFormTouched(input);
           window.updateSummary();
         };
 
@@ -14921,6 +15034,7 @@
           if (state.currentRole !== 'employee' || !state.currentUser) return;
           const files = Array.from((event.target && event.target.files) || []);
           if (!files.length) return;
+          markActivityFormTouched(event && event.target ? event.target : document.getElementById('attachmentInput'));
           let runningTotal = countAttachmentBytes(state.currentAttachments);
           for (const file of files) {
             if (state.currentAttachments.length >= MAX_ATTACHMENTS) {
@@ -17556,13 +17670,7 @@
       }
 
       function bindDomEvents() {
-        document.querySelectorAll('#employeeScreen .count-input').forEach((input) => {
-          input.addEventListener('input', () => {
-            updateSummaryInternal();
-            queueAutoSave();
-          });
-        });
-        document.getElementById('empNotes').addEventListener('input', queueAutoSave);
+        bindActivityFormFieldTracking();
         ['leaveStartDate', 'leaveEndDate', 'leaveType', 'leaveReasonCategory', 'leaveCoverage', 'leaveReason'].forEach((id) => {
           const node = document.getElementById(id);
           if (node) {
