@@ -3642,6 +3642,7 @@
             <div>
               <div class="sidebar-manager-name" id="sidebarManagerName">Usama Mazar</div>
               <div class="sidebar-manager-role" id="sidebarManagerRole">HR</div>
+              <div class="sidebar-manager-role" id="sidebarManagerDepartment">HR</div>
             </div>
           </div>
         </div>
@@ -5329,11 +5330,11 @@
               <textarea class="notes-textarea compact-textarea" id="careerCoverLetter" placeholder="Tell us why you are a fit for the role."></textarea>
             </div>
             <div class="profile-action-row">
-              <input type="file" id="careerResumeInput" class="hidden" accept=".pdf,.doc,.docx,image/*" onchange="handleCareerResumeSelection(event)" />
+              <input type="file" id="careerResumeInput" class="hidden" accept=".pdf" onchange="handleCareerResumeSelection(event)" />
               <button class="btn-filter" type="button" onclick="triggerCareerResumePicker()"><i class="fas fa-upload"></i> Upload Resume</button>
               <span class="workspace-note" id="careerResumeMeta" style="margin:0;flex:1">No resume uploaded yet.</span>
             </div>
-            <button class="btn-settings-save" style="margin-top:14px" type="button" onclick="submitCareerApplication()"><i class="fas fa-paper-plane"></i> Submit Application</button>
+            <button class="btn-settings-save" style="margin-top:14px" type="button" onclick="submitCareerApplication(this)"><i class="fas fa-paper-plane"></i> Submit Application</button>
           </div>
         </div>
       </div>
@@ -8475,6 +8476,7 @@
             userId,
             fullName: String(employee.name || '').trim(),
             role: 'employee',
+            teamLeadId: String(employee.teamLead || '').trim(),
             status: String(employee.status || 'Active').toUpperCase() === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
             defaultDepartment: String(employee.department || 'Operations').trim() || 'Operations',
             allowedDepartments: [String(employee.department || 'Operations').trim() || 'Operations'].join('|'),
@@ -8491,6 +8493,7 @@
           userId: String(state.manager.user || '').trim(),
           fullName: String(state.manager.name || '').trim(),
           role: 'hr',
+          teamLeadId: '',
           status: 'ACTIVE',
           defaultDepartment: 'HR',
           allowedDepartments: 'HR',
@@ -8506,6 +8509,7 @@
           userId: String(state.managerApprover.user || '').trim(),
           fullName: String(state.managerApprover.name || '').trim(),
           role: 'manager',
+          teamLeadId: '',
           status: 'ACTIVE',
           defaultDepartment: 'Management',
           allowedDepartments: 'Management|HR',
@@ -10523,6 +10527,7 @@
         const sidebarAvatar = document.getElementById('sidebarManagerAvatar');
         const headerName = document.getElementById('adminManagerName');
         const roleLabel = document.getElementById('sidebarManagerRole');
+        const departmentLabel = document.getElementById('sidebarManagerDepartment');
         const roleBadge = document.getElementById('adminRoleBadge');
         const activeAdmin = currentAdminAccount();
         const activeRole = currentAdminRoleLabel();
@@ -10530,6 +10535,7 @@
         if (sidebarAvatar) sidebarAvatar.textContent = initials(activeAdmin.name);
         if (headerName) headerName.textContent = activeAdmin.name;
         if (roleLabel) roleLabel.textContent = activeRole;
+        if (departmentLabel) departmentLabel.textContent = activeRole === 'Manager' ? 'Management' : 'HR';
         if (roleBadge) roleBadge.textContent = activeRole;
         const adminUserInput = document.getElementById('adminUser');
         if (adminUserInput) adminUserInput.placeholder = currentAdminAccount(selectedAdminRoleValue()).user;
@@ -15763,6 +15769,13 @@
         window.handleCareerResumeSelection = async (event) => {
           const file = ((event.target && event.target.files) || [])[0];
           if (!file) return;
+          const fileName = String(file.name || '').toLowerCase();
+          const isPdf = file.type === 'application/pdf' || fileName.endsWith('.pdf');
+          if (!isPdf) {
+            showToast('Please upload a PDF CV only.', 'error');
+            if (event.target) event.target.value = '';
+            return;
+          }
           if (file.size > MAX_EMPLOYEE_DOC_SIZE) {
             showToast(`Keep the resume under ${formatBytes(MAX_EMPLOYEE_DOC_SIZE)}. Recommended size: 3-5 MB.`, 'error');
             if (event.target) event.target.value = '';
@@ -15786,7 +15799,7 @@
           }
         };
 
-        window.submitCareerApplication = () => {
+        window.submitCareerApplication = (button) => runButtonAction(button, 'Submitting...', async () => {
           const fullName = document.getElementById('careerApplicantName').value.trim();
           const email = document.getElementById('careerApplicantEmail').value.trim();
           const phone = document.getElementById('careerApplicantPhone').value.trim();
@@ -15798,11 +15811,31 @@
             showToast('Add your name, email, and selected role before submitting.', 'error');
             return;
           }
+          if (!state.currentCareerResume || !state.currentCareerResume.dataUrl) {
+            showToast('Please upload your CV before submitting the application.', 'error');
+            return;
+          }
           const job = state.jobPosts.find((item) => item.id === jobId);
           if (!job || job.status !== 'Open') {
             showToast('That role is no longer open. Please select another vacancy.', 'error');
             return;
           }
+          const response = await authRequest('upload_cv', {
+            sheetId: sheetSpreadsheetId(),
+            applicationId: createId('application'),
+            fullName,
+            email,
+            phone,
+            position: job.title,
+            jobId,
+            source,
+            coverLetter,
+            expectedSalary: asNumber(expectedSalary, 0),
+            cvFileName: state.currentCareerResume.name,
+            cvDataUrl: state.currentCareerResume.dataUrl,
+            mimeType: state.currentCareerResume.type || 'application/octet-stream'
+          }, 'POST');
+          const application = response && response.application ? response.application : null;
           state.candidates.unshift(normalizeCandidate({
             id: createId('candidate'),
             jobId,
@@ -15813,7 +15846,7 @@
             source,
             expectedSalary: asNumber(expectedSalary, 0),
             coverLetter,
-            resume: state.currentCareerResume ? Object.assign({}, state.currentCareerResume) : null,
+            resume: Object.assign({}, state.currentCareerResume, application && application.driveFileUrl ? { driveFileUrl: application.driveFileUrl, driveFileId: application.driveFileId } : {}),
             stage: 'Applied',
             appliedAt: new Date().toISOString()
           }));
@@ -15835,8 +15868,13 @@
           state.currentCareerResume = null;
           const meta = document.getElementById('careerResumeMeta');
           if (meta) meta.textContent = 'No resume uploaded yet.';
-          showToast('Application submitted successfully.', 'success');
-        };
+          showToast(
+            response && response.warning
+              ? `Application submitted. CV upload note: ${response.warning}`
+              : 'Application submitted successfully.',
+            response && response.warning ? 'info' : 'success'
+          );
+        });
 
         window.openJobEditor = (jobId) => {
           const job = state.jobPosts.find((item) => item.id === jobId);
@@ -17203,6 +17241,12 @@
             return;
           }
           const affectedReports = state.reports.filter((report) => report.employee === oldName);
+          await authRequest('rename_employee', {
+            sheetId: sheetSpreadsheetId(),
+            employeeId: employee.id,
+            oldName,
+            newName: nextName
+          }, 'POST');
           renameEmployeeAcrossState(employee, nextName);
           state.currentRenamingEmployeeId = null;
           persistSharedStateLocally();
