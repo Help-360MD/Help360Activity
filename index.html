@@ -15533,7 +15533,6 @@
               userId: String(employee.name || '').trim(),
               fullName: String(employee.name || '').trim(),
               role: 'employee',
-              status: String(employee.status || 'Active').toUpperCase() === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
               defaultDepartment: String(employee.department || 'Operations').trim() || 'Operations',
               allowedDepartments: String(employee.department || 'Operations').trim() || 'Operations',
               pin: nextPassword

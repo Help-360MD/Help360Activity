@@ -1605,7 +1605,7 @@ function normalizeStaffInput_(input) {
     full_name: trimText_(incoming.fullName || incoming.full_name),
     role: normalizeRole_(incoming.role || 'employee'),
     team_lead_id: trimText_(incoming.teamLeadId || incoming.team_lead_id || incoming.teamLead || incoming.team_lead),
-    status: normalizeStatus_(incoming.status || 'ACTIVE'),
+    status: trimText_(incoming.status) ? normalizeStatus_(incoming.status) : '',
     default_department: trimText_(incoming.defaultDepartment || incoming.default_department),
     allowed_departments: trimText_(incoming.allowedDepartments || incoming.allowed_departments),
     pin: trimText_(incoming.pin || incoming.password),
