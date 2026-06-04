@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
       /* ============================================================
          GLOBAL RESET & BASE
@@ -1413,6 +1412,113 @@
         border-top-color: white;
         border-radius: 50%;
         animation: spin .6s linear infinite;
+      }
+      .spinner-inline {
+        width: 14px;
+        height: 14px;
+        border-color: rgba(184,151,58,.22);
+        border-top-color: var(--accent);
+        vertical-align: -2px;
+      }
+      .btn-mini {
+        min-height: 28px;
+        padding: 5px 10px;
+        font-size: 11px;
+        border-radius: 8px;
+      }
+      .btn-ghost.btn-danger-soft,
+      .btn-filter.btn-danger-soft {
+        border-color: rgba(185,28,28,.18);
+        color: #991b1b;
+      }
+      .btn-ghost.btn-danger-soft:hover,
+      .btn-filter.btn-danger-soft:hover {
+        background: rgba(239,68,68,.08);
+        border-color: rgba(185,28,28,.28);
+      }
+      .is-loading {
+        opacity: .88;
+        cursor: wait !important;
+        transform: translateY(0) !important;
+        transition: opacity .2s ease, transform .2s ease;
+      }
+      .job-composer-actions,
+      .profile-action-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .job-composer-note {
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--gray-500);
+        line-height: 1.6;
+      }
+      .job-composer-note.is-editing {
+        color: var(--accent-dark);
+      }
+      .employee-inline-editor {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .employee-inline-name {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .employee-inline-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .employee-name-inline-input {
+        min-width: min(100%, 220px);
+        flex: 1;
+        height: 34px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 10px;
+        padding: 0 12px;
+        font-size: 13px;
+        color: var(--gray-800);
+      }
+      .employee-name-inline-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(184,151,58,.14);
+      }
+      .employee-responsibility-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .employee-responsibility-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border: 1px solid var(--gray-200);
+        border-radius: 14px;
+        background: linear-gradient(180deg, #fff 0%, #fcfaf5 100%);
+      }
+      .employee-responsibility-row .custom-responsibility-name {
+        font-size: 13px;
+      }
+      .employee-responsibility-row .leave-balance-meta {
+        margin-top: 2px;
+      }
+      .task-delete-state,
+      .job-card-edit-state {
+        animation: pulseGold 1.4s ease-in-out infinite;
+      }
+      @keyframes pulseGold {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(184,151,58,0); }
+        50% { box-shadow: 0 0 0 4px rgba(184,151,58,.12); }
       }
       @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -3833,7 +3939,7 @@
                 <option value="draft">Draft Saved</option>
               </select>
               <button class="btn-filter" onclick="filterReports()"><i class="fas fa-search"></i> Filter</button>
-              <button class="btn-filter" style="background:#0f766e" onclick="refreshCloudReports()"><i class="fas fa-cloud-arrow-down"></i> Refresh Cloud</button>
+              <button class="btn-filter" style="background:#0f766e" onclick="refreshCloudReports()"><i class="fas fa-cloud-arrow-down"></i> Refresh Sheets</button>
               <button class="btn-filter" style="background:var(--success)" onclick="exportCSV()"><i class="fas fa-download"></i> Export CSV</button>
               <button class="btn-filter" style="background:#1d4ed8" onclick="exportReportBundle('excel')"><i class="fas fa-file-excel"></i> Excel</button>
               <button class="btn-filter" style="background:#7c3aed" onclick="exportReportBundle('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
@@ -4329,7 +4435,11 @@
                   </div>
                   <textarea class="hidden" id="jobPostDescription"></textarea>
                 </div>
-                <button class="btn-settings-save" type="button" onclick="publishJobPost()"><i class="fas fa-plus"></i> Publish Job</button>
+                <div class="job-composer-actions">
+                  <button class="btn-settings-save" type="button" id="jobPostPrimaryButton" onclick="publishJobPost(this)"><i class="fas fa-plus"></i> Publish Job</button>
+                  <button class="btn-filter btn-danger-soft" type="button" id="jobPostCancelButton" style="display:none" onclick="cancelJobPostEdit(this)"><i class="fas fa-times"></i> Cancel Edit</button>
+                </div>
+                <div class="job-composer-note" id="jobPostComposerNote">Published jobs remain editable after posting.</div>
                 <div class="leave-balance-list" id="jobPostAdminList">
                   <div class="attachment-empty">No vacancies posted yet.</div>
                 </div>
@@ -4396,30 +4506,14 @@
               <div class="employee-admin-card">
                 <div class="employee-admin-header">
                   <div>
-                    <div class="chart-card-title">ZKTeco Device and Attendance Policy</div>
-                    <div class="chart-card-sub">Store device settings, grace periods, weekend policies, and sync notes for biometric attendance management.</div>
+                    <div class="chart-card-title">Attendance and Sheets Sync</div>
+                    <div class="chart-card-sub">Store attendance policy settings in Google Sheets and refresh the live sync directly through Apps Script.</div>
                   </div>
                 </div>
                 <div class="employee-form-grid" style="margin-top:16px">
                   <div class="settings-item">
                     <div class="settings-label">Device Name</div>
                     <input type="text" class="settings-value" id="attendanceDeviceName" placeholder="ZKTeco Main Device" />
-                  </div>
-                  <div class="settings-item">
-                    <div class="settings-label">Device Endpoint / IP</div>
-                    <input type="text" class="settings-value" id="attendanceDeviceEndpoint" placeholder="192.168.0.150 or API bridge URL" />
-                  </div>
-                  <div class="settings-item">
-                    <div class="settings-label">Sync Mode</div>
-                    <input type="text" class="settings-value" id="attendanceDeviceMode" placeholder="CSV Import / API Bridge" />
-                  </div>
-                  <div class="settings-item">
-                    <div class="settings-label">Bridge URL</div>
-                    <input type="url" class="settings-value" id="attendanceBridgeUrl" placeholder="https://attendance-bridge.example.com" />
-                  </div>
-                  <div class="settings-item">
-                    <div class="settings-label">Bridge Admin Key</div>
-                    <input type="text" class="settings-value" id="attendanceBridgeApiKey" placeholder="Optional bridge admin key" />
                   </div>
                   <div class="settings-item">
                     <div class="settings-label">Device Timezone</div>
@@ -4447,11 +4541,10 @@
                   <textarea class="notes-textarea compact-textarea" id="attendancePenaltyRule" placeholder="Describe late coming, early exit, or overtime rules."></textarea>
                 </div>
                 <div class="profile-action-row">
-                  <button class="btn-settings-save" type="button" onclick="saveAttendanceConfig()"><i class="fas fa-save"></i> Save Policy</button>
-                  <button class="btn-filter" type="button" style="background:#0f766e" onclick="runAttendanceSync()"><i class="fas fa-rotate"></i> Run ZKTeco Sync</button>
+                  <button class="btn-settings-save" type="button" onclick="saveAttendanceConfig(this)"><i class="fas fa-save"></i> Save Policy</button>
+                  <button class="btn-filter" type="button" style="background:#0f766e" onclick="runAttendanceSync(this)"><i class="fas fa-rotate"></i> Refresh Sheets Sync</button>
                 </div>
                 <div class="workspace-note" id="attendanceSyncNote">Device sync has not been run yet.</div>
-                <div class="workspace-note" id="attendanceBridgeHint" style="margin-top:8px">Deploy the Node bridge first, then point the device PUSH / ADMS host to that bridge.</div>
               </div>
 
               <div class="employee-admin-card">
@@ -4522,7 +4615,7 @@
                   <div class="settings-label">Source</div>
                   <select class="settings-value" id="attendanceSource">
                     <option value="Manual">Manual</option>
-                    <option value="ZKTeco Sync">ZKTeco Sync</option>
+                    <option value="Google Sheets Sync">Google Sheets Sync</option>
                     <option value="Activity Sync">Activity Sync</option>
                   </select>
                 </div>
@@ -4974,7 +5067,7 @@
                   <div class="settings-label">CC Email (optional)</div>
                   <input type="email" class="settings-value" id="settingCCEmail" placeholder="cc@help360.com" />
                 </div>
-                <button class="btn-settings-save" onclick="saveSettings()"><i class="fas fa-save"></i> Save Email Settings</button>
+                <button class="btn-settings-save" onclick="saveSettings(this)"><i class="fas fa-save"></i> Save Email Settings</button>
               </div>
 
               <div class="settings-card">
@@ -4988,7 +5081,7 @@
                   <div class="settings-label">Spreadsheet ID (for reference)</div>
                   <input type="text" class="settings-value" id="settingSheetID" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" />
                 </div>
-                <button class="btn-settings-save" onclick="saveSettings()"><i class="fas fa-save"></i> Save Sheet Settings</button>
+                <button class="btn-settings-save" onclick="saveSettings(this)"><i class="fas fa-save"></i> Save Sheet Settings</button>
                 <div class="workspace-note" id="sheetStatusNote">Google Sheets sync and auth use the built-in Apps Script backend URL. Override it only if your deployment changes.</div>
                 <div style="margin-top:16px;padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0">
                   <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px"><i class="fas fa-info-circle"></i> Setup Instructions</div>
@@ -5002,8 +5095,8 @@
               </div>
 
               <div class="settings-card">
-                <h3><i class="fab fa-google" style="color:#34a853"></i> Google Sheets Live Database</h3>
-                <div class="workspace-note" id="databaseStatusNote">Google Sheets is the live database for shared HR data.</div>
+                <h3><i class="fab fa-google" style="color:#34a853"></i> Google Sheets Live Backend</h3>
+                <div class="workspace-note" id="databaseStatusNote">Google Sheets and Apps Script are the live backend for shared HR data and sessions.</div>
                 <div class="settings-item">
                   <div class="settings-label">Document storage</div>
                   <div class="settings-hint">Store the actual file in Google Drive, then save the Drive file ID / file URL in Google Sheets. Sheets should keep only metadata such as employee, title, category, expiry, and status.</div>
@@ -5012,7 +5105,7 @@
                   <div class="settings-label">Live sync model</div>
                   <div class="settings-hint">Google Sheets remains the source of truth for reports, employee records, leave, compliance, and document references. Use Google Drive for binary files.</div>
                 </div>
-                <button class="btn-settings-save" onclick="saveSettings()"><i class="fab fa-google"></i> Save Sheets Settings</button>
+                <button class="btn-settings-save" onclick="saveSettings(this)"><i class="fab fa-google"></i> Save Sheets Settings</button>
                 <div class="workspace-note" id="sheetStatusNote">Google Sheets sync and auth use the built-in Apps Script backend URL. Override it only if your deployment changes.</div>
                 <div style="margin-top:16px;padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0">
                   <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px"><i class="fas fa-info-circle"></i> Setup Instructions</div>
@@ -5024,20 +5117,7 @@
                   </div>
                 </div>
                 <div style="display:none">
-                  <div class="settings-item">
-                    <div class="settings-label">Supabase Project URL</div>
-                    <input type="url" class="settings-value" id="settingSupabaseUrl" placeholder="https://your-project.supabase.co" />
-                    <div class="settings-hint">Legacy field kept hidden for compatibility.</div>
-                  </div>
-                  <div class="settings-item">
-                    <div class="settings-label">Supabase Publishable / Anon Key</div>
-                    <textarea class="notes-textarea compact-textarea" id="settingSupabaseAnonKey" placeholder="Paste the public anon key from Supabase here."></textarea>
-                  </div>
                   <div class="employee-form-grid">
-                    <div class="settings-item">
-                      <div class="settings-label">Reports Table Name</div>
-                      <input type="text" class="settings-value" id="settingSupabaseReportsTable" placeholder="activity_reports" />
-                    </div>
                     <div class="settings-item">
                       <div class="settings-label">Refresh Every (seconds)</div>
                       <input type="number" class="settings-value" id="settingCloudRefreshSeconds" min="15" step="5" />
@@ -5068,7 +5148,7 @@
                   <div class="settings-label">Confirm New Password</div>
                   <input type="password" class="settings-value" id="settingConfirmAdminPassword" placeholder="Confirm new password" />
                 </div>
-                <button class="btn-settings-save" onclick="saveManagerAccess()"><i class="fas fa-key"></i> Update HR Access</button>
+                <button class="btn-settings-save" onclick="saveManagerAccess(this)"><i class="fas fa-key"></i> Update HR Access</button>
               </div>
 
               <div class="settings-card">
@@ -5093,7 +5173,7 @@
                   <div class="settings-label">Confirm New Password</div>
                   <input type="password" class="settings-value" id="settingConfirmApproverPassword" placeholder="Confirm new manager password" />
                 </div>
-                <button class="btn-settings-save" onclick="saveManagerApproverAccess()"><i class="fas fa-key"></i> Update Manager Access</button>
+                <button class="btn-settings-save" onclick="saveManagerApproverAccess(this)"><i class="fas fa-key"></i> Update Manager Access</button>
               </div>
 
               <div class="settings-card">
@@ -5121,11 +5201,11 @@
                     <input type="date" class="settings-value" id="holidayDate" />
                   </div>
                 </div>
-                <button class="btn-settings-save" type="button" onclick="addHoliday()"><i class="fas fa-plus"></i> Add Holiday</button>
+                <button class="btn-settings-save" type="button" onclick="addHoliday(this)"><i class="fas fa-plus"></i> Add Holiday</button>
                 <div class="leave-balance-list" id="holidayList">
                   <div class="attachment-empty">No company holidays configured yet.</div>
                 </div>
-                <button class="btn-settings-save" onclick="saveLeavePolicies()"><i class="fas fa-save"></i> Save Leave Policies</button>
+                <button class="btn-settings-save" onclick="saveLeavePolicies(this)"><i class="fas fa-save"></i> Save Leave Policies</button>
               </div>
 
               <div class="settings-card">
@@ -5146,37 +5226,20 @@
                   <div class="settings-label">Compliance Workflow</div>
                   <input type="text" class="settings-value" id="settingApprovalCompliance" placeholder="HR, Employee" />
                 </div>
-                <button class="btn-settings-save" type="button" onclick="saveApprovalEngine()"><i class="fas fa-save"></i> Save Approval Flows</button>
+                <button class="btn-settings-save" type="button" onclick="saveApprovalEngine(this)"><i class="fas fa-save"></i> Save Approval Flows</button>
               </div>
 
               <div class="settings-card">
                 <h3><i class="fas fa-lock" style="color:var(--warning)"></i> Employee Passwords</h3>
                 <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Default password for all employees is <strong>help360</strong>. You can update individual passwords below.</div>
                 <div id="empPasswordList"></div>
-                <button class="btn-settings-save" onclick="savePasswords()"><i class="fas fa-save"></i> Save Passwords</button>
+                <button class="btn-settings-save" onclick="savePasswords(this)"><i class="fas fa-save"></i> Save Passwords</button>
               </div>
 
               <div class="settings-card">
-                <h3><i class="fas fa-code" style="color:#6366f1"></i> Apps Script Template</h3>
-                <div style="font-size:11px;color:var(--gray-600);margin-bottom:10px">Copy this code into Google Apps Script:</div>
-                <pre style="background:#0f172a;color:#a5f3fc;padding:14px;border-radius:8px;font-size:10px;overflow-x:auto;line-height:1.6">function doPost(e) {
-  var sheet = SpreadsheetApp
-    .getActiveSpreadsheet()
-    .getActiveSheet();
-  var data = JSON.parse(e.postData.contents);
-  sheet.appendRow([
-    data.date, data.employee,
-    data.totalTasks, data.totalCount,
-    data.status, data.notes,
-    data.details, new Date()
-  ]);
-  return ContentService
-    .createTextOutput("ok");
-}
-function doGet() {
-  return ContentService
-    .createTextOutput("ok");
-}</pre>
+                <h3><i class="fas fa-code" style="color:#6366f1"></i> Apps Script Backend</h3>
+                <div style="font-size:11px;color:var(--gray-600);margin-bottom:10px">The full deployment script lives in <strong>server/help360-apps-script.gs</strong>. It supports shared scopes, reports, sessions, and password updates.</div>
+                <pre id="appsScriptTemplate" style="background:#0f172a;color:#a5f3fc;padding:14px;border-radius:8px;font-size:10px;overflow-x:auto;line-height:1.6">Deploy the Apps Script file from the workspace copy, then replace the built-in URL once in the app code if your deployment changes.</pre>
               </div>
 
               <div class="settings-card">
@@ -5191,7 +5254,6 @@ function doGet() {
                   <div class="settings-hint">One HR folder per company, then subfolders by employee or document category. Save the Drive file link in the sheet row for instant access.</div>
                 </div>
                 <div class="workspace-note">If you want, I can wire the upload endpoint next so the app sends the file to Google Drive through Apps Script instead of storing file bytes in the browser.</div>
-                <pre id="supabaseSqlTemplate" style="display:none"></pre>
               </div>
             </div>
           </div>
@@ -5432,7 +5494,7 @@ function doGet() {
           <div class="employee-admin-header" style="margin-top:18px">
             <div>
               <div class="chart-card-title">Assigned Responsibilities</div>
-              <div class="chart-card-sub">Update the exact tasks this employee is responsible for.</div>
+              <div class="chart-card-sub">Update the exact tasks this employee is responsible for, or delete a responsibility directly from the live list below.</div>
             </div>
             <div class="attachment-actions">
               <button class="btn-filter" type="button" onclick="toggleChecklistSelection('employeeTaskChecklist', true)"><i class="fas fa-check-double"></i> Select All</button>
@@ -5440,6 +5502,9 @@ function doGet() {
             </div>
           </div>
           <div class="task-checklist" id="employeeTaskChecklist"></div>
+          <div class="employee-responsibility-list" id="employeeAssignedResponsibilityList">
+            <div class="attachment-empty">No responsibilities assigned yet.</div>
+          </div>
           <div class="employee-admin-header" style="margin-top:18px">
             <div>
               <div class="chart-card-title">Employee Documents</div>
@@ -5469,7 +5534,7 @@ function doGet() {
           <div class="timeline-list" id="employeeTimelineAdminList">
             <div class="attachment-empty">Timeline entries for this employee will appear here.</div>
           </div>
-          <button class="btn-settings-save" style="margin-top:16px" onclick="saveEmployeeEdits()"><i class="fas fa-save"></i> Save Employee Updates</button>
+          <button class="btn-settings-save" style="margin-top:16px" onclick="saveEmployeeEdits(this)"><i class="fas fa-save"></i> Save Employee Updates</button>
         </div>
       </div>
     </div>
@@ -6353,15 +6418,13 @@ function doGet() {
         'Shahid Ali': 'help360',
         'Abdullah': 'help360'
       };
-      const DEFAULT_SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyYO0nH9_cshnjNOey9j2Px1O6lAhXcR4dSCccHiacT3R7AM5OsSyjl4Cxz3NIby9C2/exec';
+      const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_ID/exec';
+      const DEFAULT_SHEET_WEB_APP_URL = APPS_SCRIPT_URL;
       const DEFAULT_SETTINGS = {
         managerEmail: 'usama.mazar@help360.com',
         ccEmail: '',
-        sheetURL: DEFAULT_SHEET_WEB_APP_URL,
+        sheetURL: APPS_SCRIPT_URL,
         sheetID: '1kxQwm_XkmXbSvTOowdFVwF9u5riwD2zNnpx2UnsekrQ',
-        supabaseUrl: 'https://tfllzwrzfmzqpkcaihwa.supabase.co',
-        supabaseAnonKey: 'sb_publishable_CRADuuS744pyl7A1uT_LGA_KoGCdfGA',
-        supabaseReportsTable: 'activity_reports',
         cloudRefreshSeconds: 45,
         leaveAllowance: 8,
         carryForwardLimit: 4,
@@ -6395,12 +6458,10 @@ function doGet() {
       const DEFAULT_ATTENDANCE_CONFIG = {
         deviceName: 'ZKTeco Main Device',
         deviceEndpoint: '',
-        deviceMode: 'CSV Import / API Bridge',
-        bridgeUrl: '',
-        bridgeApiKey: '',
+        deviceMode: 'Google Sheets Sync',
         timezone: 'UTC',
         lastSyncAt: '',
-        bridgeStatus: '',
+        syncStatus: '',
         lastSyncSummary: '',
         graceMinutes: 10,
         earlyExitGraceMinutes: 10,
@@ -6492,6 +6553,8 @@ function doGet() {
         historyVisible: false,
         currentAttachments: [],
         currentEditingEmployeeId: null,
+        currentEditingJobId: null,
+        currentRenamingEmployeeId: null,
         currentEditingCandidateId: null,
         currentEditingPayrollId: null,
         currentCandidateResume: null,
@@ -6508,8 +6571,6 @@ function doGet() {
         authDirectoryDirty: false,
         authLastValidatedAt: '',
         authSyncError: '',
-        supabaseClient: null,
-        supabaseConfigKey: '',
         cloudReportPollTimer: null,
         cloudSharedPollTimer: null,
         sharedSheetPollTimer: null,
@@ -7220,34 +7281,8 @@ function doGet() {
         return /^[a-zA-Z0-9_]+$/.test(table) ? table : '';
       }
 
-      function supabaseProjectUrl() {
-        return String(state.settings && state.settings.supabaseUrl || '').trim().replace(/\/+$/, '');
-      }
-
-      function supabaseAnonKey() {
-        return String(state.settings && state.settings.supabaseAnonKey || '').trim();
-      }
-
-      function supabaseReportsTable() {
-        return sanitizeTableName(state.settings && state.settings.supabaseReportsTable) || 'activity_reports';
-      }
-
       function sharedStateTable() {
         return 'help360_shared_state';
-      }
-
-      function attendanceBridgeBaseUrl() {
-        const config = state.attendanceConfig || DEFAULT_ATTENDANCE_CONFIG;
-        const explicit = String(config.bridgeUrl || '').trim();
-        if (explicit) {
-          return explicit.replace(/\/+$/, '');
-        }
-        const legacy = String(config.deviceEndpoint || '').trim();
-        return /^https?:\/\//i.test(legacy) ? legacy.replace(/\/+$/, '') : '';
-      }
-
-      function attendanceBridgeAdminKey() {
-        return String(state.attendanceConfig && state.attendanceConfig.bridgeApiKey || '').trim();
       }
 
       function cloudRefreshSeconds() {
@@ -7255,7 +7290,7 @@ function doGet() {
       }
 
       function cloudConfigKey() {
-        return `${supabaseProjectUrl()}|${supabaseAnonKey()}|${supabaseReportsTable()}`;
+        return sheetWebAppUrl();
       }
 
       function cloudSyncConfigured() {
@@ -7263,11 +7298,7 @@ function doGet() {
       }
 
       function sheetWebAppUrl() {
-        const configured = String(state.settings && state.settings.sheetURL || '').trim();
-        if (configured && configured !== DEFAULT_SHEET_WEB_APP_URL) {
-          return configured;
-        }
-        return String(DEFAULT_SHEET_WEB_APP_URL || '').trim();
+        return String(APPS_SCRIPT_URL || '').trim();
       }
 
       function sheetSpreadsheetId() {
@@ -7276,7 +7307,7 @@ function doGet() {
 
       function sheetSyncConfigured() {
         const url = sheetWebAppUrl();
-        return Boolean(url && !url.includes('PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE'));
+        return Boolean(url && !url.includes('YOUR_ID'));
       }
 
       function authWebAppUrl() {
@@ -7285,7 +7316,7 @@ function doGet() {
 
       function authConfigured() {
         const url = authWebAppUrl();
-        return Boolean(url && !url.includes('PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE'));
+        return Boolean(url && !url.includes('YOUR_ID'));
       }
 
       function authSessionStorageKey() {
@@ -7293,7 +7324,7 @@ function doGet() {
       }
 
       function liveSyncConfigured() {
-        return cloudSyncConfigured() || sheetSyncConfigured();
+        return sheetSyncConfigured();
       }
 
       function normalizeHolidayEntry(holiday, index) {
@@ -7334,13 +7365,6 @@ function doGet() {
 
       function normalizeCloudSettings(value) {
         const settings = Object.assign({}, DEFAULT_SETTINGS, value && typeof value === 'object' ? value : {});
-        if (!String(settings.supabaseUrl || '').trim()) {
-          settings.supabaseUrl = DEFAULT_SETTINGS.supabaseUrl;
-        }
-        if (!String(settings.supabaseAnonKey || '').trim()) {
-          settings.supabaseAnonKey = DEFAULT_SETTINGS.supabaseAnonKey;
-        }
-        settings.supabaseReportsTable = sanitizeTableName(settings.supabaseReportsTable) || DEFAULT_SETTINGS.supabaseReportsTable;
         settings.cloudRefreshSeconds = Math.max(asNumber(settings.cloudRefreshSeconds, DEFAULT_SETTINGS.cloudRefreshSeconds), 15);
         settings.leaveAllowance = Math.max(asNumber(settings.leaveAllowance, DEFAULT_SETTINGS.leaveAllowance), 0);
         settings.carryForwardLimit = Math.max(asNumber(settings.carryForwardLimit, DEFAULT_SETTINGS.carryForwardLimit), 0);
@@ -7380,9 +7404,6 @@ function doGet() {
           ccEmail: settings.ccEmail,
           sheetURL: settings.sheetURL,
           sheetID: settings.sheetID,
-          supabaseUrl: settings.supabaseUrl,
-          supabaseAnonKey: settings.supabaseAnonKey,
-          supabaseReportsTable: settings.supabaseReportsTable,
           cloudRefreshSeconds: settings.cloudRefreshSeconds,
           leaveAllowance: settings.leaveAllowance,
           carryForwardLimit: settings.carryForwardLimit,
@@ -7416,23 +7437,6 @@ function doGet() {
           next[employee.name] = String(source[employee.name] || state.passwords[employee.name] || DEFAULT_PASSWORDS[employee.name] || 'help360');
         });
         return next;
-      }
-
-      function getSupabaseClient() {
-        if (!cloudSyncConfigured()) return null;
-        if (!window.supabase || typeof window.supabase.createClient !== 'function') return null;
-        const nextKey = cloudConfigKey();
-        if (state.supabaseClient && state.supabaseConfigKey === nextKey) {
-          return state.supabaseClient;
-        }
-        state.supabaseClient = window.supabase.createClient(supabaseProjectUrl(), supabaseAnonKey(), {
-          auth: {
-            persistSession: false,
-            autoRefreshToken: false
-          }
-        });
-        state.supabaseConfigKey = nextKey;
-        return state.supabaseClient;
       }
 
       function buildDatabaseReportPayload(report) {
@@ -7517,15 +7521,15 @@ function doGet() {
 
       function cloudStatusMessage() {
         if (!sheetSyncConfigured()) {
-          return { tone: '', text: 'Google Sheets live database and auth backend will use the built-in Apps Script URL once you replace the placeholder in the code.' };
+          return { tone: '', text: 'Google Sheets and Apps Script will be the live backend once you replace the placeholder URL in the code.' };
         }
         if (state.sheetSyncError) {
-          return { tone: 'alert', text: `Google Sheets live database / auth backend needs attention: ${state.sheetSyncError}` };
+          return { tone: 'alert', text: `Google Sheets and Apps Script backend needs attention: ${state.sheetSyncError}` };
         }
         if (state.lastSheetSyncAt) {
-          return { tone: 'success', text: `Google Sheets is the live database and auth backend. Last sync: ${formatTimestamp(state.lastSheetSyncAt)}.` };
+          return { tone: 'success', text: `Google Sheets and Apps Script are the live backend. Last sync: ${formatTimestamp(state.lastSheetSyncAt)}.` };
         }
-        return { tone: 'success', text: 'Google Sheets is the live database and auth backend. Shared HR data, document metadata, and sessions will mirror automatically.' };
+        return { tone: 'success', text: 'Google Sheets and Apps Script are the live backend. Shared HR data, document metadata, and sessions will mirror automatically.' };
       }
 
       function updateCloudStatusNote() {
@@ -7567,47 +7571,11 @@ function doGet() {
       }
 
       async function syncReportToDatabase(report) {
-        if (!cloudSyncConfigured()) {
-          return { ok: true, skipped: true };
-        }
-        const client = getSupabaseClient();
-        try {
-          const { data, error } = await client
-            .from(supabaseReportsTable())
-            .insert(buildDatabaseReportPayload(report))
-            .select('id, report_id, submitted_at');
-          if (error) {
-            if (error.code === '23505') {
-              report.databaseSynced = true;
-              report.databaseSource = 'supabase';
-              report.databaseSyncError = '';
-              report.databaseSyncedAt = new Date().toISOString();
-              state.lastCloudSyncAt = report.databaseSyncedAt;
-              state.cloudSyncError = '';
-              updateCloudStatusNote();
-              return { ok: true, row: null };
-            }
-            throw error;
-          }
-          const row = Array.isArray(data) ? data[0] : null;
-          report.databaseSynced = true;
-          report.databaseSource = 'supabase';
-          report.databaseSyncError = '';
-          report.databaseSyncedAt = new Date().toISOString();
-          report.remoteRowId = row && row.id ? String(row.id) : report.remoteRowId;
-          state.lastCloudSyncAt = report.databaseSyncedAt;
-          state.cloudSyncError = '';
-          updateCloudStatusNote();
-          return { ok: true, row };
-        } catch (error) {
-          const message = error && error.message ? error.message : 'Database sync failed.';
-          report.databaseSynced = false;
-          report.databaseSource = 'local';
-          report.databaseSyncError = message;
-          state.cloudSyncError = message;
-          updateCloudStatusNote();
-          return { ok: false, reason: message };
-        }
+        report.databaseSynced = Boolean(report.sheetSynced);
+        report.databaseSource = report.sheetSynced ? 'apps_script' : 'local';
+        report.databaseSyncError = '';
+        report.databaseSyncedAt = report.sheetSynced ? new Date().toISOString() : String(report.databaseSyncedAt || '');
+        return { ok: true, skipped: true };
       }
 
       async function fetchReportsFromSheetBackend() {
@@ -7617,10 +7585,12 @@ function doGet() {
         }
 
         const joiner = sheetUrl.includes('?') ? '&' : '?';
+        const sheetId = sheetSpreadsheetId();
+        const sheetIdQuery = sheetId ? `&sheetId=${encodeURIComponent(sheetId)}` : '';
         let lastError = '';
 
         try {
-          const reportsResponse = await fetch(`${sheetUrl}${joiner}action=reports&_=${Date.now()}`, {
+          const reportsResponse = await fetch(`${sheetUrl}${joiner}action=reports${sheetIdQuery}&_=${Date.now()}`, {
             method: 'GET',
             cache: 'no-store'
           });
@@ -7638,7 +7608,7 @@ function doGet() {
         }
 
         try {
-          const snapshotResponse = await fetch(`${sheetUrl}${joiner}action=snapshot&_=${Date.now()}`, {
+          const snapshotResponse = await fetch(`${sheetUrl}${joiner}action=snapshot${sheetIdQuery}&_=${Date.now()}`, {
             method: 'GET',
             cache: 'no-store'
           });
@@ -8024,34 +7994,7 @@ function doGet() {
         if (!SHARED_CLOUD_SCOPES.includes(scope)) {
           return { ok: false, reason: 'Unknown shared cloud scope.' };
         }
-        if (!cloudSyncConfigured()) {
-          return { ok: true, skipped: true };
-        }
-        state.sharedScopePending[scope] = true;
-        const client = getSupabaseClient();
-        try {
-          const payload = buildSharedScopePayload(scope);
-          const { error } = await client
-            .from(sharedStateTable())
-            .upsert({
-              scope,
-              payload,
-              updated_at: new Date().toISOString()
-            }, { onConflict: 'scope' })
-            .select('scope, updated_at');
-          if (error) throw error;
-          state.lastCloudSyncAt = new Date().toISOString();
-          state.cloudSyncError = '';
-          updateCloudStatusNote();
-          delete state.sharedScopePending[scope];
-          return { ok: true };
-        } catch (error) {
-          const message = error && error.message ? error.message : 'Shared cloud sync failed.';
-          state.cloudSyncError = message;
-          updateCloudStatusNote();
-          delete state.sharedScopePending[scope];
-          return { ok: false, reason: message };
-        }
+        return { ok: true, skipped: true };
       }
 
       async function syncSharedScopeToSheet(scope) {
@@ -8142,6 +8085,7 @@ function doGet() {
           if (editingEmployee) {
             renderTaskChecklist('employeeTaskChecklist', editingEmployee.responsibilities);
             renderEmployeeDocumentList(editingEmployee, 'employeeDocAdminList', true);
+            renderEmployeeAssignedResponsibilities(editingEmployee);
           } else {
             state.currentEditingEmployeeId = null;
             document.getElementById('employeeEditorModal').classList.remove('open');
@@ -8176,61 +8120,12 @@ function doGet() {
 
       async function seedMissingSharedCloudScopes(scopes) {
         for (const scope of scopes) {
-          await syncSharedScopeToDatabase(scope);
+          await syncSharedScopeToSheet(scope);
         }
       }
 
       async function refreshSharedStateFromDatabase(options) {
-        const config = Object.assign({ silent: false }, options || {});
-        if (!cloudSyncConfigured()) {
-          return { ok: true, scopes: new Set() };
-        }
-        const client = getSupabaseClient();
-        if (!client) {
-          updateCloudStatusNote();
-          return { ok: true, scopes: new Set() };
-        }
-        try {
-          const previousConfig = cloudConfigKey();
-          const previousRefreshSeconds = cloudRefreshSeconds();
-          const { data, error } = await client
-            .from(sharedStateTable())
-            .select('scope, payload, updated_at')
-            .in('scope', SHARED_CLOUD_SCOPES);
-          if (error) throw error;
-          const rowsByScope = new Map((data || []).map((row) => [String((row && row.scope) || '').trim(), row]));
-          const foundScopes = new Set();
-          SHARED_CLOUD_SCOPES.forEach((scope) => {
-            const row = rowsByScope.get(scope);
-            if (!row) return;
-            foundScopes.add(scope);
-            if (state.sharedScopePending[scope]) return;
-            applySharedCloudPayload(scope, row.payload);
-          });
-          ensureTaskAssignments({ skipCloud: true });
-          persistSharedStateLocally();
-          refreshSharedViews();
-          state.lastCloudSyncAt = new Date().toISOString();
-          state.cloudSyncError = '';
-          updateCloudStatusNote();
-          if (previousConfig !== cloudConfigKey() || previousRefreshSeconds !== cloudRefreshSeconds()) {
-            setTimeout(() => {
-              setupCloudReportSync();
-              setupSharedCloudSync();
-            }, 0);
-          }
-          if (!config.silent) {
-            showToast('Shared HR data refreshed from cloud.', 'success');
-          }
-          return { ok: true, scopes: foundScopes };
-        } catch (error) {
-          state.cloudSyncError = error && error.message ? error.message : 'Unable to refresh shared HR data.';
-          updateCloudStatusNote();
-          if (!config.silent) {
-            showToast(state.cloudSyncError, 'error');
-          }
-          return { ok: false, scopes: new Set() };
-        }
+        return refreshSharedStateFromSheet(options);
       }
 
       function clearSharedSheetPolling() {
@@ -8279,10 +8174,12 @@ function doGet() {
         }
 
         const joiner = sheetUrl.includes('?') ? '&' : '?';
+        const sheetId = sheetSpreadsheetId();
+        const sheetIdQuery = sheetId ? `&sheetId=${encodeURIComponent(sheetId)}` : '';
         let lastError = '';
 
         try {
-          const snapshotResponse = await fetch(`${sheetUrl}${joiner}action=snapshot&_=${Date.now()}`, {
+          const snapshotResponse = await fetch(`${sheetUrl}${joiner}action=snapshot${sheetIdQuery}&_=${Date.now()}`, {
             method: 'GET',
             cache: 'no-store'
           });
@@ -8303,7 +8200,7 @@ function doGet() {
         let scopeSuccess = false;
         for (const scope of SHARED_CLOUD_SCOPES) {
           try {
-            const scopeResponse = await fetch(`${sheetUrl}${joiner}action=scope&scope=${encodeURIComponent(scope)}&_=${Date.now()}`, {
+            const scopeResponse = await fetch(`${sheetUrl}${joiner}action=scope&scope=${encodeURIComponent(scope)}${sheetIdQuery}&_=${Date.now()}`, {
               method: 'GET',
               cache: 'no-store'
             });
@@ -8562,6 +8459,7 @@ function doGet() {
         const staff = state.employees.map((employee) => {
           const userId = String(employee.name || '').trim();
           return {
+            staffId: String(employee.id || userId || '').trim(),
             userId,
             fullName: String(employee.name || '').trim(),
             role: 'employee',
@@ -8577,6 +8475,7 @@ function doGet() {
         });
 
         staff.push({
+          staffId: 'hr_account',
           userId: String(state.manager.user || '').trim(),
           fullName: String(state.manager.name || '').trim(),
           role: 'hr',
@@ -8591,6 +8490,7 @@ function doGet() {
         });
 
         staff.push({
+          staffId: 'manager_account',
           userId: String(state.managerApprover.user || '').trim(),
           fullName: String(state.managerApprover.name || '').trim(),
           role: 'manager',
@@ -8666,6 +8566,7 @@ function doGet() {
         }
         const normalizedMethod = String(method || 'POST').toUpperCase();
         const requestUrl = new URL(url);
+        const sheetId = sheetSpreadsheetId();
         const options = {
           method: normalizedMethod,
           headers: { 'Content-Type': 'text/plain' },
@@ -8673,13 +8574,16 @@ function doGet() {
         };
         if (normalizedMethod === 'GET') {
           requestUrl.searchParams.set('action', action);
+          if (sheetId) {
+            requestUrl.searchParams.set('sheetId', sheetId);
+          }
           Object.entries(payload || {}).forEach(([key, value]) => {
             if (value !== undefined && value !== null && String(value) !== '') {
               requestUrl.searchParams.set(key, String(value));
             }
           });
         } else {
-          options.body = JSON.stringify(Object.assign({ action }, payload || {}));
+          options.body = JSON.stringify(Object.assign({ action, sheetId }, payload || {}));
         }
         const response = await fetch(requestUrl.toString(), options);
         const data = await response.json().catch(() => null);
@@ -8821,41 +8725,6 @@ function doGet() {
           showScreen('adminScreen');
         }
         startAuthSessionValidation();
-      }
-
-      async function requestAttendanceBridgeSync() {
-        const baseUrl = attendanceBridgeBaseUrl();
-        if (!baseUrl) {
-          return { ok: false, reason: 'Add the ZKTeco bridge URL first.' };
-        }
-        const headers = {
-          'Content-Type': 'application/json',
-          'X-Requested-By': currentActorName()
-        };
-        const adminKey = attendanceBridgeAdminKey();
-        if (adminKey) {
-          headers['X-Bridge-Key'] = adminKey;
-        }
-        try {
-          const response = await fetch(`${baseUrl}/api/zkteco/sync`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({
-              requestedAt: new Date().toISOString(),
-              requestedBy: headers['X-Requested-By']
-            })
-          });
-          const payload = await response.json().catch(() => null);
-          if (!response.ok || !payload || payload.ok === false) {
-            throw new Error(payload && payload.error ? payload.error : `Bridge sync failed with status ${response.status}.`);
-          }
-          return { ok: true, data: payload };
-        } catch (error) {
-          return {
-            ok: false,
-            reason: error && error.message ? error.message : 'Unable to reach the ZKTeco bridge.'
-          };
-        }
       }
 
       function createAuditEntry(action, meta) {
@@ -9090,6 +8959,259 @@ function doGet() {
         renderTeamLeadSelect('newEmployeeTeamLead', null, document.getElementById('newEmployeeTeamLead') && document.getElementById('newEmployeeTeamLead').value);
         const currentEmployee = currentEmployeeId ? getEmployeeById(currentEmployeeId) : null;
         renderTeamLeadSelect('editEmployeeTeamLead', currentEmployeeId, currentEmployee ? currentEmployee.teamLead : '');
+      }
+
+      function renderEmployeeAssignedResponsibilities(employee) {
+        const container = document.getElementById('employeeAssignedResponsibilityList');
+        if (!container) return;
+        const tasks = employee && Array.isArray(employee.responsibilities) ? employee.responsibilities.filter(Boolean) : [];
+        if (!tasks.length) {
+          container.innerHTML = '<div class="attachment-empty">No responsibilities assigned yet.</div>';
+          return;
+        }
+        container.innerHTML = tasks.map((task) => `
+          <div class="employee-responsibility-row">
+            <div>
+              <div class="custom-responsibility-name">${escapeHtml(task)}</div>
+              <div class="leave-balance-meta">Delete this item to remove it from Google Sheets immediately.</div>
+            </div>
+            <button class="btn-ghost btn-danger-soft btn-mini" type="button" onclick='deleteEmployeeResponsibility("${escapeHtml(employee.id)}", ${JSON.stringify(task)}, this)'><i class="fas fa-trash-alt"></i> Delete</button>
+          </div>
+        `).join('');
+      }
+
+      function renderJobComposerState() {
+        const button = document.getElementById('jobPostPrimaryButton');
+        const cancelButton = document.getElementById('jobPostCancelButton');
+        const note = document.getElementById('jobPostComposerNote');
+        const currentJob = state.currentEditingJobId ? state.jobPosts.find((item) => item.id === state.currentEditingJobId) : null;
+        if (button) {
+          if (currentJob) {
+            button.innerHTML = '<i class="fas fa-save"></i> Update Job';
+            button.dataset.mode = 'edit';
+          } else {
+            button.innerHTML = '<i class="fas fa-plus"></i> Publish Job';
+            button.dataset.mode = 'create';
+          }
+        }
+        if (cancelButton) {
+          cancelButton.style.display = currentJob ? 'inline-flex' : 'none';
+        }
+        if (note) {
+          note.classList.toggle('is-editing', Boolean(currentJob));
+          note.textContent = currentJob
+            ? `Editing ${currentJob.title}. Save your changes and the updated role will sync to Google Sheets immediately.`
+            : 'Published jobs remain editable after posting.';
+        }
+      }
+
+      function migrateEmployeeDraftStorage(oldName, newName) {
+        const keys = [draftStorageKey(oldName), legacyDraftStorageKey(oldName)];
+        let draft = null;
+        for (const key of keys) {
+          try {
+            const raw = localStorage.getItem(key);
+            if (!raw) continue;
+            draft = JSON.parse(raw);
+            break;
+          } catch (error) {
+            draft = null;
+          }
+        }
+        if (!draft) return;
+        const nextDraft = Object.assign({}, draft, {
+          savedAt: draft.savedAt || nowTime()
+        });
+        try {
+          localStorage.setItem(draftStorageKey(newName), JSON.stringify(nextDraft));
+          localStorage.setItem(legacyDraftStorageKey(newName), JSON.stringify(nextDraft));
+        } catch (error) {
+          // Draft migration is best-effort; the old draft is still preserved below.
+        }
+        keys.forEach((key) => localStorage.removeItem(key));
+      }
+
+      function renameEmployeeAcrossState(employee, nextName) {
+        const oldName = String(employee && employee.name || '').trim();
+        const newName = String(nextName || '').trim();
+        if (!employee || !oldName || !newName || oldName === newName) {
+          return false;
+        }
+
+        const generatedOldEmail = generateWorkEmail(oldName);
+        const generatedNewEmail = generateWorkEmail(newName);
+
+        state.employees = state.employees.map((item) => {
+          const next = Object.assign({}, item);
+          if (item.id === employee.id) {
+            next.name = newName;
+            if (!next.email || next.email === generatedOldEmail) {
+              next.email = generatedNewEmail;
+            }
+          }
+          if (String(next.teamLead || '').trim() === oldName) {
+            next.teamLead = newName;
+          }
+          if (String(next.reportingManager || '').trim() === oldName) {
+            next.reportingManager = newName;
+          }
+          return next;
+        });
+
+        state.settings.departments = departmentRecords().map((entry) => {
+          const next = Object.assign({}, entry);
+          if (String(next.head || '').trim() === oldName) {
+            next.head = newName;
+          }
+          return next;
+        });
+
+        state.settings.teams = teamRecords().map((entry) => {
+          const next = Object.assign({}, entry);
+          if (String(next.lead || '').trim() === oldName) {
+            next.lead = newName;
+          }
+          return next;
+        });
+
+        const replaceEmployeeName = (record, fieldName) => {
+          if (String(record && record[fieldName] || '').trim() === oldName) {
+            record[fieldName] = newName;
+          }
+        };
+
+        state.reports.forEach((report) => {
+          replaceEmployeeName(report, 'employee');
+        });
+        state.leaveRequests.forEach((request) => {
+          replaceEmployeeName(request, 'employeeName');
+        });
+        state.announcements.forEach((announcement) => {
+          replaceEmployeeName(announcement, 'author');
+        });
+        state.auditLog.forEach((entry) => {
+          replaceEmployeeName(entry, 'employeeName');
+        });
+        state.disciplinaryActions.forEach((action) => {
+          replaceEmployeeName(action, 'employeeName');
+          replaceEmployeeName(action, 'employeeSignature');
+        });
+        state.documentCenter.forEach((record) => {
+          replaceEmployeeName(record, 'employeeName');
+        });
+        state.selfServiceRequests.forEach((request) => {
+          replaceEmployeeName(request, 'employeeName');
+        });
+        state.timelineEvents.forEach((event) => {
+          replaceEmployeeName(event, 'employeeName');
+        });
+        state.notifications.forEach((notification) => {
+          replaceEmployeeName(notification, 'employeeName');
+          if (notification.meta && notification.meta.includes(oldName)) {
+            notification.meta = notification.meta.split(oldName).join(newName);
+          }
+          if (notification.title && notification.title.includes(oldName)) {
+            notification.title = notification.title.split(oldName).join(newName);
+          }
+        });
+        state.attendanceRecords.forEach((record) => {
+          replaceEmployeeName(record, 'employeeName');
+        });
+        state.payrollRuns.forEach((run) => {
+          replaceEmployeeName(run, 'employeeName');
+        });
+        state.loans.forEach((loan) => {
+          replaceEmployeeName(loan, 'employeeName');
+        });
+        state.finalSettlements.forEach((settlement) => {
+          replaceEmployeeName(settlement, 'employeeName');
+        });
+
+        if (state.passwords[oldName] || state.passwords[newName]) {
+          state.passwords[newName] = state.passwords[oldName] || state.passwords[newName] || DEFAULT_PASSWORDS[newName] || 'help360';
+          delete state.passwords[oldName];
+        }
+
+        if (state.currentUser === oldName) {
+          state.currentUser = newName;
+        }
+        if (state.authSession && state.authSession.fullName === oldName) {
+          state.authSession.fullName = newName;
+          persistAuthSession(state.authSession);
+        }
+        migrateEmployeeDraftStorage(oldName, newName);
+        return true;
+      }
+
+      async function syncScopesNow(scopes, options) {
+        const config = Object.assign({ refresh: false }, options || {});
+        const uniqueScopes = [...new Set((Array.isArray(scopes) ? scopes : [scopes]).filter(Boolean))];
+        const results = [];
+        for (const scope of uniqueScopes) {
+          results.push(await syncSharedScopeToSheet(scope));
+        }
+        const ok = results.every((result) => result && result.ok);
+        if (ok && config.refresh) {
+          await refreshSharedStateFromSheet({ silent: true, seedIfMissing: false });
+        }
+        return { ok, results };
+      }
+
+      function resetJobComposer() {
+        state.currentEditingJobId = null;
+        ['jobPostTitle', 'jobPostDescription', 'jobPostClosesOn'].forEach((id) => {
+          const node = document.getElementById(id);
+          if (node) node.value = '';
+        });
+        setJobDescriptionEditor('');
+        const departmentNode = document.getElementById('jobPostDepartment');
+        const locationNode = document.getElementById('jobPostLocation');
+        const employmentTypeNode = document.getElementById('jobPostEmploymentType');
+        const openingsNode = document.getElementById('jobPostOpenings');
+        if (departmentNode) departmentNode.value = 'Operations';
+        if (locationNode) locationNode.value = 'Remote';
+        if (employmentTypeNode) employmentTypeNode.value = 'Full Time';
+        if (openingsNode) openingsNode.value = '1';
+        const jobStyleSelect = document.getElementById('jobPostStyleSelect');
+        if (jobStyleSelect) jobStyleSelect.value = '';
+        const jobFontSelect = document.getElementById('jobPostFontFamily');
+        if (jobFontSelect) jobFontSelect.value = 'Calibri, Arial, sans-serif';
+        const fontSizeSelect = document.getElementById('jobPostFontSize');
+        if (fontSizeSelect) fontSizeSelect.value = '12px';
+        const textColorPicker = document.getElementById('jobPostTextColorPicker');
+        if (textColorPicker) textColorPicker.value = '#000000';
+        const highlightColorPicker = document.getElementById('jobPostHighlightColorPicker');
+        if (highlightColorPicker) highlightColorPicker.value = '#ffff00';
+        renderJobComposerState();
+      }
+
+      function populateJobEditor(job) {
+        if (!job) return;
+        state.currentEditingJobId = job.id;
+        const titleNode = document.getElementById('jobPostTitle');
+        const departmentNode = document.getElementById('jobPostDepartment');
+        const locationNode = document.getElementById('jobPostLocation');
+        const employmentTypeNode = document.getElementById('jobPostEmploymentType');
+        const openingsNode = document.getElementById('jobPostOpenings');
+        const closesOnNode = document.getElementById('jobPostClosesOn');
+        if (titleNode) titleNode.value = job.title || '';
+        if (departmentNode) departmentNode.value = job.department || 'Operations';
+        if (locationNode) locationNode.value = job.location || 'Remote';
+        if (employmentTypeNode) employmentTypeNode.value = job.employmentType || 'Full Time';
+        if (openingsNode) openingsNode.value = String(job.openings || 1);
+        if (closesOnNode) closesOnNode.value = job.closesOn || '';
+        setJobDescriptionEditor(job.description || '');
+        const jobStyleSelect = document.getElementById('jobPostStyleSelect');
+        if (jobStyleSelect) jobStyleSelect.value = '';
+        const jobFontSelect = document.getElementById('jobPostFontFamily');
+        if (jobFontSelect) jobFontSelect.value = 'Calibri, Arial, sans-serif';
+        const fontSizeSelect = document.getElementById('jobPostFontSize');
+        if (fontSizeSelect) fontSizeSelect.value = '12px';
+        const textColorPicker = document.getElementById('jobPostTextColorPicker');
+        if (textColorPicker) textColorPicker.value = '#000000';
+        const highlightColorPicker = document.getElementById('jobPostHighlightColorPicker');
+        if (highlightColorPicker) highlightColorPicker.value = '#ffff00';
+        renderJobComposerState();
       }
 
       function approvalFlowFor(scope) {
@@ -9793,10 +9915,8 @@ function doGet() {
         next.deviceName = String(next.deviceName || DEFAULT_ATTENDANCE_CONFIG.deviceName).trim();
         next.deviceEndpoint = String(next.deviceEndpoint || '').trim();
         next.deviceMode = String(next.deviceMode || DEFAULT_ATTENDANCE_CONFIG.deviceMode).trim();
-        next.bridgeUrl = String(next.bridgeUrl || '').trim().replace(/\/+$/, '');
-        next.bridgeApiKey = String(next.bridgeApiKey || '').trim();
         next.timezone = String(next.timezone || DEFAULT_ATTENDANCE_CONFIG.timezone).trim() || DEFAULT_ATTENDANCE_CONFIG.timezone;
-        next.bridgeStatus = String(next.bridgeStatus || '').trim();
+        next.syncStatus = String(next.syncStatus || '').trim();
         next.lastSyncSummary = String(next.lastSyncSummary || '').trim();
         next.lastSyncAt = String(next.lastSyncAt || '').trim();
         next.graceMinutes = Math.max(asNumber(next.graceMinutes, DEFAULT_ATTENDANCE_CONFIG.graceMinutes), 0);
@@ -10470,13 +10590,19 @@ function doGet() {
 
       function getAssignedTasksForCurrentUser() {
         const employee = getEmployeeByName(state.currentUser);
-        return employee ? [...employee.responsibilities] : getTaskLabels();
+        return employee ? [...employee.responsibilities] : [];
       }
 
       function applyAssignedTaskState() {
         const assignedTasks = getAssignedTasksForCurrentUser();
         const taskSet = new Set(assignedTasks);
-        const showOnly = document.getElementById('assignedOnlyToggle') && document.getElementById('assignedOnlyToggle').checked;
+        const assignedOnlyToggle = document.getElementById('assignedOnlyToggle');
+        if (assignedOnlyToggle) {
+          assignedOnlyToggle.checked = true;
+          assignedOnlyToggle.disabled = true;
+          assignedOnlyToggle.style.display = 'none';
+        }
+        const showOnly = true;
         document.querySelectorAll('#employeeScreen .task-row').forEach((row) => {
           const isAssigned = taskSet.has(row.dataset.task);
           row.classList.toggle('assigned-task', isAssigned);
@@ -12223,7 +12349,7 @@ function doGet() {
               <div class="custom-responsibility-name">${escapeHtml(holiday.name)}</div>
               <div class="leave-balance-meta">${escapeHtml(formatShortDate(holiday.date))}</div>
             </div>
-            <button class="btn-ghost" type="button" onclick="removeHoliday('${holiday.id}')"><i class="fas fa-trash-alt"></i> Remove</button>
+            <button class="btn-ghost" type="button" onclick="removeHoliday('${holiday.id}', this)"><i class="fas fa-trash-alt"></i> Remove</button>
           </div>
         `).join('');
       }
@@ -12730,8 +12856,9 @@ function doGet() {
                   </div>
                   <div class="attachment-item-actions">
                     <span class="metric-chip ${job.status === 'Open' ? 'success' : 'alert'}">${escapeHtml(job.status)}</span>
-                    <button class="btn-ghost" type="button" onclick="toggleJobPostStatus('${job.id}')"><i class="fas fa-toggle-on"></i> ${job.status === 'Open' ? 'Close' : 'Reopen'}</button>
-                    <button class="btn-ghost btn-danger-soft" type="button" onclick="deleteJobPost('${job.id}')"><i class="fas fa-trash-alt"></i> Delete</button>
+                    <button class="btn-ghost btn-mini" type="button" onclick="openJobEditor('${job.id}', this)"><i class="fas fa-pen"></i> Edit</button>
+                    <button class="btn-ghost" type="button" onclick="toggleJobPostStatus('${job.id}', this)"><i class="fas fa-toggle-on"></i> ${job.status === 'Open' ? 'Close' : 'Reopen'}</button>
+                    <button class="btn-ghost btn-danger-soft" type="button" onclick="deleteJobPost('${job.id}', this)"><i class="fas fa-trash-alt"></i> Delete</button>
                   </div>
                 </div>
               `).join('');
@@ -12813,6 +12940,7 @@ function doGet() {
             </div>
           </div>
         `).join('');
+        renderJobComposerState();
       }
 
       function renderAttendancePanel() {
@@ -12826,8 +12954,6 @@ function doGet() {
           attendanceDeviceName: state.attendanceConfig.deviceName || '',
           attendanceDeviceEndpoint: state.attendanceConfig.deviceEndpoint || '',
           attendanceDeviceMode: state.attendanceConfig.deviceMode || '',
-          attendanceBridgeUrl: state.attendanceConfig.bridgeUrl || '',
-          attendanceBridgeApiKey: state.attendanceConfig.bridgeApiKey || '',
           attendanceTimezone: state.attendanceConfig.timezone || DEFAULT_ATTENDANCE_CONFIG.timezone,
           attendanceGraceMinutes: String(state.attendanceConfig.graceMinutes || 0),
           attendanceEarlyExitGrace: String(state.attendanceConfig.earlyExitGraceMinutes || 0),
@@ -12843,22 +12969,12 @@ function doGet() {
         if (syncNote) {
           const noteParts = [];
           if (state.attendanceConfig.lastSyncAt) {
-            noteParts.push(`Last ZKTeco sync: ${formatTimestamp(state.attendanceConfig.lastSyncAt)}`);
-          }
-          if (state.attendanceConfig.bridgeStatus) {
-            noteParts.push(`Bridge status: ${state.attendanceConfig.bridgeStatus}`);
+            noteParts.push(`Last Google Sheets sync: ${formatTimestamp(state.attendanceConfig.lastSyncAt)}`);
           }
           if (state.attendanceConfig.lastSyncSummary) {
             noteParts.push(state.attendanceConfig.lastSyncSummary);
           }
-          syncNote.textContent = noteParts.length ? noteParts.join(' | ') : 'Device sync has not been run yet.';
-        }
-        const bridgeHint = document.getElementById('attendanceBridgeHint');
-        if (bridgeHint) {
-          const bridgeUrl = attendanceBridgeBaseUrl();
-          bridgeHint.innerHTML = bridgeUrl
-            ? `Device PUSH URL: <strong>${escapeHtml(`${bridgeUrl}/iclock/cdata`)}</strong><br>Manual sync API: <strong>${escapeHtml(`${bridgeUrl}/api/zkteco/sync`)}</strong>`
-            : 'Deploy the Node bridge first, then point the device PUSH / ADMS host to that bridge.';
+          syncNote.textContent = noteParts.length ? noteParts.join(' | ') : 'Google Sheets attendance sync has not been run yet.';
         }
 
         const todayRecords = state.attendanceRecords.filter((record) => record.date === todayKey());
@@ -13410,15 +13526,8 @@ function doGet() {
           : 'email not opened';
         const sheetText = report.sheetSynced
           ? 'sheet synced'
-          : state.settings && state.settings.sheetURL
-            ? 'sheet pending'
-            : 'sheet off';
-        const cloudText = report.databaseSynced
-          ? 'cloud synced'
-          : cloudSyncConfigured()
-            ? 'cloud pending'
-            : 'cloud off';
-        return `${attachmentText} - ${emailText} - ${sheetText} - ${cloudText}`;
+          : 'sheet pending';
+        return `${attachmentText} - ${emailText} - ${sheetText}`;
       }
 
       function setSendButtonState(isBusy) {
@@ -13431,6 +13540,34 @@ function doGet() {
         } else {
           sendButton.innerHTML = sendButton.dataset.originalLabel || '<i class="fas fa-paper-plane"></i> Submit and Email HR';
           sendButton.disabled = false;
+        }
+      }
+
+      function setButtonLoadingState(button, isBusy, label) {
+        if (!button) return;
+        if (isBusy) {
+          if (!button.dataset.originalHtml) {
+            button.dataset.originalHtml = button.innerHTML;
+          }
+          button.disabled = true;
+          button.classList.add('is-loading');
+          button.innerHTML = `<span class="spinner spinner-inline"></span>${label || 'Saving...'}`;
+          return;
+        }
+        button.disabled = false;
+        button.classList.remove('is-loading');
+        if (button.dataset.originalHtml) {
+          button.innerHTML = button.dataset.originalHtml;
+          delete button.dataset.originalHtml;
+        }
+      }
+
+      async function runButtonAction(button, label, action) {
+        setButtonLoadingState(button, true, label);
+        try {
+          return await action();
+        } finally {
+          setButtonLoadingState(button, false);
         }
       }
 
@@ -13480,17 +13617,12 @@ function doGet() {
       function renderSettingsPage() {
         document.getElementById('settingManagerEmail').value = state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail;
         document.getElementById('settingCCEmail').value = state.settings.ccEmail || '';
-        document.getElementById('settingSheetURL').value = state.settings.sheetURL || DEFAULT_SHEET_WEB_APP_URL;
+        document.getElementById('settingSheetURL').value = APPS_SCRIPT_URL;
+        document.getElementById('settingSheetURL').readOnly = true;
         document.getElementById('settingSheetID').value = state.settings.sheetID || '';
         updateCloudStatusNote();
         updateSheetStatusNote();
-        const supabaseUrlNode = document.getElementById('settingSupabaseUrl');
-        const supabaseKeyNode = document.getElementById('settingSupabaseAnonKey');
-        const supabaseTableNode = document.getElementById('settingSupabaseReportsTable');
         const cloudRefreshNode = document.getElementById('settingCloudRefreshSeconds');
-        if (supabaseUrlNode) supabaseUrlNode.value = state.settings.supabaseUrl || '';
-        if (supabaseKeyNode) supabaseKeyNode.value = state.settings.supabaseAnonKey || '';
-        if (supabaseTableNode) supabaseTableNode.value = supabaseReportsTable();
         if (cloudRefreshNode) cloudRefreshNode.value = String(cloudRefreshSeconds());
         const leaveAllowanceNode = document.getElementById('settingLeaveAllowance');
         const carryForwardNode = document.getElementById('settingCarryForwardLimit');
@@ -13541,321 +13673,6 @@ function doGet() {
         renderHolidayList();
         renderAnnouncementAdminList();
 
-        const templateNode = document.querySelector('#panel-settings .settings-card pre');
-        if (templateNode) {
-          templateNode.textContent = `function doPost(e) {
-  try {
-    var input = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    var spreadsheet = openTargetSpreadsheet_(input.sheetId);
-    if (!spreadsheet) {
-      throw new Error('Add a Spreadsheet ID or bind this script to a Google Sheet.');
-    }
-
-    if (input.action === 'upsert_report') {
-      upsertReport_(spreadsheet, input);
-      return jsonResponse_({
-        ok: true,
-        action: 'upsert_report',
-        reportId: String(input.reportId || '')
-      });
-    }
-
-    if (input.action === 'upsert_scope') {
-      upsertSharedScope_(spreadsheet, input);
-      return jsonResponse_({
-        ok: true,
-        action: 'upsert_scope',
-        scope: String(input.scope || '')
-      });
-    }
-
-    throw new Error('Unsupported action.');
-  } catch (error) {
-    return jsonResponse_({
-      ok: false,
-      error: String(error && error.message ? error.message : error)
-    });
-  }
-}
-
-function doGet() {
-  return jsonResponse_({
-    ok: true,
-    service: 'help360-google-sheets',
-    time: new Date().toISOString()
-  });
-}
-
-function openTargetSpreadsheet_(sheetId) {
-  if (sheetId) {
-    return SpreadsheetApp.openById(String(sheetId).trim());
-  }
-  return SpreadsheetApp.getActiveSpreadsheet();
-}
-
-function jsonResponse_(payload) {
-  return ContentService
-    .createTextOutput(JSON.stringify(payload))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function ensureSheet_(spreadsheet, name, headers) {
-  var sheet = spreadsheet.getSheetByName(name);
-  if (!sheet) {
-    sheet = spreadsheet.insertSheet(name);
-  }
-  if (headers && headers.length && sheet.getLastRow() === 0) {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sheet.setFrozenRows(1);
-  }
-  return sheet;
-}
-
-function findRowByFirstColumn_(sheet, value) {
-  var lastRow = sheet.getLastRow();
-  if (lastRow < 2) return -1;
-  var values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-  for (var i = 0; i < values.length; i += 1) {
-    if (String(values[i][0]) === String(value)) {
-      return i + 2;
-    }
-  }
-  return -1;
-}
-
-function upsertRow_(sheet, keyValue, rowValues) {
-  var existingRow = findRowByFirstColumn_(sheet, keyValue);
-  if (existingRow > 0) {
-    sheet.getRange(existingRow, 1, 1, rowValues.length).setValues([rowValues]);
-    return existingRow;
-  }
-  sheet.appendRow(rowValues);
-  return sheet.getLastRow();
-}
-
-function upsertReport_(spreadsheet, input) {
-  var headers = [
-    'report_id',
-    'employee',
-    'employee_email',
-    'employee_title',
-    'department',
-    'report_date',
-    'report_time',
-    'total_tasks',
-    'total_count',
-    'status',
-    'notes',
-    'email_method',
-    'sheet_synced',
-    'attachment_count',
-    'attachment_names',
-    'task_details_json',
-    'assigned_responsibilities_json',
-    'submitted_at',
-    'updated_at',
-    'payload_json'
-  ];
-  var sheet = ensureSheet_(spreadsheet, 'activity_reports', headers);
-  var attachmentNames = Array.isArray(input.attachmentNames) ? input.attachmentNames.join('; ') : String(input.attachmentNames || '');
-  var payload = {
-    reportId: String(input.reportId || ''),
-    employee: String(input.employee || ''),
-    employeeEmail: String(input.employeeEmail || ''),
-    employeeTitle: String(input.employeeTitle || ''),
-    department: String(input.department || ''),
-    date: String(input.date || ''),
-    time: String(input.time || ''),
-    totalTasks: Number(input.totalTasks || 0),
-    totalCount: Number(input.totalCount || 0),
-    status: String(input.status || 'sent'),
-    notes: String(input.notes || ''),
-    emailMethod: String(input.emailMethod || ''),
-    sheetSynced: Boolean(input.sheetSynced),
-    attachmentCount: Number(input.attachmentCount || 0),
-    attachmentNames: Array.isArray(input.attachmentNames) ? input.attachmentNames : [],
-    taskDetails: input.taskDetails || {},
-    assignedResponsibilities: input.assignedResponsibilities || [],
-    submittedAt: String(input.submittedAt || new Date().toISOString())
-  };
-  upsertRow_(sheet, payload.reportId, [
-    payload.reportId,
-    payload.employee,
-    payload.employeeEmail,
-    payload.employeeTitle,
-    payload.department,
-    payload.date,
-    payload.time,
-    payload.totalTasks,
-    payload.totalCount,
-    payload.status,
-    payload.notes,
-    payload.emailMethod,
-    String(payload.sheetSynced),
-    payload.attachmentCount,
-    attachmentNames,
-    JSON.stringify(payload.taskDetails),
-    JSON.stringify(payload.assignedResponsibilities),
-    payload.submittedAt,
-    new Date().toISOString(),
-    JSON.stringify(payload)
-  ]);
-}
-
-function upsertSharedScope_(spreadsheet, input) {
-  var headers = [
-    'scope',
-    'record_count',
-    'updated_at',
-    'payload_json'
-  ];
-  var sheet = ensureSheet_(spreadsheet, 'help360_shared_state', headers);
-  var scope = String(input.scope || '').trim();
-  var payload = input.payload || {};
-  upsertRow_(sheet, scope, [
-    scope,
-    Number(input.recordCount || 0),
-    String(input.updatedAt || new Date().toISOString()),
-    JSON.stringify(payload)
-  ]);
-}`;
-        }
-
-        const supabaseSqlNode = document.getElementById('supabaseSqlTemplate');
-        if (supabaseSqlNode) {
-          const tableName = supabaseReportsTable();
-          const sharedTableName = sharedStateTable();
-          supabaseSqlNode.textContent = `create table if not exists public.${tableName} (
-  id bigint generated by default as identity primary key,
-  report_id text not null unique,
-  employee text not null,
-  employee_email text,
-  employee_title text,
-  department text,
-  report_date date not null,
-  report_time text,
-  total_tasks integer not null default 0,
-  total_count integer not null default 0,
-  status text not null default 'sent',
-  notes text,
-  email_method text,
-  cc_email text,
-  sheet_synced boolean not null default false,
-  attachment_count integer not null default 0,
-  attachment_names jsonb not null default '[]'::jsonb,
-  task_details jsonb not null default '{}'::jsonb,
-  assigned_responsibilities jsonb not null default '[]'::jsonb,
-  submitted_at timestamptz not null default now()
-);
-
-alter table public.${tableName} enable row level security;
-
-grant usage on schema public to anon;
-grant select, insert on public.${tableName} to anon;
-grant usage, select on sequence public.${tableName}_id_seq to anon;
-
-drop policy if exists "anon can read ${tableName}" on public.${tableName};
-create policy "anon can read ${tableName}"
-on public.${tableName}
-for select
-to anon
-using (true);
-
-drop policy if exists "anon can insert ${tableName}" on public.${tableName};
-create policy "anon can insert ${tableName}"
-on public.${tableName}
-for insert
-to anon
-with check (true);
-
-create table if not exists public.${sharedTableName} (
-  scope text primary key,
-  payload jsonb not null default '{}'::jsonb,
-  updated_at timestamptz not null default now()
-);
-
-alter table public.${sharedTableName} enable row level security;
-
-grant select, insert, update on public.${sharedTableName} to anon;
-
-drop policy if exists "anon can read ${sharedTableName}" on public.${sharedTableName};
-create policy "anon can read ${sharedTableName}"
-on public.${sharedTableName}
-for select
-to anon
-using (true);
-
-drop policy if exists "anon can insert ${sharedTableName}" on public.${sharedTableName};
-create policy "anon can insert ${sharedTableName}"
-on public.${sharedTableName}
-for insert
-to anon
-with check (true);
-
-drop policy if exists "anon can update ${sharedTableName}" on public.${sharedTableName};
-create policy "anon can update ${sharedTableName}"
-on public.${sharedTableName}
-for update
-to anon
-using (true)
-with check (true);
-
-create table if not exists public.zkteco_devices (
-  device_sn text primary key,
-  device_name text,
-  last_ip text,
-  push_mode text,
-  last_seen_at timestamptz,
-  last_path text,
-  last_table text,
-  last_payload jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table if not exists public.zkteco_attendance_logs (
-  id bigint generated by default as identity primary key,
-  event_hash text not null unique,
-  device_sn text not null,
-  employee_code text not null,
-  verify_type text,
-  io_mode text,
-  work_code text,
-  log_date date not null,
-  log_time_text text not null,
-  raw_line text not null,
-  raw_payload jsonb not null default '{}'::jsonb,
-  source text not null default 'push',
-  recorded_at timestamptz not null default now()
-);
-
-create index if not exists idx_zkteco_logs_employee_date
-on public.zkteco_attendance_logs(employee_code, log_date);
-
-create index if not exists idx_zkteco_logs_device_date
-on public.zkteco_attendance_logs(device_sn, log_date);
-
-create table if not exists public.zkteco_sync_runs (
-  id bigint generated by default as identity primary key,
-  device_sn text,
-  sync_source text not null default 'bridge',
-  sync_status text not null default 'ok',
-  imported_logs integer not null default 0,
-  rebuilt_records integer not null default 0,
-  message text,
-  request_meta jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now()
-);
-
-alter table public.zkteco_devices enable row level security;
-alter table public.zkteco_attendance_logs enable row level security;
-alter table public.zkteco_sync_runs enable row level security;
-
-revoke all on public.zkteco_devices from anon, authenticated;
-revoke all on public.zkteco_attendance_logs from anon, authenticated;
-revoke all on public.zkteco_sync_runs from anon, authenticated;`;
-        }
-
         updateCloudStatusNote();
         refreshAdminLoginHints();
       }
@@ -13872,15 +13689,35 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           const pendingLeaves = state.leaveRequests.filter((request) => request.employeeName === employee.name && request.status === 'pending').length;
           const leaveBalance = getEmployeeLeaveBalance(employee.name);
           const reporteeCount = reporteesForLead(employee.name, employee.id).length;
+          const isRenaming = state.currentRenamingEmployeeId === employee.id;
           return `
             <div style="background:white;border-radius:var(--radius);border:1px solid var(--gray-200);padding:20px;box-shadow:var(--shadow-sm)">
               <div style="display:flex;align-items:center;gap:12px">
                 ${avatarMarkup(employee, 'emp-mini-avatar', 'width:44px;height:44px;font-size:16px')}
-                <div style="min-width:0">
-                  <div style="font-size:14px;font-weight:700;color:var(--dark)">${escapeHtml(employee.name)}</div>
-                  <div class="employee-card-subtext">${escapeHtml(employee.title)} | ${escapeHtml(employee.department || 'Operations')}</div>
-                  <div class="employee-card-subtext">${escapeHtml(employee.email)}</div>
-                  <div class="employee-card-subtext">${isEmployeeTeamLead(employee) ? `${reporteeCount} direct report(s)` : `Reports to ${escapeHtml(employee.teamLead || DEFAULT_MANAGER.name)}`}</div>
+                <div style="min-width:0;flex:1">
+                  ${
+                    isRenaming
+                      ? `
+                        <div class="employee-inline-editor">
+                          <input type="text" class="employee-name-inline-input" id="employeeRenameInput_${employee.id}" value="${escapeHtml(employee.name)}" />
+                          <div class="employee-inline-actions">
+                            <button class="btn-ghost btn-mini" type="button" onclick="saveEmployeeRename('${employee.id}', this)"><i class="fas fa-check"></i> Save</button>
+                            <button class="btn-ghost btn-mini" type="button" onclick="cancelEmployeeRename()"><i class="fas fa-times"></i> Cancel</button>
+                          </div>
+                        </div>
+                        <div class="employee-card-subtext">${escapeHtml(employee.title)} | ${escapeHtml(employee.department || 'Operations')}</div>
+                        <div class="employee-card-subtext">${escapeHtml(employee.email)}</div>
+                      `
+                      : `
+                        <div class="employee-inline-name">
+                          <div style="font-size:14px;font-weight:700;color:var(--dark)">${escapeHtml(employee.name)}</div>
+                          <button class="btn-ghost btn-mini" type="button" onclick="startEmployeeRename('${employee.id}')"><i class="fas fa-pen"></i> Rename</button>
+                        </div>
+                        <div class="employee-card-subtext">${escapeHtml(employee.title)} | ${escapeHtml(employee.department || 'Operations')}</div>
+                        <div class="employee-card-subtext">${escapeHtml(employee.email)}</div>
+                        <div class="employee-card-subtext">${isEmployeeTeamLead(employee) ? `${reporteeCount} direct report(s)` : `Reports to ${escapeHtml(employee.teamLead || DEFAULT_MANAGER.name)}`}</div>
+                      `
+                  }
                 </div>
               </div>
               <div class="employee-header-meta">
@@ -14244,7 +14081,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             </div>
             <div class="report-meta-card">
               <div class="report-meta-label">Delivery</div>
-              <div><strong>${report.sheetSynced ? 'Google Sheets synced' : report.databaseSynced ? 'Legacy sync' : 'Saved locally'}</strong></div>
+              <div><strong>${report.sheetSynced || report.databaseSynced ? 'Google Sheets synced' : 'Saved locally'}</strong></div>
               <div class="table-secondary">${escapeHtml(reportDeliverySummary(report))}</div>
             </div>
           </div>
@@ -14940,14 +14777,15 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           }
         };
 
-        window.saveApprovalEngine = () => {
+        window.saveApprovalEngine = (button) => runButtonAction(button, 'Saving...', async () => {
           state.settings.approvalFlows = {
             leave: normalizeApprovalFlowList(document.getElementById('settingApprovalLeave').value || '', DEFAULT_SETTINGS.approvalFlows.leave),
             payroll: normalizeApprovalFlowList(document.getElementById('settingApprovalPayroll').value || '', DEFAULT_SETTINGS.approvalFlows.payroll),
             recruitment: normalizeApprovalFlowList(document.getElementById('settingApprovalRecruitment').value || '', DEFAULT_SETTINGS.approvalFlows.recruitment),
             compliance: normalizeApprovalFlowList(document.getElementById('settingApprovalCompliance').value || '', DEFAULT_SETTINGS.approvalFlows.compliance)
           };
-          persistSettings();
+          persistSettings({ skipCloud: true });
+          await syncSharedScopeToSheet('settings');
           renderSettingsPage();
           renderEmployeePolicySummary();
           renderRecruitmentPanel();
@@ -14959,7 +14797,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             details: `Leave ${approvalFlowText('leave')} | Payroll ${approvalFlowText('payroll')}`
           });
           showToast('Approval flows saved.', 'success');
-        };
+        });
 
         window.adjustCount = (button, delta) => {
           const input = button.closest('.task-input-group').querySelector('.count-input');
@@ -15388,7 +15226,6 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           const emailResult = openEmailDraft(report, false);
           report.emailMethod = emailResult.method;
           report.sheetSynced = await syncReportToSheet(report);
-          const databaseResult = await syncReportToDatabase(report);
           persistReports();
           setSendButtonState(false);
           if (report.sheetSynced) {
@@ -15403,14 +15240,11 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           const managerEmail = (state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail).trim();
           const messageParts = [`Email draft opened for HR at ${managerEmail}.`];
           if (state.settings.sheetURL) {
-            messageParts.push(report.sheetSynced ? 'Google Sheet synced.' : 'Google Sheet sync pending.');
-          }
-          if (cloudSyncConfigured()) {
-            messageParts.push(report.databaseSynced ? 'Cloud database synced.' : 'Cloud database sync pending.');
+            messageParts.push(report.sheetSynced ? 'Google Sheets synced.' : 'Google Sheets sync pending.');
           }
           showToast(
             `Report saved. ${messageParts.join(' ')}`,
-            report.sheetSynced || report.databaseSynced ? 'success' : 'info'
+            report.sheetSynced ? 'success' : 'info'
           );
         };
 
@@ -15530,32 +15364,30 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           showToast('CSV exported!', 'success');
         };
 
-        window.saveSettings = () => {
-        state.settings.managerEmail = document.getElementById('settingManagerEmail').value.trim() || DEFAULT_SETTINGS.managerEmail;
-        state.settings.ccEmail = document.getElementById('settingCCEmail').value.trim();
-        state.settings.sheetURL = document.getElementById('settingSheetURL').value.trim() || DEFAULT_SHEET_WEB_APP_URL;
-        state.settings.sheetID = document.getElementById('settingSheetID').value.trim();
-          state.settings.supabaseUrl = document.getElementById('settingSupabaseUrl').value.trim();
-          state.settings.supabaseAnonKey = document.getElementById('settingSupabaseAnonKey').value.trim();
-          state.settings.supabaseReportsTable = sanitizeTableName(document.getElementById('settingSupabaseReportsTable').value.trim()) || DEFAULT_SETTINGS.supabaseReportsTable;
+        window.saveSettings = (button) => runButtonAction(button, 'Saving...', async () => {
+          state.settings.managerEmail = document.getElementById('settingManagerEmail').value.trim() || DEFAULT_SETTINGS.managerEmail;
+          state.settings.ccEmail = document.getElementById('settingCCEmail').value.trim();
+          state.settings.sheetURL = APPS_SCRIPT_URL;
+          state.settings.sheetID = document.getElementById('settingSheetID').value.trim();
           state.settings.cloudRefreshSeconds = Math.max(asNumber(document.getElementById('settingCloudRefreshSeconds').value, cloudRefreshSeconds()), 15);
-          persistSettings();
+          persistSettings({ skipCloud: true });
+          await syncSharedScopeToSheet('settings');
           setupCloudReportSync();
           setupSharedCloudSync();
           syncPendingReportsToCloud({ silent: true });
           renderSettingsPage();
           logAudit('General settings updated', {
             scope: 'settings',
-            details: `Email ${state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail} | Sheets ${sheetSyncConfigured() ? 'on' : 'off'} | Documents in Google Drive`
+            details: `Email ${state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail} | Apps Script ${sheetSyncConfigured() ? 'on' : 'off'} | Documents in Google Drive`
           });
           showToast('Settings saved!', 'success');
-        };
+        });
 
         window.refreshCloudReports = async () => {
           await refreshAllCloudData();
         };
 
-        window.saveManagerAccess = async () => {
+        window.saveManagerAccess = (button) => runButtonAction(button, 'Saving...', async () => {
           const nameNode = document.getElementById('settingManagerName');
           const userNode = document.getElementById('settingAdminUser');
           const currentNode = document.getElementById('settingCurrentAdminPassword');
@@ -15588,8 +15420,11 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           state.manager.name = name;
           state.manager.user = user;
           if (newPassword) state.manager.pass = newPassword;
-          persistManager();
-          await syncAuthStaffDirectory({ silent: true }).catch(() => {});
+          persistManager({ skipCloud: true });
+          await Promise.all([
+            syncSharedScopeToSheet('manager_account'),
+            syncAuthStaffDirectory({ silent: true })
+          ]);
           refreshManagerChrome();
           renderSettingsPage();
           logAudit('HR access updated', {
@@ -15597,9 +15432,9 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             details: `HR username changed to ${user}`
           });
           showToast('HR access updated!', 'success');
-        };
+        });
 
-        window.saveManagerApproverAccess = async () => {
+        window.saveManagerApproverAccess = (button) => runButtonAction(button, 'Saving...', async () => {
           const nameNode = document.getElementById('settingApproverName');
           const userNode = document.getElementById('settingApproverUser');
           const currentNode = document.getElementById('settingCurrentApproverPassword');
@@ -15632,8 +15467,11 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           state.managerApprover.name = name;
           state.managerApprover.user = user;
           if (newPassword) state.managerApprover.pass = newPassword;
-          persistManagerApprover();
-          await syncAuthStaffDirectory({ silent: true }).catch(() => {});
+          persistManagerApprover({ skipCloud: true });
+          await Promise.all([
+            syncSharedScopeToSheet('manager_approver'),
+            syncAuthStaffDirectory({ silent: true })
+          ]);
           refreshManagerChrome();
           renderSettingsPage();
           logAudit('Manager access updated', {
@@ -15641,32 +15479,36 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             details: `Manager username changed to ${user}`
           });
           showToast('Manager access updated!', 'success');
-        };
+        });
 
-        window.savePasswords = async () => {
+        window.savePasswords = (button) => runButtonAction(button, 'Saving...', async () => {
           state.employees.forEach((employee) => {
             const input = document.getElementById(`pw_${employee.id}`);
             if (input && input.value.trim()) {
               state.passwords[employee.name] = input.value.trim();
             }
           });
-          persistPasswords();
-          await syncAuthStaffDirectory({ silent: true }).catch(() => {});
+          persistPasswords({ skipCloud: true });
+          await Promise.all([
+            syncSharedScopeToSheet('passwords'),
+            syncAuthStaffDirectory({ silent: true })
+          ]);
           logAudit('Employee passwords updated', {
             scope: 'settings',
             details: 'One or more employee passwords were changed.'
           });
           showToast('Employee passwords updated!', 'success');
-        };
+        });
 
-        window.saveLeavePolicies = () => {
+        window.saveLeavePolicies = (button) => runButtonAction(button, 'Saving...', async () => {
           state.settings.leaveAllowance = Math.max(asNumber(document.getElementById('settingLeaveAllowance').value, annualLeaveAllowance()), 0);
           state.settings.carryForwardLimit = Math.max(asNumber(document.getElementById('settingCarryForwardLimit').value, carryForwardLimit()), 0);
           state.settings.leaveReasonCategories = String(document.getElementById('settingLeaveCategories').value || '')
             .split(',')
             .map((value) => value.trim())
             .filter(Boolean);
-          persistSettings();
+          persistSettings({ skipCloud: true });
+          await syncSharedScopeToSheet('settings');
           renderSettingsPage();
           renderFilterOptions();
           renderEmployeePolicySummary();
@@ -15682,9 +15524,9 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             details: `Allowance ${state.settings.leaveAllowance}, carry forward ${state.settings.carryForwardLimit}, categories ${state.settings.leaveReasonCategories.join(', ')}`
           });
           showToast('Leave policies saved!', 'success');
-        };
+        });
 
-        window.addHoliday = () => {
+        window.addHoliday = (button) => runButtonAction(button, 'Saving...', async () => {
           const name = document.getElementById('holidayName').value.trim();
           const date = document.getElementById('holidayDate').value;
           if (!name || !date) {
@@ -15693,7 +15535,8 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           }
           state.settings.companyHolidays = companyHolidays().filter((holiday) => holiday.date !== date || holiday.name.toLowerCase() !== name.toLowerCase());
           state.settings.companyHolidays.push({ id: createId('holiday'), name, date });
-          persistSettings();
+          persistSettings({ skipCloud: true });
+          await syncSharedScopeToSheet('settings');
           renderHolidayList();
           renderEmployeeAnnouncementsAndHolidays();
           renderEmployeePolicySummary();
@@ -15711,11 +15554,12 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             details: `${name} on ${date}`
           });
           showToast('Company holiday added.', 'success');
-        };
+        });
 
-        window.removeHoliday = (holidayId) => {
+        window.removeHoliday = (holidayId, button) => runButtonAction(button, 'Saving...', async () => {
           state.settings.companyHolidays = companyHolidays().filter((holiday) => holiday.id !== holidayId);
-          persistSettings();
+          persistSettings({ skipCloud: true });
+          await syncSharedScopeToSheet('settings');
           renderHolidayList();
           renderEmployeeAnnouncementsAndHolidays();
           renderEmployeePolicySummary();
@@ -15731,7 +15575,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             details: `Holiday id ${holidayId} removed`
           });
           showToast('Company holiday removed.', 'info');
-        };
+        });
 
         window.publishAnnouncement = () => {
           const title = document.getElementById('announcementTitle').value.trim();
@@ -15982,7 +15826,22 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           showToast('Application submitted successfully.', 'success');
         };
 
-        window.publishJobPost = () => {
+        window.openJobEditor = (jobId) => {
+          const job = state.jobPosts.find((item) => item.id === jobId);
+          if (!job) return;
+          populateJobEditor(job);
+          const editor = document.getElementById('jobPostTitle');
+          if (editor && editor.scrollIntoView) {
+            editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        };
+
+        window.cancelJobPostEdit = () => {
+          resetJobComposer();
+          renderRecruitmentPanel();
+        };
+
+        window.publishJobPost = (button) => runButtonAction(button, state.currentEditingJobId ? 'Updating...' : 'Publishing...', async () => {
           const title = document.getElementById('jobPostTitle').value.trim();
           const department = document.getElementById('jobPostDepartment').value.trim() || 'Operations';
           const location = document.getElementById('jobPostLocation').value.trim() || 'Remote';
@@ -15994,8 +15853,9 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             showToast('Add a job title and description before publishing.', 'error');
             return;
           }
-          state.jobPosts.unshift(normalizeJobPost({
-            id: createId('job'),
+          const editingJob = state.currentEditingJobId ? state.jobPosts.find((item) => item.id === state.currentEditingJobId) : null;
+          const nextJob = normalizeJobPost(Object.assign({}, editingJob || {}, {
+            id: editingJob ? editingJob.id : createId('job'),
             title,
             department,
             location,
@@ -16003,44 +15863,33 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             openings: asNumber(openings, 1),
             description,
             closesOn,
-            status: 'Open',
-            createdAt: new Date().toISOString()
+            status: editingJob ? editingJob.status : 'Open',
+            createdAt: editingJob ? editingJob.createdAt : new Date().toISOString()
           }));
-          persistJobPosts();
+          if (editingJob) {
+            Object.assign(editingJob, nextJob);
+          } else {
+            state.jobPosts.unshift(nextJob);
+          }
+          persistJobPosts({ skipCloud: true });
+          await syncSharedScopeToSheet('job_posts');
           renderRecruitmentPanel();
           renderCareersPortal();
           renderAnalyticsPanel();
-          logAudit('Job post published', {
+          logAudit(editingJob ? 'Job post updated' : 'Job post published', {
             scope: 'recruitment',
             details: `${title} in ${department}`
           });
-          ['jobPostTitle', 'jobPostDescription', 'jobPostClosesOn'].forEach((id) => {
-            const node = document.getElementById(id);
-            if (node) node.value = '';
-          });
-          setJobDescriptionEditor('');
-          document.getElementById('jobPostDepartment').value = 'Operations';
-          document.getElementById('jobPostLocation').value = 'Remote';
-          document.getElementById('jobPostEmploymentType').value = 'Full Time';
-          document.getElementById('jobPostOpenings').value = '1';
-          const jobStyleSelect = document.getElementById('jobPostStyleSelect');
-          if (jobStyleSelect) jobStyleSelect.value = '';
-          const jobFontSelect = document.getElementById('jobPostFontFamily');
-          if (jobFontSelect) jobFontSelect.value = 'Calibri, Arial, sans-serif';
-          const fontSizeSelect = document.getElementById('jobPostFontSize');
-          if (fontSizeSelect) fontSizeSelect.value = '12px';
-          const textColorPicker = document.getElementById('jobPostTextColorPicker');
-          if (textColorPicker) textColorPicker.value = '#000000';
-          const highlightColorPicker = document.getElementById('jobPostHighlightColorPicker');
-          if (highlightColorPicker) highlightColorPicker.value = '#ffff00';
-          showToast('Job published to the careers page.', 'success');
-        };
+          resetJobComposer();
+          showToast(editingJob ? 'Job updated successfully.' : 'Job published to the careers page.', 'success');
+        });
 
-        window.toggleJobPostStatus = (jobId) => {
+        window.toggleJobPostStatus = (jobId, button) => runButtonAction(button, 'Updating...', async () => {
           const job = state.jobPosts.find((item) => item.id === jobId);
           if (!job) return;
           job.status = job.status === 'Open' ? 'Closed' : 'Open';
-          persistJobPosts();
+          persistJobPosts({ skipCloud: true });
+          await syncSharedScopeToSheet('job_posts');
           renderRecruitmentPanel();
           renderCareersPortal();
           renderAnalyticsPanel();
@@ -16048,9 +15897,9 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             scope: 'recruitment',
             details: `${job.title} is now ${job.status}`
           });
-        };
+        });
 
-        window.deleteJobPost = (jobId) => {
+        window.deleteJobPost = (jobId, button) => {
           const job = state.jobPosts.find((item) => item.id === jobId);
           if (!job) return;
           const linkedCandidates = state.candidates.filter((candidate) => candidate.jobId === jobId).length;
@@ -16058,16 +15907,22 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             ? `Delete ${job.title}? ${linkedCandidates} application(s) will stay in the ATS, but this job will be removed from the careers page.`
             : `Delete ${job.title} from the careers page?`;
           if (!confirm(confirmMessage)) return;
-          state.jobPosts = state.jobPosts.filter((item) => item.id !== jobId);
-          persistJobPosts();
-          renderRecruitmentPanel();
-          renderCareersPortal();
-          renderAnalyticsPanel();
-          logAudit('Job post deleted', {
-            scope: 'recruitment',
-            details: `${job.title} removed from active jobs`
+          return runButtonAction(button, 'Deleting...', async () => {
+            state.jobPosts = state.jobPosts.filter((item) => item.id !== jobId);
+            if (state.currentEditingJobId === jobId) {
+              resetJobComposer();
+            }
+            persistJobPosts({ skipCloud: true });
+            await syncSharedScopeToSheet('job_posts');
+            renderRecruitmentPanel();
+            renderCareersPortal();
+            renderAnalyticsPanel();
+            logAudit('Job post deleted', {
+              scope: 'recruitment',
+              details: `${job.title} removed from active jobs`
+            });
+            showToast('Job deleted successfully.', 'success');
           });
-          showToast('Job deleted successfully.', 'success');
         };
 
         window.openCandidateEditor = (candidateId) => {
@@ -16331,13 +16186,11 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           });
         };
 
-        window.saveAttendanceConfig = () => {
+        window.saveAttendanceConfig = (button) => runButtonAction(button, 'Saving...', async () => {
           state.attendanceConfig = normalizeAttendanceConfig({
             deviceName: document.getElementById('attendanceDeviceName').value.trim(),
-            deviceEndpoint: document.getElementById('attendanceDeviceEndpoint').value.trim(),
-            deviceMode: document.getElementById('attendanceDeviceMode').value.trim(),
-            bridgeUrl: document.getElementById('attendanceBridgeUrl').value.trim(),
-            bridgeApiKey: document.getElementById('attendanceBridgeApiKey').value.trim(),
+            deviceEndpoint: state.attendanceConfig.deviceEndpoint || '',
+            deviceMode: state.attendanceConfig.deviceMode || 'Google Sheets Sync',
             timezone: document.getElementById('attendanceTimezone').value.trim(),
             graceMinutes: document.getElementById('attendanceGraceMinutes').value.trim(),
             earlyExitGraceMinutes: document.getElementById('attendanceEarlyExitGrace').value.trim(),
@@ -16346,17 +16199,18 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
             penaltyRule: document.getElementById('attendancePenaltyRule').value.trim(),
             shifts: shiftDefinitions().map((shift) => Object.assign({}, shift)),
             lastSyncAt: state.attendanceConfig.lastSyncAt || '',
-            bridgeStatus: state.attendanceConfig.bridgeStatus || '',
+            syncStatus: state.attendanceConfig.syncStatus || '',
             lastSyncSummary: state.attendanceConfig.lastSyncSummary || ''
           });
-          persistAttendanceConfig();
+          persistAttendanceConfig({ skipCloud: true });
+          await syncSharedScopeToSheet('attendance_config');
           renderAttendancePanel();
           logAudit('Attendance policy updated', {
             scope: 'attendance',
             details: `${state.attendanceConfig.deviceName} | Grace ${state.attendanceConfig.graceMinutes} min`
           });
           showToast('Attendance policy saved.', 'success');
-        };
+        });
 
         window.addShiftDefinition = () => {
           const name = document.getElementById('shiftDefinitionName').value.trim();
@@ -16391,62 +16245,30 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           renderAttendancePanel();
         };
 
-        window.runAttendanceSync = async () => {
-          const bridgeUrl = attendanceBridgeBaseUrl();
-          if (bridgeUrl) {
-            const bridgeResult = await requestAttendanceBridgeSync();
-            if (!bridgeResult.ok) {
-              showToast(bridgeResult.reason || 'Unable to run the ZKTeco bridge sync.', 'error');
-              return;
-            }
-            const payload = bridgeResult.data || {};
-            state.attendanceConfig.lastSyncAt = String(payload.syncedAt || new Date().toISOString());
-            state.attendanceConfig.bridgeStatus = 'Connected';
-            state.attendanceConfig.lastSyncSummary = String(payload.message || 'Bridge sync completed.');
-            persistAttendanceConfig();
-            await refreshSharedStateFromSheet({ silent: true });
-            renderAttendancePanel();
-            renderAnalyticsPanel();
-            logAudit('ZKTeco bridge sync executed', {
-              scope: 'attendance',
-              details: state.attendanceConfig.lastSyncSummary
-            });
-            showToast(state.attendanceConfig.lastSyncSummary || 'ZKTeco bridge sync completed.', 'success');
-            return;
-          }
-          state.attendanceConfig.lastSyncAt = new Date().toISOString();
-          state.attendanceConfig.bridgeStatus = 'Local placeholder';
-          const today = todayKey();
-          state.reports
-            .filter((report) => report.date === today && report.status === 'sent')
-            .forEach((report) => {
-              if (state.attendanceRecords.some((record) => record.employeeName === report.employee && record.date === today)) return;
-              const shift = getShiftDefinitionByName((getEmployeeByName(report.employee) || {}).shiftName || 'Morning Shift');
-              state.attendanceRecords.unshift(normalizeAttendanceEntry({
-                id: createId('attendance'),
-                employeeId: (getEmployeeByName(report.employee) || {}).id || '',
-                employeeName: report.employee,
-                employeeCode: (getEmployeeByName(report.employee) || {}).employeeCode || '',
-                date: today,
-                shiftName: shift.name,
-                clockIn: shift.start,
-                clockOut: shift.end,
-                source: 'ZKTeco Sync',
-                remarks: 'Auto-created from sync placeholder',
-                status: 'Present'
-              }));
-            });
-          state.attendanceConfig.lastSyncSummary = 'Bridge URL is not configured yet, so attendance was created from submitted daily activity reports instead.';
-          persistAttendanceConfig();
-          persistAttendanceRecords();
+        window.runAttendanceSync = (button) => runButtonAction(button, 'Syncing...', async () => {
+          const syncStartedAt = new Date().toISOString();
+          state.attendanceConfig.lastSyncAt = syncStartedAt;
+          state.attendanceConfig.syncStatus = 'Google Sheets sync';
+          state.attendanceConfig.lastSyncSummary = 'Refreshing attendance configuration and records from Google Sheets.';
+          persistAttendanceConfig({ skipCloud: true });
+          await Promise.all([
+            syncSharedScopeToSheet('attendance_config'),
+            syncSharedScopeToSheet('attendance_records')
+          ]);
+          await refreshSharedStateFromSheet({ silent: true, seedIfMissing: false });
+          state.attendanceConfig.lastSyncAt = syncStartedAt;
+          state.attendanceConfig.syncStatus = 'Google Sheets sync';
+          state.attendanceConfig.lastSyncSummary = 'Attendance data refreshed through the Apps Script Web App.';
+          persistAttendanceConfig({ skipCloud: true });
+          await syncSharedScopeToSheet('attendance_config');
           renderAttendancePanel();
           renderAnalyticsPanel();
-          logAudit('ZKTeco attendance sync executed', {
+          logAudit('Attendance sync refreshed', {
             scope: 'attendance',
-            details: `Sync time ${state.attendanceConfig.lastSyncAt}`
+            details: state.attendanceConfig.lastSyncSummary
           });
-          showToast('Bridge URL is not configured yet, so the local placeholder sync ran instead.', 'success');
-        };
+          showToast(state.attendanceConfig.lastSyncSummary, 'success');
+        });
 
         window.recordAttendanceEntry = () => {
           const employeeName = document.getElementById('attendanceEmployee').value.trim();
@@ -17320,6 +17142,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           document.getElementById('editEmployeePassword').value = state.passwords[employee.name] || 'help360';
           renderTaskChecklist('employeeTaskChecklist', employee.responsibilities);
           renderEmployeeDocumentList(employee, 'employeeDocAdminList', true);
+          renderEmployeeAssignedResponsibilities(employee);
           renderEmployeeMasterProfileSummary(employee);
           renderTimelineList('employeeTimelineAdminList', employee.name, 'Timeline entries for this employee will appear here.');
           document.getElementById('employeeEditorModal').classList.add('open');
@@ -17330,7 +17153,115 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           document.getElementById('employeeEditorModal').classList.remove('open');
         };
 
-        window.saveEmployeeEdits = async () => {
+        window.startEmployeeRename = (employeeId) => {
+          state.currentRenamingEmployeeId = employeeId;
+          renderEmployeeCards();
+          setTimeout(() => {
+            const input = document.getElementById(`employeeRenameInput_${employeeId}`);
+            if (input) {
+              input.focus();
+              if (input.select) input.select();
+            }
+          }, 0);
+        };
+
+        window.cancelEmployeeRename = () => {
+          state.currentRenamingEmployeeId = null;
+          renderEmployeeCards();
+        };
+
+        window.saveEmployeeRename = (employeeId, button) => runButtonAction(button, 'Saving...', async () => {
+          const employee = getEmployeeById(employeeId);
+          if (!employee) return;
+          const input = document.getElementById(`employeeRenameInput_${employeeId}`);
+          const nextName = String(input && input.value || '').trim();
+          const oldName = String(employee.name || '').trim();
+          if (!nextName) {
+            showToast('Employee name is required.', 'error');
+            return;
+          }
+          if (nextName === oldName) {
+            state.currentRenamingEmployeeId = null;
+            renderEmployeeCards();
+            return;
+          }
+          const existing = getEmployeeByName(nextName);
+          if (existing && existing.id !== employee.id) {
+            showToast('Another employee already uses that name.', 'error');
+            return;
+          }
+          const affectedReports = state.reports.filter((report) => report.employee === oldName);
+          renameEmployeeAcrossState(employee, nextName);
+          state.currentRenamingEmployeeId = null;
+          persistSharedStateLocally();
+          persistReports();
+          await Promise.all([
+            syncAllSharedScopesToSheet({ silent: true }),
+            syncAuthStaffDirectory({ silent: true }),
+            Promise.all(affectedReports.map((report) => syncReportToSheet(report)))
+          ]);
+          persistReports();
+          populateEmployeeSelects();
+          renderEmployeeCards();
+          renderHrPanel();
+          renderTeamLeadPanel();
+          renderOrganizationPanel();
+          renderSettingsPage();
+          renderRecruitmentPanel();
+          renderAttendancePanel();
+          renderPayrollPanel();
+          renderCompliancePanel();
+          renderAnalyticsPanel();
+          renderGlobalSearchResults();
+          if (state.currentEditingEmployeeId === employee.id) {
+            openEmployeeEditor(employee.id);
+          }
+          if (state.currentRole === 'employee' && state.currentUser === nextName) {
+            syncCurrentEmployeeContext();
+          }
+          logAudit('Employee renamed', {
+            scope: 'employee',
+            employeeName: nextName,
+            details: `${oldName} renamed to ${nextName}`
+          });
+          showToast('Employee renamed successfully.', 'success');
+        });
+
+        window.deleteEmployeeResponsibility = (employeeId, taskName, button) => {
+          const employee = getEmployeeById(employeeId);
+          const task = String(taskName || '').trim();
+          if (!employee || !task) return;
+          if (!confirm(`Delete "${task}" from ${employee.name}?`)) return;
+          return runButtonAction(button, 'Deleting...', async () => {
+            employee.responsibilities = (employee.responsibilities || []).filter((item) => item !== task);
+            persistEmployees({ skipCloud: true });
+            await syncSharedScopeToSheet('employees');
+            if (state.currentEditingEmployeeId === employee.id) {
+              renderTaskChecklist('employeeTaskChecklist', employee.responsibilities);
+              renderEmployeeAssignedResponsibilities(employee);
+              renderEmployeeDocumentList(employee, 'employeeDocAdminList', true);
+              renderEmployeeMasterProfileSummary(employee);
+              renderTimelineList('employeeTimelineAdminList', employee.name, 'Timeline entries for this employee will appear here.');
+            }
+            populateEmployeeSelects();
+            renderEmployeeCards();
+            renderHrPanel();
+            renderTeamLeadPanel();
+            renderOrganizationPanel();
+            renderSettingsPage();
+            if (state.currentRole === 'employee' && state.currentUser === employee.name) {
+              syncCurrentEmployeeContext();
+            }
+            logAudit('Employee responsibility removed', {
+              scope: 'employee',
+              employeeName: employee.name,
+              details: task
+            });
+            showToast('Responsibility deleted successfully.', 'success');
+          });
+        };
+
+        window.saveEmployeeEdits = (button) => runButtonAction(button, 'Saving...', async () => {
           const employee = getEmployeeById(state.currentEditingEmployeeId);
           if (!employee) return;
           const employeeCode = document.getElementById('editEmployeeCode').value.trim();
@@ -17360,10 +17291,6 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           const performanceRemark = document.getElementById('editEmployeePerformanceRemark').value.trim();
           const password = document.getElementById('editEmployeePassword').value.trim();
           const responsibilities = getSelectedChecklistTasks('employeeTaskChecklist');
-          if (!responsibilities.length) {
-            showToast('Assign at least one responsibility to this employee.', 'error');
-            return;
-          }
           employee.employeeCode = employeeCode || employee.employeeCode || `EMP-${String(state.employees.indexOf(employee) + 1).padStart(3, '0')}`;
           employee.email = email || generateWorkEmail(employee.name);
           employee.title = title || 'Medical Billing Specialist';
@@ -17392,9 +17319,12 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           employee.performanceRemark = performanceRemark;
           employee.responsibilities = responsibilities;
           if (password) state.passwords[employee.name] = password;
-          persistEmployees();
-          persistPasswords();
-          await syncAuthStaffDirectory({ silent: true }).catch(() => {});
+          persistSharedStateLocally();
+          await Promise.all([
+            syncSharedScopeToSheet('employees'),
+            syncSharedScopeToSheet('passwords'),
+            syncAuthStaffDirectory({ silent: true })
+          ]);
           populateEmployeeSelects();
           renderEmployeeCards();
           renderHrPanel();
@@ -17411,7 +17341,7 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
           }
           window.closeEmployeeEditor();
           showToast(`${employee.name} updated successfully.`, 'success');
-        };
+        });
 
         window.triggerEmployeeDocPicker = () => {
           if (!state.currentEditingEmployeeId) return;
@@ -17769,6 +17699,8 @@ revoke all on public.zkteco_sync_runs from anon, authenticated;`;
 
       async function init() {
         loadState();
+        await refreshSharedStateFromSheet({ silent: true, seedIfMissing: true });
+        await syncAuthStaffDirectory({ silent: true }).catch(() => {});
         await restoreAuthSessionFromStorage();
         initBrandLogos();
         persistDocumentCenter({ skipCloud: true });
