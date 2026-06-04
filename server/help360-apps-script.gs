@@ -2,12 +2,14 @@ const HELP360_SHEETS = {
   shared: 'SharedState',
   reports: 'Reports',
   payroll: 'Payroll',
-  staff: 'StaffUsers',
+  staff: 'StaffDirectory',
   jobs: 'Jobs',
   cvApplications: 'CVApplications',
   sessions: 'AuthSessions',
   resets: 'PinResetRequests'
 };
+
+const HELP360_STAFF_SHEET_ALIASES = ['StaffDirectory', 'StaffUsers'];
 
 const HELP360_HEADERS = {
   shared: ['scope', 'record_count', 'updated_at', 'payload_json'],
@@ -75,6 +77,8 @@ const HELP360_HEADERS = {
     'allowed_departments',
     'pin',
     'password',
+    'pin_salt',
+    'pin_hash',
     'force_pin_reset',
     'last_login_at',
     'last_activity_at',
@@ -1003,18 +1007,48 @@ function upsertReport_(spreadsheet, input) {
 }
 
 function upsertStaffDirectory_(spreadsheet, input) {
-  const staffList = Array.isArray(input.staff) ? input.staff : [];
+  const staffList = Array.isArray(input.staff)
+    ? input.staff
+    : input.staff && typeof input.staff === 'object'
+      ? [input.staff]
+      : [];
   const existingRows = readStaffRows_(spreadsheet);
   const existingByKey = {};
-  existingRows.forEach((row) => {
+  const existingIndexByKey = {};
+  existingRows.forEach((row, index) => {
     const key = staffRecordKey_(row);
-    if (key) existingByKey[key] = row;
+    if (key) {
+      existingByKey[key] = row;
+      existingIndexByKey[key] = index;
+    }
   });
 
-  const nextRows = staffList
+  const nextRows = existingRows.slice();
+  staffList
     .map((item) => normalizeStaffInput_(item))
     .filter((item) => item.staff_id || item.user_id || item.full_name)
-    .map((item) => mergeStaffRecord_(existingByKey[staffRecordKey_(item)] || null, item, nowIso_()));
+    .forEach((item) => {
+      const key = staffRecordKey_(item);
+      const current = key && Object.prototype.hasOwnProperty.call(existingByKey, key)
+        ? existingByKey[key]
+        : null;
+      const merged = mergeStaffRecord_(current, item, nowIso_());
+      if (key && Object.prototype.hasOwnProperty.call(existingIndexByKey, key)) {
+        const existingIndex = existingIndexByKey[key];
+        nextRows[existingIndex] = merged;
+      } else {
+        nextRows.push(merged);
+        if (key) {
+          existingIndexByKey[key] = nextRows.length - 1;
+        }
+      }
+      if (key) {
+        existingByKey[key] = merged;
+        if (!Object.prototype.hasOwnProperty.call(existingIndexByKey, key)) {
+          existingIndexByKey[key] = nextRows.length - 1;
+        }
+      }
+    });
 
   writeTableRows_(spreadsheet, HELP360_SHEETS.staff, HELP360_HEADERS.staff, nextRows);
   writeSharedScopeRow_(
@@ -1045,10 +1079,15 @@ function login_(spreadsheet, input) {
   if (normalizeStatus_(staff.status) !== 'ACTIVE') {
     return { ok: false, error: 'Account is inactive.' };
   }
-  if (trimText_(staff.pin) !== pin) {
+  const hasStoredHash = Boolean(trimText_(staff.pin_salt) && trimText_(staff.pin_hash));
+  const passwordMatches = hasStoredHash
+    ? verifySecret_(pin, staff.pin_salt, staff.pin_hash)
+    : trimText_(staff.pin) === pin;
+  if (!passwordMatches) {
     return { ok: false, error: 'Incorrect password.' };
   }
-  const requiresPinReset = isTruthy_(staff.force_pin_reset) || !trimText_(staff.pin);
+  const hasStoredPin = Boolean(trimText_(staff.pin) || hasStoredHash);
+  const requiresPinReset = isTruthy_(staff.force_pin_reset) || !hasStoredPin;
   if (!requiresPinReset) {
     const updated = updateStaffRow_(spreadsheet, staff, {
       last_login_at: nowIso_(),
@@ -1139,7 +1178,11 @@ function completePinReset_(spreadsheet, input) {
   if (!staff) {
     return { ok: false, error: 'Account not found.' };
   }
-  if (trimText_(staff.pin) !== currentPin) {
+  const hasStoredHash = Boolean(trimText_(staff.pin_salt) && trimText_(staff.pin_hash));
+  const currentPinMatches = hasStoredHash
+    ? verifySecret_(currentPin, staff.pin_salt, staff.pin_hash)
+    : trimText_(staff.pin) === currentPin;
+  if (!currentPinMatches) {
     return { ok: false, error: 'Current PIN is incorrect.' };
   }
   const now = nowIso_();
@@ -1399,6 +1442,22 @@ function readReportsRows_(spreadsheet) {
 }
 
 function readStaffRows_(spreadsheet) {
+  const rows = [];
+  const seen = new Set();
+  HELP360_STAFF_SHEET_ALIASES.forEach((sheetName) => {
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) return;
+    readSheetObjects_(sheet).forEach((row) => {
+      const mapped = mapStaffRowForClient_(row);
+      const key = staffRecordKey_(mapped);
+      if (key && seen.has(key)) return;
+      if (key) seen.add(key);
+      rows.push(mapped);
+    });
+  });
+  if (rows.length) {
+    return rows;
+  }
   const sheet = ensureSheet_(spreadsheet, HELP360_SHEETS.staff, HELP360_HEADERS.staff);
   return readSheetObjects_(sheet).map((row) => mapStaffRowForClient_(row));
 }
@@ -1415,9 +1474,7 @@ function updateStaffPasswordsFromMap_(spreadsheet, passwordMap) {
     if (!Object.prototype.hasOwnProperty.call(passwordMap, key)) {
       return row;
     }
-    const next = Object.assign({}, row, {
-      pin: trimText_(passwordMap[key]),
-      password: trimText_(passwordMap[key]),
+    const next = Object.assign({}, row, buildStaffPinFields_(passwordMap[key], row), {
       updated_at: nowIso_()
     });
     updated += 1;
@@ -1553,6 +1610,8 @@ function normalizeStaffInput_(input) {
     allowed_departments: trimText_(incoming.allowedDepartments || incoming.allowed_departments),
     pin: trimText_(incoming.pin || incoming.password),
     password: trimText_(incoming.password || incoming.pin),
+    pin_salt: trimText_(incoming.pinSalt || incoming.pin_salt),
+    pin_hash: trimText_(incoming.pinHash || incoming.pin_hash),
     force_pin_reset: isTruthy_(incoming.forcePinReset || incoming.force_pin_reset),
     last_login_at: trimText_(incoming.lastLoginAt || incoming.last_login_at),
     last_activity_at: trimText_(incoming.lastActivityAt || incoming.last_activity_at),
@@ -1566,8 +1625,8 @@ function normalizeStaffInput_(input) {
 function mergeStaffRecord_(existingRow, incomingRow, now) {
   const existing = existingRow && typeof existingRow === 'object' ? existingRow : {};
   const incoming = incomingRow && typeof incomingRow === 'object' ? incomingRow : {};
-  const existingPin = trimText_(existing.pin || existing.password);
   const incomingPin = trimText_(incoming.pin || incoming.password);
+  const pinFields = buildStaffPinFields_(incomingPin, existing);
   const merged = {
     staff_id: trimText_(incoming.staff_id || existing.staff_id),
     user_id: trimText_(incoming.user_id || existing.user_id),
@@ -1577,8 +1636,10 @@ function mergeStaffRecord_(existingRow, incomingRow, now) {
     status: normalizeStatus_(incoming.status || existing.status || 'ACTIVE'),
     default_department: trimText_(incoming.default_department || existing.default_department),
     allowed_departments: trimText_(incoming.allowed_departments || existing.allowed_departments),
-    pin: incomingPin || existingPin,
-    password: incomingPin || existingPin,
+    pin: pinFields.pin,
+    password: pinFields.password,
+    pin_salt: pinFields.pin_salt,
+    pin_hash: pinFields.pin_hash,
     force_pin_reset: incoming.force_pin_reset === true ? true : isTruthy_(existing.force_pin_reset),
     last_login_at: trimText_(incoming.last_login_at) || trimText_(existing.last_login_at),
     last_activity_at: trimText_(incoming.last_activity_at) || trimText_(existing.last_activity_at),
@@ -1600,7 +1661,7 @@ function mergeStaffRecord_(existingRow, incomingRow, now) {
 }
 
 function mapStaffRowForClient_(row) {
-  return {
+  const mapped = {
     staff_id: trimText_(row.staff_id),
     user_id: trimText_(row.user_id),
     full_name: trimText_(row.full_name),
@@ -1611,6 +1672,8 @@ function mapStaffRowForClient_(row) {
     allowed_departments: trimText_(row.allowed_departments),
     pin: trimText_(row.pin || row.password),
     password: trimText_(row.password || row.pin),
+    pin_salt: trimText_(row.pin_salt),
+    pin_hash: trimText_(row.pin_hash),
     force_pin_reset: isTruthy_(row.force_pin_reset),
     last_login_at: trimText_(row.last_login_at),
     last_activity_at: trimText_(row.last_activity_at),
@@ -1619,6 +1682,9 @@ function mapStaffRowForClient_(row) {
     created_at: trimText_(row.created_at),
     updated_at: trimText_(row.updated_at)
   };
+  mapped.pinSalt = mapped.pin_salt;
+  mapped.pinHash = mapped.pin_hash;
+  return mapped;
 }
 
 function staffRecordKey_(row) {
@@ -1642,6 +1708,48 @@ function normalizePasswordMap_(value) {
     map[nextKey] = trimText_(value[key]);
   });
   return map;
+}
+
+function buildStaffPinFields_(pin, existingRow) {
+  const rawPin = trimText_(pin);
+  const existing = existingRow && typeof existingRow === 'object' ? existingRow : {};
+  if (rawPin) {
+    const salt = generateSalt_();
+    return {
+      pin: rawPin,
+      password: rawPin,
+      pin_salt: salt,
+      pin_hash: hashSecret_(rawPin, salt)
+    };
+  }
+  return {
+    pin: trimText_(existing.pin),
+    password: trimText_(existing.password || existing.pin),
+    pin_salt: trimText_(existing.pin_salt),
+    pin_hash: trimText_(existing.pin_hash)
+  };
+}
+
+function generateSalt_() {
+  return Utilities.getUuid().replace(/-/g, '');
+}
+
+function hashSecret_(secret, salt) {
+  const input = `${trimText_(salt)}:${trimText_(secret)}`;
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, input, Utilities.Charset.UTF_8);
+  return bytesToHex_(bytes);
+}
+
+function verifySecret_(secret, salt, expectedHash) {
+  const calculated = hashSecret_(secret, salt);
+  return trimText_(calculated) === trimText_(expectedHash);
+}
+
+function bytesToHex_(bytes) {
+  return (bytes || []).map((value) => {
+    const normalized = value < 0 ? value + 256 : value;
+    return normalized.toString(16).padStart(2, '0');
+  }).join('');
 }
 
 function mapSharedRowForClient_(row) {
@@ -1735,9 +1843,23 @@ function ensureSheet_(spreadsheet, name, headers) {
   if (!sheet) {
     sheet = spreadsheet.insertSheet(name);
   }
-  if (headers && headers.length && sheet.getLastRow() === 0) {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sheet.setFrozenRows(1);
+  if (headers && headers.length) {
+    if (sheet.getLastRow() === 0) {
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.setFrozenRows(1);
+    } else {
+      const existingHeaders = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), headers.length)).getValues()[0]
+        .map((header) => trimText_(header))
+        .filter(Boolean);
+      const missingHeaders = headers.filter((header) => existingHeaders.indexOf(header) < 0);
+      if (missingHeaders.length) {
+        const mergedHeaders = existingHeaders.concat(missingHeaders);
+        sheet.getRange(1, 1, 1, mergedHeaders.length).setValues([mergedHeaders]);
+      }
+      if (sheet.getFrozenRows() === 0) {
+        sheet.setFrozenRows(1);
+      }
+    }
   }
   return sheet;
 }

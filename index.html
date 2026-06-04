@@ -8468,9 +8468,13 @@
         return 'employee';
       }
 
-      function buildAuthStaffDirectory() {
+      function buildAuthStaffDirectory(passwordOverrides) {
+        const overrideMap = passwordOverrides && typeof passwordOverrides === 'object' ? passwordOverrides : null;
         const staff = state.employees.map((employee) => {
           const userId = String(employee.name || '').trim();
+          const overridePassword = overrideMap && Object.prototype.hasOwnProperty.call(overrideMap, employee.name)
+            ? String(overrideMap[employee.name] || '').trim()
+            : '';
           return {
             staffId: String(employee.id || userId || '').trim(),
             userId,
@@ -8480,13 +8484,20 @@
             status: String(employee.status || 'Active').toUpperCase() === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
             defaultDepartment: String(employee.department || 'Operations').trim() || 'Operations',
             allowedDepartments: [String(employee.department || 'Operations').trim() || 'Operations'].join('|'),
-            pin: String(state.passwords[employee.name] || DEFAULT_PASSWORDS[employee.name] || 'help360'),
+            pin: overridePassword || String(state.passwords[employee.name] || DEFAULT_PASSWORDS[employee.name] || 'help360'),
             forcePinReset: false,
             lastLoginAt: '',
             lastPinResetAt: '',
             notes: `Synced employee directory record for ${String(employee.name || '').trim()}`
           };
         });
+
+        const managerOverridePassword = overrideMap && Object.prototype.hasOwnProperty.call(overrideMap, state.manager.name)
+          ? String(overrideMap[state.manager.name] || '').trim()
+          : '';
+        const managerApproverOverridePassword = overrideMap && Object.prototype.hasOwnProperty.call(overrideMap, state.managerApprover.name)
+          ? String(overrideMap[state.managerApprover.name] || '').trim()
+          : '';
 
         staff.push({
           staffId: 'hr_account',
@@ -8497,7 +8508,7 @@
           status: 'ACTIVE',
           defaultDepartment: 'HR',
           allowedDepartments: 'HR',
-          pin: String(state.manager.pass || ''),
+          pin: managerOverridePassword || String(state.manager.pass || ''),
           forcePinReset: false,
           lastLoginAt: '',
           lastPinResetAt: '',
@@ -8513,7 +8524,7 @@
           status: 'ACTIVE',
           defaultDepartment: 'Management',
           allowedDepartments: 'Management|HR',
-          pin: String(state.managerApprover.pass || ''),
+          pin: managerApproverOverridePassword || String(state.managerApprover.pass || ''),
           forcePinReset: false,
           lastLoginAt: '',
           lastPinResetAt: '',
@@ -8547,13 +8558,18 @@
         }
         state.authDirectorySyncInFlight = true;
         try {
+          const providedStaff = Array.isArray(config.staff) ? config.staff.filter(Boolean) : null;
+          const staffPayload = providedStaff && providedStaff.length ? providedStaff : buildAuthStaffDirectory(config.passwordOverrides);
+          if (providedStaff && !providedStaff.length) {
+            return { ok: true, skipped: true };
+          }
           const response = await fetch(authWebAppUrl(), {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({
               action: 'upsert_staff_directory',
               sheetId: sheetSpreadsheetId(),
-              staff: buildAuthStaffDirectory(),
+              staff: staffPayload,
               updatedAt: new Date().toISOString()
             })
           });
@@ -15500,22 +15516,51 @@
         });
 
         window.savePasswords = (button) => runButtonAction(button, 'Saving...', async () => {
+          const nextPasswords = Object.assign({}, state.passwords);
+          const changedStaff = [];
           state.employees.forEach((employee) => {
             const input = document.getElementById(`pw_${employee.id}`);
-            if (input && input.value.trim()) {
-              state.passwords[employee.name] = input.value.trim();
+            const nextPassword = input ? input.value.trim() : '';
+            if (!nextPassword) {
+              return;
             }
+            if (nextPasswords[employee.name] === nextPassword) {
+              return;
+            }
+            nextPasswords[employee.name] = nextPassword;
+            changedStaff.push({
+              staffId: String(employee.id || '').trim(),
+              userId: String(employee.name || '').trim(),
+              fullName: String(employee.name || '').trim(),
+              role: 'employee',
+              status: String(employee.status || 'Active').toUpperCase() === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
+              defaultDepartment: String(employee.department || 'Operations').trim() || 'Operations',
+              allowedDepartments: String(employee.department || 'Operations').trim() || 'Operations',
+              pin: nextPassword
+            });
           });
-          persistPasswords({ skipCloud: true });
-          await Promise.all([
-            syncSharedScopeToSheet('passwords'),
-            syncAuthStaffDirectory({ silent: true })
-          ]);
-          logAudit('Employee passwords updated', {
-            scope: 'settings',
-            details: 'One or more employee passwords were changed.'
-          });
-          showToast('Employee passwords updated!', 'success');
+
+          if (!changedStaff.length) {
+            showToast('No password changes detected.', 'info');
+            return;
+          }
+
+          try {
+            const syncResult = await syncAuthStaffDirectory({ silent: true, staff: changedStaff });
+            if (!syncResult || syncResult.ok === false) {
+              throw new Error(syncResult && syncResult.reason ? syncResult.reason : 'Unable to update employee passwords.');
+            }
+            state.passwords = nextPasswords;
+            persistPasswords({ skipCloud: true });
+            renderSettingsPage();
+            logAudit('Employee passwords updated', {
+              scope: 'settings',
+              details: `${changedStaff.length} employee password${changedStaff.length === 1 ? '' : 's'} were changed.`
+            });
+            showToast('Employee passwords updated!', 'success');
+          } catch (error) {
+            showToast(error && error.message ? error.message : 'Unable to update employee passwords.', 'error');
+          }
         });
 
         window.saveLeavePolicies = (button) => runButtonAction(button, 'Saving...', async () => {
@@ -17346,6 +17391,7 @@
           const bankDetails = document.getElementById('editEmployeeBankDetails').value.trim();
           const performanceRemark = document.getElementById('editEmployeePerformanceRemark').value.trim();
           const password = document.getElementById('editEmployeePassword').value.trim();
+          const nextPasswords = password ? Object.assign({}, state.passwords, { [employee.name]: password }) : null;
           const responsibilities = getSelectedChecklistTasks('employeeTaskChecklist');
           employee.employeeCode = employeeCode || employee.employeeCode || `EMP-${String(state.employees.indexOf(employee) + 1).padStart(3, '0')}`;
           employee.email = email || generateWorkEmail(employee.name);
@@ -17374,29 +17420,41 @@
           employee.bankDetails = bankDetails;
           employee.performanceRemark = performanceRemark;
           employee.responsibilities = responsibilities;
-          if (password) state.passwords[employee.name] = password;
-          persistSharedStateLocally();
-          await Promise.all([
-            syncSharedScopeToSheet('employees'),
-            syncSharedScopeToSheet('passwords'),
-            syncAuthStaffDirectory({ silent: true })
-          ]);
-          populateEmployeeSelects();
-          renderEmployeeCards();
-          renderHrPanel();
-          renderTeamLeadPanel();
-          renderOrganizationPanel();
-          renderSettingsPage();
-          logAudit('Employee profile updated', {
-            scope: 'employee',
-            employeeName: employee.name,
-            details: `${employee.department} | ${employee.title} | target ${employee.monthlyTarget} | team lead ${employee.teamLead}`
-          });
-          if (state.currentRole === 'employee' && state.currentUser === employee.name) {
-            syncCurrentEmployeeContext();
+          try {
+            persistSharedStateLocally();
+            const [employeeSyncResult, authSyncResult] = await Promise.all([
+              syncSharedScopeToSheet('employees'),
+              syncAuthStaffDirectory({ silent: true, passwordOverrides: nextPasswords || undefined })
+            ]);
+            if (!employeeSyncResult || employeeSyncResult.ok === false) {
+              throw new Error(employeeSyncResult && employeeSyncResult.reason ? employeeSyncResult.reason : 'Unable to update employee profile.');
+            }
+            if (!authSyncResult || authSyncResult.ok === false) {
+              throw new Error(authSyncResult && authSyncResult.reason ? authSyncResult.reason : 'Unable to update employee profile.');
+            }
+            if (nextPasswords) {
+              state.passwords = nextPasswords;
+              persistPasswords({ skipCloud: true });
+            }
+            populateEmployeeSelects();
+            renderEmployeeCards();
+            renderHrPanel();
+            renderTeamLeadPanel();
+            renderOrganizationPanel();
+            renderSettingsPage();
+            logAudit('Employee profile updated', {
+              scope: 'employee',
+              employeeName: employee.name,
+              details: `${employee.department} | ${employee.title} | target ${employee.monthlyTarget} | team lead ${employee.teamLead}`
+            });
+            if (state.currentRole === 'employee' && state.currentUser === employee.name) {
+              syncCurrentEmployeeContext();
+            }
+            window.closeEmployeeEditor();
+            showToast(`${employee.name} updated successfully.`, 'success');
+          } catch (error) {
+            showToast(error && error.message ? error.message : 'Unable to update employee profile.', 'error');
           }
-          window.closeEmployeeEditor();
-          showToast(`${employee.name} updated successfully.`, 'success');
         });
 
         window.triggerEmployeeDocPicker = () => {
