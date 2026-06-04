@@ -7332,6 +7332,14 @@
         return Boolean(url && !url.includes('YOUR_ID'));
       }
 
+      function isAccountDisabledStatus(status) {
+        const normalized = String(status || '').trim().toUpperCase();
+        return normalized === 'INACTIVE'
+          || normalized === 'REVOKED'
+          || normalized === 'EXPIRED'
+          || normalized === 'RESIGNED';
+      }
+
       function authSessionStorageKey() {
         return 'h360_auth_session';
       }
@@ -8481,7 +8489,7 @@
             fullName: String(employee.name || '').trim(),
             role: 'employee',
             teamLeadId: String(employee.teamLead || '').trim(),
-            status: String(employee.status || 'Active').toUpperCase() === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
+            status: isAccountDisabledStatus(employee.status) ? 'INACTIVE' : 'ACTIVE',
             defaultDepartment: String(employee.department || 'Operations').trim() || 'Operations',
             allowedDepartments: [String(employee.department || 'Operations').trim() || 'Operations'].join('|'),
             pin: overridePassword || String(state.passwords[employee.name] || DEFAULT_PASSWORDS[employee.name] || 'help360'),
@@ -10075,7 +10083,7 @@
           ? storedEmployees.map((employee, index) => normalizeEmployee(employee, index))
           : DEFAULT_EMPLOYEE_NAMES.map((name, index) => normalizeEmployee({ name }, index));
 
-        state.passwords = normalizePasswordMap(loadJSON('h360_passwords', {}));
+        state.passwords = sheetSyncConfigured() ? {} : normalizePasswordMap(loadJSON('h360_passwords', {}));
 
         state.reports = loadJSON('h360_reports', []).map(normalizeReport);
         state.leaveRequests = loadJSON('h360_leave_requests', [])
@@ -15550,6 +15558,7 @@
               throw new Error(syncResult && syncResult.reason ? syncResult.reason : 'Unable to update employee passwords.');
             }
             state.passwords = nextPasswords;
+            await refreshSharedStateFromSheet({ silent: true, seedIfMissing: false }).catch(() => {});
             persistPasswords({ skipCloud: true });
             renderSettingsPage();
             logAudit('Employee passwords updated', {
@@ -17420,7 +17429,6 @@
           employee.performanceRemark = performanceRemark;
           employee.responsibilities = responsibilities;
           try {
-            persistSharedStateLocally();
             const [employeeSyncResult, authSyncResult] = await Promise.all([
               syncSharedScopeToSheet('employees'),
               syncAuthStaffDirectory({ silent: true, passwordOverrides: nextPasswords || undefined })
@@ -17433,8 +17441,9 @@
             }
             if (nextPasswords) {
               state.passwords = nextPasswords;
-              persistPasswords({ skipCloud: true });
+              await refreshSharedStateFromSheet({ silent: true, seedIfMissing: false }).catch(() => {});
             }
+            persistSharedStateLocally();
             populateEmployeeSelects();
             renderEmployeeCards();
             renderHrPanel();
@@ -17759,9 +17768,11 @@
             }
             refreshSharedViews();
           }
-          if (event.key === 'h360_passwords') {
-            state.passwords = normalizePasswordMap(loadJSON('h360_passwords', {}));
-            renderSettingsPage();
+        if (event.key === 'h360_passwords') {
+            if (!sheetSyncConfigured()) {
+              state.passwords = normalizePasswordMap(loadJSON('h360_passwords', {}));
+              renderSettingsPage();
+            }
           }
           if (event.key === 'h360_settings') {
             state.settings = normalizeCloudSettings(loadJSON('h360_settings', DEFAULT_SETTINGS));

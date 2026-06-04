@@ -1076,7 +1076,7 @@ function login_(spreadsheet, input) {
   if (!staff) {
     return { ok: false, error: 'Invalid credentials.' };
   }
-  if (normalizeStatus_(staff.status) !== 'ACTIVE') {
+  if (isAccountDisabledStatus_(staff.status)) {
     return { ok: false, error: 'Account is inactive.' };
   }
   const hasStoredHash = Boolean(trimText_(staff.pin_salt) && trimText_(staff.pin_hash));
@@ -1937,6 +1937,11 @@ function normalizeStatus_(value) {
     return status;
   }
   return status || 'ACTIVE';
+}
+
+function isAccountDisabledStatus_(value) {
+  const status = trimText_(value).toUpperCase();
+  return status === 'INACTIVE' || status === 'REVOKED' || status === 'EXPIRED' || status === 'RESIGNED';
 }
 
 function latestTimestamp_(values) {
