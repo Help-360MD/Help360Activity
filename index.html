@@ -6559,6 +6559,8 @@
         managerAccessTouched: false,
         fieldDrafts: {},
         currentEditingEmployeeId: null,
+        employeeEditorResponsibilitiesDraft: [],
+        employeeEditorResponsibilitiesTouched: false,
         currentEditingJobId: null,
         currentRenamingEmployeeId: null,
         currentEditingCandidateId: null,
@@ -6806,6 +6808,54 @@
           field.addEventListener('change', () => {
             markManagerAccessTouched(field);
           });
+        });
+      }
+
+      function normalizeResponsibilitySelection(tasks) {
+        return [...new Set((Array.isArray(tasks) ? tasks : [])
+          .map((task) => String(task || '').trim())
+          .filter(Boolean))];
+      }
+
+      function resetEmployeeEditorResponsibilitiesTracking() {
+        state.employeeEditorResponsibilitiesDraft = [];
+        state.employeeEditorResponsibilitiesTouched = false;
+      }
+
+      function setEmployeeEditorResponsibilitiesDraft(tasks) {
+        state.employeeEditorResponsibilitiesDraft = normalizeResponsibilitySelection(tasks);
+        state.employeeEditorResponsibilitiesTouched = true;
+      }
+
+      function isEmployeeEditorResponsibilitiesLocked() {
+        return Boolean(state.currentEditingEmployeeId && state.employeeEditorResponsibilitiesTouched);
+      }
+
+      function employeeEditorResponsibilitiesDraftFor(employee) {
+        if (!employee) return [];
+        if (state.currentEditingEmployeeId === employee.id && isEmployeeEditorResponsibilitiesLocked()) {
+          return normalizeResponsibilitySelection(state.employeeEditorResponsibilitiesDraft);
+        }
+        return normalizeResponsibilitySelection(employee.responsibilities);
+      }
+
+      function bindEmployeeEditorResponsibilitiesTracking() {
+        const container = document.getElementById('employeeTaskChecklist');
+        if (!container || container.dataset.employeeResponsibilitiesTracked === 'true') return;
+        container.dataset.employeeResponsibilitiesTracked = 'true';
+        const syncDraft = () => {
+          if (!state.currentEditingEmployeeId) return;
+          setEmployeeEditorResponsibilitiesDraft(getSelectedChecklistTasks('employeeTaskChecklist'));
+        };
+        container.addEventListener('change', (event) => {
+          const target = event.target;
+          if (!target || !target.matches || !target.matches('input[type="checkbox"]')) return;
+          syncDraft();
+        });
+        container.addEventListener('input', (event) => {
+          const target = event.target;
+          if (!target || !target.matches || !target.matches('input[type="checkbox"]')) return;
+          syncDraft();
         });
       }
 
@@ -8323,10 +8373,13 @@
         if (state.currentEditingEmployeeId) {
           const editingEmployee = getEmployeeById(state.currentEditingEmployeeId);
           if (editingEmployee) {
-            renderTaskChecklist('employeeTaskChecklist', editingEmployee.responsibilities);
+            const editingResponsibilities = employeeEditorResponsibilitiesDraftFor(editingEmployee);
+            renderTaskChecklist('employeeTaskChecklist', editingResponsibilities);
+            bindEmployeeEditorResponsibilitiesTracking();
             renderEmployeeDocumentList(editingEmployee, 'employeeDocAdminList', true);
-            renderEmployeeAssignedResponsibilities(editingEmployee);
+            renderEmployeeAssignedResponsibilities(Object.assign({}, editingEmployee, { responsibilities: editingResponsibilities }));
           } else {
+            resetEmployeeEditorResponsibilitiesTracking();
             state.currentEditingEmployeeId = null;
             document.getElementById('employeeEditorModal').classList.remove('open');
           }
@@ -17394,6 +17447,14 @@
           document.querySelectorAll(`#${containerId} input[type="checkbox"]`).forEach((checkbox) => {
             checkbox.checked = checked;
           });
+          if (containerId === 'employeeTaskChecklist' && state.currentEditingEmployeeId) {
+            const employee = getEmployeeById(state.currentEditingEmployeeId);
+            const selectedTasks = getSelectedChecklistTasks('employeeTaskChecklist');
+            setEmployeeEditorResponsibilitiesDraft(selectedTasks);
+            if (employee) {
+              renderEmployeeAssignedResponsibilities(Object.assign({}, employee, { responsibilities: selectedTasks }));
+            }
+          }
         };
 
         window.addCustomResponsibility = () => {
@@ -17526,6 +17587,7 @@
         window.openEmployeeEditor = (employeeId) => {
           const employee = getEmployeeById(employeeId);
           if (!employee) return;
+          resetEmployeeEditorResponsibilitiesTracking();
           state.currentEditingEmployeeId = employee.id;
           document.getElementById('employeeEditorTitle').textContent = `Employee Access - ${employee.name}`;
           document.getElementById('editEmployeeName').value = employee.name;
@@ -17556,15 +17618,17 @@
           document.getElementById('editEmployeeBankDetails').value = employee.bankDetails || '';
           document.getElementById('editEmployeePerformanceRemark').value = employee.performanceRemark || '';
           document.getElementById('editEmployeePassword').value = state.passwords[employee.name] || 'help360';
-          renderTaskChecklist('employeeTaskChecklist', employee.responsibilities);
+          renderTaskChecklist('employeeTaskChecklist', employeeEditorResponsibilitiesDraftFor(employee));
+          bindEmployeeEditorResponsibilitiesTracking();
           renderEmployeeDocumentList(employee, 'employeeDocAdminList', true);
-          renderEmployeeAssignedResponsibilities(employee);
+          renderEmployeeAssignedResponsibilities(Object.assign({}, employee, { responsibilities: employeeEditorResponsibilitiesDraftFor(employee) }));
           renderEmployeeMasterProfileSummary(employee);
           renderTimelineList('employeeTimelineAdminList', employee.name, 'Timeline entries for this employee will appear here.');
           document.getElementById('employeeEditorModal').classList.add('open');
         };
 
         window.closeEmployeeEditor = () => {
+          resetEmployeeEditorResponsibilitiesTracking();
           state.currentEditingEmployeeId = null;
           document.getElementById('employeeEditorModal').classList.remove('open');
         };
@@ -17644,12 +17708,19 @@
           if (!employee || !task) return;
           if (!confirm(`Delete "${task}" from ${employee.name}?`)) return;
           return runButtonAction(button, 'Deleting...', async () => {
+            const effectiveSelection = state.currentEditingEmployeeId === employee.id && state.employeeEditorResponsibilitiesTouched
+              ? normalizeResponsibilitySelection(state.employeeEditorResponsibilitiesDraft)
+              : normalizeResponsibilitySelection(employee.responsibilities);
+            const nextSelection = effectiveSelection.filter((item) => item !== task);
             employee.responsibilities = (employee.responsibilities || []).filter((item) => item !== task);
+            if (state.currentEditingEmployeeId === employee.id) {
+              setEmployeeEditorResponsibilitiesDraft(nextSelection);
+              renderTaskChecklist('employeeTaskChecklist', nextSelection);
+              renderEmployeeAssignedResponsibilities(Object.assign({}, employee, { responsibilities: nextSelection }));
+            }
             persistEmployees({ skipCloud: true });
             await syncSharedScopeToSheet('employees');
             if (state.currentEditingEmployeeId === employee.id) {
-              renderTaskChecklist('employeeTaskChecklist', employee.responsibilities);
-              renderEmployeeAssignedResponsibilities(employee);
               renderEmployeeDocumentList(employee, 'employeeDocAdminList', true);
               renderEmployeeMasterProfileSummary(employee);
               renderTimelineList('employeeTimelineAdminList', employee.name, 'Timeline entries for this employee will appear here.');
