@@ -5350,7 +5350,7 @@
           <div class="employee-modal-grid">
             <div class="settings-item">
               <div class="settings-label">Employee Name</div>
-              <input type="text" class="settings-value" id="editEmployeeName" readonly />
+              <input type="text" class="settings-value" id="editEmployeeName" />
             </div>
             <div class="settings-item">
               <div class="settings-label">Employee Code</div>
@@ -9400,6 +9400,41 @@
         }
         migrateEmployeeDraftStorage(oldName, newName);
         return true;
+      }
+
+      async function syncEmployeeRenameEverywhere(employee, nextName, options) {
+        const config = Object.assign({
+          passwordOverrides: undefined
+        }, options || {});
+        const oldName = String(employee && employee.name || '').trim();
+        const newName = String(nextName || '').trim();
+        if (!employee || !oldName || !newName || oldName === newName) {
+          return { ok: true, changed: false, oldName, newName, affectedReports: [] };
+        }
+
+        const affectedReports = state.reports.filter((report) => report.employee === oldName);
+        await authRequest('rename_employee', {
+          sheetId: sheetSpreadsheetId(),
+          employeeId: employee.id,
+          oldName,
+          newName
+        }, 'POST');
+        renameEmployeeAcrossState(employee, newName);
+        persistSharedStateLocally();
+        persistReports();
+        await Promise.all([
+          syncAllSharedScopesToSheet({ silent: true }),
+          syncAuthStaffDirectory({ silent: true, passwordOverrides: config.passwordOverrides }),
+          Promise.all(affectedReports.map((report) => syncReportToSheet(report)))
+        ]);
+        persistReports();
+        return {
+          ok: true,
+          changed: true,
+          oldName,
+          newName,
+          affectedReports
+        };
       }
 
       async function syncScopesNow(scopes, options) {
@@ -17574,23 +17609,8 @@
             showToast('Another employee already uses that name.', 'error');
             return;
           }
-          const affectedReports = state.reports.filter((report) => report.employee === oldName);
-          await authRequest('rename_employee', {
-            sheetId: sheetSpreadsheetId(),
-            employeeId: employee.id,
-            oldName,
-            newName: nextName
-          }, 'POST');
-          renameEmployeeAcrossState(employee, nextName);
           state.currentRenamingEmployeeId = null;
-          persistSharedStateLocally();
-          persistReports();
-          await Promise.all([
-            syncAllSharedScopesToSheet({ silent: true }),
-            syncAuthStaffDirectory({ silent: true }),
-            Promise.all(affectedReports.map((report) => syncReportToSheet(report)))
-          ]);
-          persistReports();
+          await syncEmployeeRenameEverywhere(employee, nextName);
           populateEmployeeSelects();
           renderEmployeeCards();
           renderHrPanel();
@@ -17655,6 +17675,21 @@
         window.saveEmployeeEdits = (button) => runButtonAction(button, 'Saving...', async () => {
           const employee = getEmployeeById(state.currentEditingEmployeeId);
           if (!employee) return;
+          const employeeNameNode = document.getElementById('editEmployeeName');
+          const employeeName = employeeNameNode ? employeeNameNode.value.trim() : '';
+          const oldName = String(employee.name || '').trim();
+          if (!employeeName) {
+            showToast('Employee name is required.', 'error');
+            return;
+          }
+          const nameChanged = employeeName !== oldName;
+          if (nameChanged) {
+            const existing = getEmployeeByName(employeeName);
+            if (existing && existing.id !== employee.id) {
+              showToast('Another employee already uses that name.', 'error');
+              return;
+            }
+          }
           const employeeCode = document.getElementById('editEmployeeCode').value.trim();
           const email = document.getElementById('editEmployeeEmail').value.trim();
           const title = document.getElementById('editEmployeeTitle').value.trim();
@@ -17681,7 +17716,8 @@
           const bankDetails = document.getElementById('editEmployeeBankDetails').value.trim();
           const performanceRemark = document.getElementById('editEmployeePerformanceRemark').value.trim();
           const password = document.getElementById('editEmployeePassword').value.trim();
-          const nextPasswords = password ? Object.assign({}, state.passwords, { [employee.name]: password }) : null;
+          const passwordKey = nameChanged ? employeeName : employee.name;
+          const nextPasswords = password ? Object.assign({}, state.passwords, { [passwordKey]: password }) : null;
           const responsibilities = getSelectedChecklistTasks('employeeTaskChecklist');
           employee.employeeCode = employeeCode || employee.employeeCode || `EMP-${String(state.employees.indexOf(employee) + 1).padStart(3, '0')}`;
           employee.email = email || generateWorkEmail(employee.name);
@@ -17711,15 +17747,21 @@
           employee.performanceRemark = performanceRemark;
           employee.responsibilities = responsibilities;
           try {
-            const [employeeSyncResult, authSyncResult] = await Promise.all([
-              syncSharedScopeToSheet('employees'),
-              syncAuthStaffDirectory({ silent: true, passwordOverrides: nextPasswords || undefined })
-            ]);
-            if (!employeeSyncResult || employeeSyncResult.ok === false) {
-              throw new Error(employeeSyncResult && employeeSyncResult.reason ? employeeSyncResult.reason : 'Unable to update employee profile.');
-            }
-            if (!authSyncResult || authSyncResult.ok === false) {
-              throw new Error(authSyncResult && authSyncResult.reason ? authSyncResult.reason : 'Unable to update employee profile.');
+            if (nameChanged) {
+              await syncEmployeeRenameEverywhere(employee, employeeName, {
+                passwordOverrides: nextPasswords || undefined
+              });
+            } else {
+              const [employeeSyncResult, authSyncResult] = await Promise.all([
+                syncSharedScopeToSheet('employees'),
+                syncAuthStaffDirectory({ silent: true, passwordOverrides: nextPasswords || undefined })
+              ]);
+              if (!employeeSyncResult || employeeSyncResult.ok === false) {
+                throw new Error(employeeSyncResult && employeeSyncResult.reason ? employeeSyncResult.reason : 'Unable to update employee profile.');
+              }
+              if (!authSyncResult || authSyncResult.ok === false) {
+                throw new Error(authSyncResult && authSyncResult.reason ? authSyncResult.reason : 'Unable to update employee profile.');
+              }
             }
             if (nextPasswords) {
               state.passwords = nextPasswords;
@@ -17732,16 +17774,25 @@
             renderTeamLeadPanel();
             renderOrganizationPanel();
             renderSettingsPage();
+            if (nameChanged) {
+              renderRecruitmentPanel();
+              renderAttendancePanel();
+              renderPayrollPanel();
+              renderCompliancePanel();
+              renderAnalyticsPanel();
+              renderGlobalSearchResults();
+            }
+            const savedEmployee = getEmployeeById(employee.id) || employee;
             logAudit('Employee profile updated', {
               scope: 'employee',
-              employeeName: employee.name,
-              details: `${employee.department} | ${employee.title} | target ${employee.monthlyTarget} | team lead ${employee.teamLead}`
+              employeeName: savedEmployee.name,
+              details: `${savedEmployee.department} | ${savedEmployee.title} | target ${savedEmployee.monthlyTarget} | team lead ${savedEmployee.teamLead}`
             });
-            if (state.currentRole === 'employee' && state.currentUser === employee.name) {
+            if (state.currentRole === 'employee' && state.currentUser === savedEmployee.name) {
               syncCurrentEmployeeContext();
             }
             window.closeEmployeeEditor();
-            showToast(`${employee.name} updated successfully.`, 'success');
+            showToast(`${savedEmployee.name} updated successfully.`, 'success');
           } catch (error) {
             showToast(error && error.message ? error.message : 'Unable to update employee profile.', 'error');
           }
