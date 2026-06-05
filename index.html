@@ -6557,6 +6557,7 @@
         activityFormTouched: false,
         managerAccessActiveField: '',
         managerAccessTouched: false,
+        fieldDrafts: {},
         currentEditingEmployeeId: null,
         currentEditingJobId: null,
         currentRenamingEmployeeId: null,
@@ -6592,6 +6593,53 @@
 
       function clone(value) {
         return JSON.parse(JSON.stringify(value));
+      }
+
+      function fieldDraftKey(node) {
+        if (!node) return '';
+        if (node.dataset && node.dataset.draftKey) return node.dataset.draftKey;
+        if (node.id) return node.id;
+        if (node.name) return node.name;
+        return '';
+      }
+
+      function getFieldDraftValue(key, fallback) {
+        if (!key) return fallback;
+        if (state.fieldDrafts && Object.prototype.hasOwnProperty.call(state.fieldDrafts, key)) {
+          return state.fieldDrafts[key];
+        }
+        return fallback;
+      }
+
+      function setFieldDraftValue(key, value) {
+        if (!key) return;
+        if (!state.fieldDrafts) state.fieldDrafts = {};
+        state.fieldDrafts[key] = String(value == null ? '' : value);
+      }
+
+      function clearFieldDraftValue(key) {
+        if (!key || !state.fieldDrafts) return;
+        delete state.fieldDrafts[key];
+      }
+
+      function clearFieldDraftValues(keys) {
+        (Array.isArray(keys) ? keys : []).forEach((key) => clearFieldDraftValue(key));
+      }
+
+      function bindFieldDraftTracking(rootSelector) {
+        const root = document.querySelector(rootSelector);
+        if (!root || root.dataset.fieldDraftTracking === 'true') return;
+        root.dataset.fieldDraftTracking = 'true';
+        const trackDraftValue = (event) => {
+          const target = event.target;
+          if (!target || !target.matches || !target.matches('input, textarea, select')) return;
+          if (target.type === 'file') return;
+          const key = fieldDraftKey(target);
+          if (!key) return;
+          setFieldDraftValue(key, target.value);
+        };
+        root.addEventListener('input', trackDraftValue);
+        root.addEventListener('change', trackDraftValue);
       }
 
       const MANAGER_ACCESS_FIELD_SELECTOR = [
@@ -13033,6 +13081,7 @@
       }
 
       function renderRecruitmentPanel() {
+        bindFieldDraftTracking('#candidatePipelineList');
         const jobPosts = Array.isArray(state.jobPosts) ? state.jobPosts.filter(Boolean) : [];
         const openJobs = openJobPosts();
         const applied = state.candidates.length;
@@ -13114,37 +13163,37 @@
               <div class="settings-item">
                 <div class="settings-label">Stage</div>
                 <select class="settings-value" id="candidateStage_${candidate.id}">
-                  ${candidateStageOptions().map((stage) => `<option value="${escapeHtml(stage)}" ${stage === candidate.stage ? 'selected' : ''}>${escapeHtml(stage)}</option>`).join('')}
+                  ${candidateStageOptions().map((stage) => `<option value="${escapeHtml(stage)}" ${stage === getFieldDraftValue(`candidateStage_${candidate.id}`, candidate.stage) ? 'selected' : ''}>${escapeHtml(stage)}</option>`).join('')}
                 </select>
               </div>
               <div class="settings-item">
                 <div class="settings-label">Interview Date</div>
-                <input type="datetime-local" class="settings-value" id="candidateInterview_${candidate.id}" value="${escapeHtml(candidate.interviewDate || '')}" />
+                <input type="datetime-local" class="settings-value" id="candidateInterview_${candidate.id}" value="${escapeHtml(getFieldDraftValue(`candidateInterview_${candidate.id}`, candidate.interviewDate || ''))}" />
               </div>
               <div class="settings-item">
                 <div class="settings-label">Scorecard</div>
-                <input type="number" class="settings-value" id="candidateScore_${candidate.id}" min="0" max="100" value="${candidate.scorecard}" />
+                <input type="number" class="settings-value" id="candidateScore_${candidate.id}" min="0" max="100" value="${escapeHtml(getFieldDraftValue(`candidateScore_${candidate.id}`, candidate.scorecard))}" />
               </div>
               <div class="settings-item">
                 <div class="settings-label">Offer Salary</div>
-                <input type="number" class="settings-value" id="candidateOfferSalary_${candidate.id}" min="0" value="${candidate.offerSalary || 0}" />
+                <input type="number" class="settings-value" id="candidateOfferSalary_${candidate.id}" min="0" value="${escapeHtml(getFieldDraftValue(`candidateOfferSalary_${candidate.id}`, candidate.offerSalary || 0))}" />
               </div>
               <div class="settings-item">
                 <div class="settings-label">Start Date</div>
-                <input type="date" class="settings-value" id="candidateStartDate_${candidate.id}" value="${escapeHtml(candidate.proposedStartDate || '')}" />
+                <input type="date" class="settings-value" id="candidateStartDate_${candidate.id}" value="${escapeHtml(getFieldDraftValue(`candidateStartDate_${candidate.id}`, candidate.proposedStartDate || ''))}" />
               </div>
               <div class="settings-item">
                 <div class="settings-label">Interviewers</div>
-                <input type="text" class="settings-value" id="candidateInterviewers_${candidate.id}" value="${escapeHtml(candidate.interviewers || '')}" placeholder="Panel members" />
+                <input type="text" class="settings-value" id="candidateInterviewers_${candidate.id}" value="${escapeHtml(getFieldDraftValue(`candidateInterviewers_${candidate.id}`, candidate.interviewers || ''))}" placeholder="Panel members" />
               </div>
             </div>
             <div class="settings-item" style="margin-top:10px">
               <div class="settings-label">HR Notes</div>
-              <textarea class="notes-textarea compact-textarea" id="candidateNotes_${candidate.id}" placeholder="Shortlist comments, hiring manager note, or talent pool details.">${escapeHtml(candidate.hrNotes || '')}</textarea>
+              <textarea class="notes-textarea compact-textarea" id="candidateNotes_${candidate.id}" placeholder="Shortlist comments, hiring manager note, or talent pool details.">${escapeHtml(getFieldDraftValue(`candidateNotes_${candidate.id}`, candidate.hrNotes || ''))}</textarea>
             </div>
             <div class="settings-item" style="margin-top:10px">
               <div class="settings-label">Interview Feedback</div>
-              <textarea class="notes-textarea compact-textarea" id="candidateFeedback_${candidate.id}" placeholder="Interview feedback form content.">${escapeHtml(candidate.feedback || '')}</textarea>
+              <textarea class="notes-textarea compact-textarea" id="candidateFeedback_${candidate.id}" placeholder="Interview feedback form content.">${escapeHtml(getFieldDraftValue(`candidateFeedback_${candidate.id}`, candidate.feedback || ''))}</textarea>
             </div>
             <div class="leave-note">Offer status: ${escapeHtml(candidate.offerStatus)} | Onboarding: ${escapeHtml(candidate.onboardingStatus || 'Not Started')} | Workflow: ${escapeHtml(approvalFlowText('recruitment'))}</div>
             <div class="leave-note">HR signed: ${candidate.hrSignature ? escapeHtml(candidate.hrSignature) : 'Pending'} | Candidate signed: ${candidate.candidateSignature ? escapeHtml(candidate.candidateSignature) : 'Pending'}</div>
@@ -13835,58 +13884,59 @@
       }
 
       function renderSettingsPage() {
-        document.getElementById('settingManagerEmail').value = state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail;
-        document.getElementById('settingCCEmail').value = state.settings.ccEmail || '';
-        document.getElementById('settingSheetURL').value = sheetWebAppUrl() || DEFAULT_SHEET_WEB_APP_URL;
-        document.getElementById('settingSheetID').value = state.settings.sheetID || '';
+        bindFieldDraftTracking('#panel-settings');
+        document.getElementById('settingManagerEmail').value = getFieldDraftValue('settingManagerEmail', state.settings.managerEmail || DEFAULT_SETTINGS.managerEmail);
+        document.getElementById('settingCCEmail').value = getFieldDraftValue('settingCCEmail', state.settings.ccEmail || '');
+        document.getElementById('settingSheetURL').value = getFieldDraftValue('settingSheetURL', sheetWebAppUrl() || DEFAULT_SHEET_WEB_APP_URL);
+        document.getElementById('settingSheetID').value = getFieldDraftValue('settingSheetID', state.settings.sheetID || '');
         updateCloudStatusNote();
         updateSheetStatusNote();
         const cloudRefreshNode = document.getElementById('settingCloudRefreshSeconds');
-        if (cloudRefreshNode) cloudRefreshNode.value = String(cloudRefreshSeconds());
+        if (cloudRefreshNode) cloudRefreshNode.value = getFieldDraftValue('settingCloudRefreshSeconds', String(cloudRefreshSeconds()));
         const leaveAllowanceNode = document.getElementById('settingLeaveAllowance');
         const carryForwardNode = document.getElementById('settingCarryForwardLimit');
         const leaveCategoriesNode = document.getElementById('settingLeaveCategories');
-        if (leaveAllowanceNode) leaveAllowanceNode.value = String(annualLeaveAllowance());
-        if (carryForwardNode) carryForwardNode.value = String(carryForwardLimit());
-        if (leaveCategoriesNode) leaveCategoriesNode.value = leaveReasonCategories().join(', ');
+        if (leaveAllowanceNode) leaveAllowanceNode.value = getFieldDraftValue('settingLeaveAllowance', String(annualLeaveAllowance()));
+        if (carryForwardNode) carryForwardNode.value = getFieldDraftValue('settingCarryForwardLimit', String(carryForwardLimit()));
+        if (leaveCategoriesNode) leaveCategoriesNode.value = getFieldDraftValue('settingLeaveCategories', leaveReasonCategories().join(', '));
         const approvalLeaveNode = document.getElementById('settingApprovalLeave');
         const approvalPayrollNode = document.getElementById('settingApprovalPayroll');
         const approvalRecruitmentNode = document.getElementById('settingApprovalRecruitment');
         const approvalComplianceNode = document.getElementById('settingApprovalCompliance');
-        if (approvalLeaveNode) approvalLeaveNode.value = approvalFlowFor('leave').join(', ');
-        if (approvalPayrollNode) approvalPayrollNode.value = approvalFlowFor('payroll').join(', ');
-        if (approvalRecruitmentNode) approvalRecruitmentNode.value = approvalFlowFor('recruitment').join(', ');
-        if (approvalComplianceNode) approvalComplianceNode.value = approvalFlowFor('compliance').join(', ');
+        if (approvalLeaveNode) approvalLeaveNode.value = getFieldDraftValue('settingApprovalLeave', approvalFlowFor('leave').join(', '));
+        if (approvalPayrollNode) approvalPayrollNode.value = getFieldDraftValue('settingApprovalPayroll', approvalFlowFor('payroll').join(', '));
+        if (approvalRecruitmentNode) approvalRecruitmentNode.value = getFieldDraftValue('settingApprovalRecruitment', approvalFlowFor('recruitment').join(', '));
+        if (approvalComplianceNode) approvalComplianceNode.value = getFieldDraftValue('settingApprovalCompliance', approvalFlowFor('compliance').join(', '));
 
         bindManagerAccessFieldTracking();
         const managerAccessLocked = isManagerAccessEditing();
         const managerName = document.getElementById('settingManagerName');
         const managerUser = document.getElementById('settingAdminUser');
-        if (managerName) managerName.value = state.manager.name;
-        if (managerUser) managerUser.value = state.manager.user;
+        if (managerName) managerName.value = getFieldDraftValue('settingManagerName', state.manager.name);
+        if (managerUser) managerUser.value = getFieldDraftValue('settingAdminUser', state.manager.user);
         const approverName = document.getElementById('settingApproverName');
         const approverUser = document.getElementById('settingApproverUser');
-        if (approverName && !managerAccessLocked) approverName.value = state.managerApprover.name;
-        if (approverUser && !managerAccessLocked) approverUser.value = state.managerApprover.user;
+        if (approverName && !managerAccessLocked) approverName.value = getFieldDraftValue('settingApproverName', state.managerApprover.name);
+        if (approverUser && !managerAccessLocked) approverUser.value = getFieldDraftValue('settingApproverUser', state.managerApprover.user);
         const currentPassword = document.getElementById('settingCurrentAdminPassword');
         const newPassword = document.getElementById('settingNewAdminPassword');
         const confirmPassword = document.getElementById('settingConfirmAdminPassword');
-        if (currentPassword) currentPassword.value = '';
-        if (newPassword) newPassword.value = '';
-        if (confirmPassword) confirmPassword.value = '';
+        if (currentPassword) currentPassword.value = getFieldDraftValue('settingCurrentAdminPassword', '');
+        if (newPassword) newPassword.value = getFieldDraftValue('settingNewAdminPassword', '');
+        if (confirmPassword) confirmPassword.value = getFieldDraftValue('settingConfirmAdminPassword', '');
         const currentApproverPassword = document.getElementById('settingCurrentApproverPassword');
         const newApproverPassword = document.getElementById('settingNewApproverPassword');
         const confirmApproverPassword = document.getElementById('settingConfirmApproverPassword');
-        if (currentApproverPassword && !managerAccessLocked) currentApproverPassword.value = '';
-        if (newApproverPassword && !managerAccessLocked) newApproverPassword.value = '';
-        if (confirmApproverPassword && !managerAccessLocked) confirmApproverPassword.value = '';
+        if (currentApproverPassword && !managerAccessLocked) currentApproverPassword.value = getFieldDraftValue('settingCurrentApproverPassword', '');
+        if (newApproverPassword && !managerAccessLocked) newApproverPassword.value = getFieldDraftValue('settingNewApproverPassword', '');
+        if (confirmApproverPassword && !managerAccessLocked) confirmApproverPassword.value = getFieldDraftValue('settingConfirmApproverPassword', '');
 
         const passwordList = document.getElementById('empPasswordList');
         if (passwordList) {
           passwordList.innerHTML = state.employees.map((employee) => `
             <div class="settings-item">
               <div class="settings-label">${escapeHtml(employee.name)} <span class="employee-card-subtext">${escapeHtml(employee.email)} | ${escapeHtml(employee.department || 'Operations')}</span></div>
-              <input type="text" class="settings-value" id="pw_${employee.id}" value="${escapeHtml(state.passwords[employee.name] || 'help360')}" />
+              <input type="text" class="settings-value" id="pw_${employee.id}" value="${escapeHtml(getFieldDraftValue(`pw_${employee.id}`, state.passwords[employee.name] || 'help360'))}" />
             </div>
           `).join('');
         }
@@ -13899,6 +13949,7 @@
       }
 
       function renderEmployeeCards() {
+        bindFieldDraftTracking('#empCardsGrid');
         const grid = document.getElementById('empCardsGrid');
         grid.innerHTML = state.employees.map((employee) => {
           const reports = state.reports.filter((report) => report.employee === employee.name);
@@ -13920,7 +13971,7 @@
                     isRenaming
                       ? `
                         <div class="employee-inline-editor">
-                          <input type="text" class="employee-name-inline-input" id="employeeRenameInput_${employee.id}" value="${escapeHtml(employee.name)}" />
+                          <input type="text" class="employee-name-inline-input" id="employeeRenameInput_${employee.id}" value="${escapeHtml(getFieldDraftValue(`employeeRenameInput_${employee.id}`, employee.name))}" />
                           <div class="employee-inline-actions">
                             <button class="btn-ghost btn-mini" type="button" onclick="saveEmployeeRename('${employee.id}', this)"><i class="fas fa-check"></i> Save</button>
                             <button class="btn-ghost btn-mini" type="button" onclick="cancelEmployeeRename()"><i class="fas fa-times"></i> Cancel</button>
@@ -15007,6 +15058,12 @@
           };
           persistSettings({ skipCloud: true });
           await syncSharedScopeToSheet('settings');
+          clearFieldDraftValues([
+            'settingApprovalLeave',
+            'settingApprovalPayroll',
+            'settingApprovalRecruitment',
+            'settingApprovalCompliance'
+          ]);
           renderSettingsPage();
           renderEmployeePolicySummary();
           renderRecruitmentPanel();
@@ -15599,6 +15656,13 @@
           setupCloudReportSync();
           setupSharedCloudSync();
           syncPendingReportsToCloud({ silent: true });
+          clearFieldDraftValues([
+            'settingManagerEmail',
+            'settingCCEmail',
+            'settingSheetURL',
+            'settingSheetID',
+            'settingCloudRefreshSeconds'
+          ]);
           renderSettingsPage();
           logAudit('General settings updated', {
             scope: 'settings',
@@ -15649,6 +15713,13 @@
             syncSharedScopeToSheet('manager_account'),
             syncAuthStaffDirectory({ silent: true })
           ]);
+          clearFieldDraftValues([
+            'settingManagerName',
+            'settingAdminUser',
+            'settingCurrentAdminPassword',
+            'settingNewAdminPassword',
+            'settingConfirmAdminPassword'
+          ]);
           refreshManagerChrome();
           renderSettingsPage();
           logAudit('HR access updated', {
@@ -15695,6 +15766,13 @@
           await Promise.all([
             syncSharedScopeToSheet('manager_approver'),
             syncAuthStaffDirectory({ silent: true })
+          ]);
+          clearFieldDraftValues([
+            'settingApproverName',
+            'settingApproverUser',
+            'settingCurrentApproverPassword',
+            'settingNewApproverPassword',
+            'settingConfirmApproverPassword'
           ]);
           resetManagerAccessTracking();
           refreshManagerChrome();
@@ -15743,6 +15821,7 @@
             state.passwords = nextPasswords;
             await refreshSharedStateFromSheet({ silent: true, seedIfMissing: false }).catch(() => {});
             persistPasswords({ skipCloud: true });
+            state.employees.forEach((employee) => clearFieldDraftValue(`pw_${employee.id}`));
             renderSettingsPage();
             logAudit('Employee passwords updated', {
               scope: 'settings',
@@ -15763,6 +15842,11 @@
             .filter(Boolean);
           persistSettings({ skipCloud: true });
           await syncSharedScopeToSheet('settings');
+          clearFieldDraftValues([
+            'settingLeaveAllowance',
+            'settingCarryForwardLimit',
+            'settingLeaveCategories'
+          ]);
           renderSettingsPage();
           renderFilterOptions();
           renderEmployeePolicySummary();
@@ -15791,6 +15875,7 @@
           state.settings.companyHolidays.push({ id: createId('holiday'), name, date });
           persistSettings({ skipCloud: true });
           await syncSharedScopeToSheet('settings');
+          clearFieldDraftValues(['holidayName', 'holidayDate']);
           renderHolidayList();
           renderEmployeeAnnouncementsAndHolidays();
           renderEmployeePolicySummary();
@@ -16384,6 +16469,16 @@
           }
           candidate.offerStatus = candidate.offerSalary > 0 ? (candidate.candidateSignature ? 'Signed' : 'Sent') : candidate.offerStatus;
           persistCandidates();
+          clearFieldDraftValues([
+            `candidateStage_${candidateId}`,
+            `candidateInterview_${candidateId}`,
+            `candidateScore_${candidateId}`,
+            `candidateOfferSalary_${candidateId}`,
+            `candidateStartDate_${candidateId}`,
+            `candidateInterviewers_${candidateId}`,
+            `candidateNotes_${candidateId}`,
+            `candidateFeedback_${candidateId}`
+          ]);
           renderRecruitmentPanel();
           renderAnalyticsPanel();
           logAudit('Candidate pipeline updated', {
@@ -17452,7 +17547,9 @@
         };
 
         window.cancelEmployeeRename = () => {
+          const employeeId = state.currentRenamingEmployeeId;
           state.currentRenamingEmployeeId = null;
+          if (employeeId) clearFieldDraftValue(`employeeRenameInput_${employeeId}`);
           renderEmployeeCards();
         };
 
@@ -17468,6 +17565,7 @@
           }
           if (nextName === oldName) {
             state.currentRenamingEmployeeId = null;
+            clearFieldDraftValue(`employeeRenameInput_${employeeId}`);
             renderEmployeeCards();
             return;
           }
@@ -17511,6 +17609,7 @@
           if (state.currentRole === 'employee' && state.currentUser === nextName) {
             syncCurrentEmployeeContext();
           }
+          clearFieldDraftValue(`employeeRenameInput_${employeeId}`);
           logAudit('Employee renamed', {
             scope: 'employee',
             employeeName: nextName,
@@ -17741,6 +17840,8 @@
       function bindDomEvents() {
         bindActivityFormFieldTracking();
         bindManagerAccessFieldTracking();
+        bindFieldDraftTracking('#panel-settings');
+        bindFieldDraftTracking('#empCardsGrid');
         ['leaveStartDate', 'leaveEndDate', 'leaveType', 'leaveReasonCategory', 'leaveCoverage', 'leaveReason'].forEach((id) => {
           const node = document.getElementById(id);
           if (node) {
