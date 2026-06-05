@@ -6555,6 +6555,8 @@
         currentAttachments: [],
         activityFormActiveField: '',
         activityFormTouched: false,
+        managerAccessActiveField: '',
+        managerAccessTouched: false,
         currentEditingEmployeeId: null,
         currentEditingJobId: null,
         currentRenamingEmployeeId: null,
@@ -6591,6 +6593,14 @@
       function clone(value) {
         return JSON.parse(JSON.stringify(value));
       }
+
+      const MANAGER_ACCESS_FIELD_SELECTOR = [
+        '#settingApproverName',
+        '#settingApproverUser',
+        '#settingCurrentApproverPassword',
+        '#settingNewApproverPassword',
+        '#settingConfirmApproverPassword'
+      ].join(', ');
 
       const ACTIVITY_FORM_FIELD_SELECTOR = [
         '#employeeScreen .activity-grid input',
@@ -6691,6 +6701,62 @@
             if (field.type !== 'file') {
               queueAutoSave();
             }
+          });
+        });
+      }
+
+      function isManagerAccessField(node) {
+        return Boolean(node && node.matches && node.matches(MANAGER_ACCESS_FIELD_SELECTOR));
+      }
+
+      function managerAccessFieldKey(node) {
+        return node && node.id ? node.id : '';
+      }
+
+      function resetManagerAccessTracking() {
+        state.managerAccessActiveField = '';
+        state.managerAccessTouched = false;
+      }
+
+      function markManagerAccessFocused(node) {
+        if (!isManagerAccessField(node)) return;
+        state.managerAccessActiveField = managerAccessFieldKey(node);
+      }
+
+      function markManagerAccessTouched(node) {
+        if (!isManagerAccessField(node)) return;
+        state.managerAccessActiveField = managerAccessFieldKey(node);
+        state.managerAccessTouched = true;
+      }
+
+      function isManagerAccessEditing() {
+        return state.managerAccessTouched || Boolean(state.managerAccessActiveField);
+      }
+
+      function bindManagerAccessFieldTracking() {
+        document.querySelectorAll(MANAGER_ACCESS_FIELD_SELECTOR).forEach((field) => {
+          if (field.dataset.managerAccessTracked === 'true') return;
+          field.dataset.managerAccessTracked = 'true';
+          field.addEventListener('focus', () => {
+            markManagerAccessFocused(field);
+          });
+          field.addEventListener('blur', () => {
+            window.setTimeout(() => {
+              const activeField = document.activeElement;
+              if (isManagerAccessField(activeField)) {
+                markManagerAccessFocused(activeField);
+                return;
+              }
+              if (state.managerAccessActiveField === managerAccessFieldKey(field)) {
+                state.managerAccessActiveField = '';
+              }
+            }, 0);
+          });
+          field.addEventListener('input', () => {
+            markManagerAccessTouched(field);
+          });
+          field.addEventListener('change', () => {
+            markManagerAccessTouched(field);
           });
         });
       }
@@ -13792,14 +13858,16 @@
         if (approvalRecruitmentNode) approvalRecruitmentNode.value = approvalFlowFor('recruitment').join(', ');
         if (approvalComplianceNode) approvalComplianceNode.value = approvalFlowFor('compliance').join(', ');
 
+        bindManagerAccessFieldTracking();
+        const managerAccessLocked = isManagerAccessEditing();
         const managerName = document.getElementById('settingManagerName');
         const managerUser = document.getElementById('settingAdminUser');
         if (managerName) managerName.value = state.manager.name;
         if (managerUser) managerUser.value = state.manager.user;
         const approverName = document.getElementById('settingApproverName');
         const approverUser = document.getElementById('settingApproverUser');
-        if (approverName) approverName.value = state.managerApprover.name;
-        if (approverUser) approverUser.value = state.managerApprover.user;
+        if (approverName && !managerAccessLocked) approverName.value = state.managerApprover.name;
+        if (approverUser && !managerAccessLocked) approverUser.value = state.managerApprover.user;
         const currentPassword = document.getElementById('settingCurrentAdminPassword');
         const newPassword = document.getElementById('settingNewAdminPassword');
         const confirmPassword = document.getElementById('settingConfirmAdminPassword');
@@ -13809,9 +13877,9 @@
         const currentApproverPassword = document.getElementById('settingCurrentApproverPassword');
         const newApproverPassword = document.getElementById('settingNewApproverPassword');
         const confirmApproverPassword = document.getElementById('settingConfirmApproverPassword');
-        if (currentApproverPassword) currentApproverPassword.value = '';
-        if (newApproverPassword) newApproverPassword.value = '';
-        if (confirmApproverPassword) confirmApproverPassword.value = '';
+        if (currentApproverPassword && !managerAccessLocked) currentApproverPassword.value = '';
+        if (newApproverPassword && !managerAccessLocked) newApproverPassword.value = '';
+        if (confirmApproverPassword && !managerAccessLocked) confirmApproverPassword.value = '';
 
         const passwordList = document.getElementById('empPasswordList');
         if (passwordList) {
@@ -15628,6 +15696,7 @@
             syncSharedScopeToSheet('manager_approver'),
             syncAuthStaffDirectory({ silent: true })
           ]);
+          resetManagerAccessTracking();
           refreshManagerChrome();
           renderSettingsPage();
           logAudit('Manager access updated', {
@@ -17671,6 +17740,7 @@
 
       function bindDomEvents() {
         bindActivityFormFieldTracking();
+        bindManagerAccessFieldTracking();
         ['leaveStartDate', 'leaveEndDate', 'leaveType', 'leaveReasonCategory', 'leaveCoverage', 'leaveReason'].forEach((id) => {
           const node = document.getElementById(id);
           if (node) {
